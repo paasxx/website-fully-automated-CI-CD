@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+  db:
+    image: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: kanastra_db
+      POSTGRES_USER: kanastra_user
+      POSTGRES_PASSWORD: mypassword
+
+  web:
+    build: .
+    volumes:
+      - ./kanastra:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DB_NAME: kanastra_db
+      DB_USER: kanastra_user
+      DB_PASSWORD: mypassword
+      DB_HOST: db
+
+volumes:
+  postgres_data:

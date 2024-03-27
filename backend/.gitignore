@@ -1,0 +1,15 @@
+# Arquivos e diretórios de ambiente virtual
+venv/
+env/
+
+# Arquivos compilados Python
+*.pyc
+
+# Arquivos de log
+*.log
+
+# Arquivos de configuração local
+.env
+
+# Arquivos de mídia (geralmente estão armazenados em outro local em produção)
+media/
