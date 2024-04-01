@@ -29,7 +29,7 @@ cd kanastra
 2.1 Certifique-se de ter o Docker e o Docker Compose instalados em sua máquina.
 
 ```bash
-docker-compose up --build
+docker-compose up --build -d
 ```
 2.2 Acesse o container do backend
 
