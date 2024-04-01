@@ -6,10 +6,15 @@ services:
     container_name: kanastra-db
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+
     environment:
       POSTGRES_DB: kanastra_db
       POSTGRES_USER: kanastra_user
       POSTGRES_PASSWORD: mypassword
+      POSTGRES_PORT: 5432
+
+    ports:
+      - "5432:5432" # Map port 5432 on the host to port 5432 in the container
 
   web:
     image: back
@@ -26,6 +31,7 @@ services:
       DB_USER: kanastra_user
       DB_PASSWORD: mypassword
       DB_HOST: db
+      DB_PORT: 5432
 
   frontend:
     image: front

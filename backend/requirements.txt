@@ -1,2 +1,6 @@
-Django==3.2.12
-psycopg2==2.9.1
+Django
+psycopg2
+djangorestframework
+django-cors-headers
+reportlab == 3.2.0
+boto3
