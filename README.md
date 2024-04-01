@@ -23,7 +23,7 @@ git clone https://github.com/paasxx/kanastra.git
 2. Navegue até o diretório do projeto:
 
 ```bash
-cd projeto-kanastra
+cd kanastra
 ```
 
 2.1 Certifique-se de ter o Docker e o Docker Compose instalados em sua máquina.
