@@ -6,6 +6,46 @@
     height: 100vh;
 }
 
+/* styles.css */
+.uploaded-files-container {
+    margin-top: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.uploaded-files-container h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 20px;
+}
+
+.uploaded-files-container ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.uploaded-files-container li {
+    border-bottom: 1px solid #ccc;
+    /* Add a border between each file */
+    padding: 10px 0;
+    /* Add some vertical padding for spacing */
+}
+
+.uploaded-files-container li:last-child {
+    border-bottom: none;
+    /* Remove border from the last item */
+}
+
+.uploaded-files-container li span {
+    margin-right: 10px;
+    /* Add some space between name and date */
+    font-weight: normal;
+    /* Make the name bold */
+}
+
+
 .upload-form {
     width: 80%;
     max-width: 400px;
@@ -55,4 +95,11 @@
 
 .upload-form button:hover {
     background-color: #0056b3;
+}
+
+.file-info {
+    display: flex;
+    /* Use flexbox para alinhar os itens horizontalmente */
+    align-items: center;
+    /* Alinhe verticalmente ao centro */
 }

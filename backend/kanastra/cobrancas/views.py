@@ -11,6 +11,8 @@ from itertools import islice
 from django.db import migrations
 import time
 from functools import wraps
+from datetime import datetime
+from .email_engine import *
 
 
 def measure_time(func):
@@ -103,10 +105,14 @@ def process_csv(csv_file):
 def list_files(request):
     arquivos = Arquivo.objects.all().order_by("-data_envio")
     if not arquivos:
-        return Response({"message": "Nenhum arquivo encontrado"}, status=404)
+        return Response({"message": "No File Found!"}, status=404)
 
     data = [
-        {"nome": arquivo.nome, "data_envio": arquivo.data_envio} for arquivo in arquivos
+        {
+            "nome": arquivo.nome,
+            "data_envio": arquivo.data_envio.strftime("%d/%m/%Y %H:%M:%S"),
+        }
+        for arquivo in arquivos
     ]
     return Response(data)
 
@@ -118,8 +124,19 @@ def save_file_name(request):
 
         if nome_arquivo:
             Arquivo.objects.create(nome=nome_arquivo)
-            return Response(
-                {"success": "Nome do arquivo salvo com sucesso."}, status=201
-            )
+            return Response({"success": "File name saved successfully!."}, status=201)
         else:
-            return Response({"error": "Nome do arquivo não fornecido."}, status=400)
+            return Response({"error": "File name not given!."}, status=400)
+
+
+@api_view(["POST"])
+def send_emails_from_database(request):
+    if request.method == "POST":
+        try:
+            # Exemplo de uso:
+            send_emails_from_database()
+            return Response(
+                {"success": "Email sent to all database clients!."}, status=201
+            )
+        except:
+            return Response({"error": "Emails not sent!."}, status=400)
