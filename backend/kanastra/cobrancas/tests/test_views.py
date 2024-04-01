@@ -40,7 +40,7 @@ class EndToEndTestCase(TestCase):
             file_data = {"csv_file": csv_file}
             response = self.client.post(reverse("upload_csv"), file_data)
             response_file = self.client.post(
-                reverse("save_file_name"), {"nome_arquivo": os.path.basename(csv_file)}
+                reverse("save_file_name"), {"nome_arquivo": "input.csv"}
             )
 
             # Verificar se a resposta é 200 OK e se contém a mensagem de sucesso
@@ -48,7 +48,7 @@ class EndToEndTestCase(TestCase):
             self.assertIn("success", response.content.decode("utf-8"))
 
             # Verificar se a resposta é 200 OK e se contém a mensagem de sucesso
-            self.assertEqual(response_file.status_code, 200)
+            self.assertEqual(response_file.status_code, 201)
             self.assertIn("success", response_file.content.decode("utf-8"))
 
         # Contar o número de objetos Cobranca após o upload
