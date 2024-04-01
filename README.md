@@ -30,7 +30,7 @@ E rode o comando para instalar os node_modules.
 npm install
 ```
 
-2.1 Certifique-se de ter o Docker e o Docker Compose instalados em sua máquina, volte na raiz do projeto onde o docker compose está e rode.
+2.1 Certifique-se de ter o Docker e o Docker Compose instalados em sua máquina, volte na raiz do projeto kanastra/ onde o docker compose está e rode:
 
 ```bash
 docker-compose up --build -d
