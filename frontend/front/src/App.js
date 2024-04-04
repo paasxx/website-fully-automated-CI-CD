@@ -10,15 +10,26 @@ import './fonts.css'; // Importe o arquivo CSS de fontes
 function App() {
   return (
     <UploadedFilesProvider>
-      <div className="form-container">
-        <UploadCSV />
-        <div >
-          <h2>Uploaded Files</h2>
-          <UploadedFilesList />
+      <div className="card-container">
+
+        <div className="card">
+          {/* Upload CSV Form Component */}
+          <UploadCSV />
         </div>
+
+        <div >
+          <div className="card">
+
+            <UploadedFilesList />
+          </div>
+        </div>
+
       </div>
     </UploadedFilesProvider>
   );
 }
 
 export default App;
+
+
+

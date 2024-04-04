@@ -15,7 +15,7 @@ RUN npm install && npm install axios
 EXPOSE 3000
 
 # Comando para iniciar o servidor de desenvolvimento do React quando o contêiner for executado
-CMD ["npm", "start"]
+# CMD ["npm", "start"]
 
 #Comando para rodar o container porém sem iniciar npm start, que deve ser feito manualmente entrando no container.
-# CMD ["sleep", "infinity"]
+CMD ["sleep", "infinity"]
