@@ -21,6 +21,7 @@ const UploadCSV = () => {
             }, 1000); // Update every second
         } else {
             clearInterval(interval); // Clear interval when upload is finished
+            interval = 0
         }
 
         return () => clearInterval(interval); // Cleanup on unmount or when uploading is finished
