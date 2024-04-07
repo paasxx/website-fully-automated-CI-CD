@@ -1,0 +1,19 @@
+// Import global styles
+@import 'global/Variables.scss';
+@import 'global/Mixins.scss';
+@import 'global/Reset.scss';
+
+// Import component styles
+@import 'components/Button.scss';
+@import 'components/Navbar.scss';
+@import 'components/Cards.scss';
+@import 'components/UploadForm.scss';
+@import 'components/Files.scss';
+@import 'components/Spinner.scss';
+// Import other component styles as needed
+
+// Import layout styles
+@import 'layouts/Header.scss';
+@import 'layouts/Footer.scss';
+@import 'layouts/background.scss';
+// Import other layout styles as needed
