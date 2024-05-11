@@ -8,7 +8,7 @@ WORKDIR /app
 COPY front/ /app
 
 # Instala as dependências do projeto
-RUN npm install && npm install axios
+RUN npm install && npm install axios && npm rebuild node-sass
 
 
 # Abre a porta 3000 para acessar o servidor de desenvolvimento do React
