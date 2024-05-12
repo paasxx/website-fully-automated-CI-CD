@@ -50,7 +50,7 @@ jobs:
 
       - name: Run run.sh script
         run: |
-          cd backend  # Navega até o diretório do seu projeto Django
+          cd backend/kanastra  # Navega até o diretório do seu projeto Django
           chmod +x run.sh  # Dá permissões de execução ao script
           ./run.sh  # Executa o script run.sh
 
