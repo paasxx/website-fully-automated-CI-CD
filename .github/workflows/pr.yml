@@ -60,7 +60,9 @@ jobs:
 
       - name: Run run.sh script inside Docker container
         run: |
-          docker exec back bash -c "cd /app && pwd && ls -l"
+          docker exec back bash -c "ls -l /app"
+          docker exec back bash -c "chmod +x /app/run.sh && /app/run.sh"
+
 
       # - name: Run run.sh script inside Docker container
       #   run: |
