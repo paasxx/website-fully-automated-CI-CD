@@ -59,7 +59,7 @@ jobs:
 
       - name: List files and directories inside Docker container
         run: |
-          docker exec back bash -c "ls -la"
+          docker exec back bash -c "ls"
 
 
       - name: Run run.sh script inside Docker container
