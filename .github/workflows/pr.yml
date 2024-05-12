@@ -53,6 +53,11 @@ jobs:
         run: |
             docker-compose -f docker-compose.yml up -d db web
 
+      - name: Print current directory and list files
+        run: |
+          pwd
+          ls -l
+
       - name: Run run.sh script inside Docker container
         run: |
           docker exec back bash -c "cd /app && chmod +x run.sh && ./run.sh"
