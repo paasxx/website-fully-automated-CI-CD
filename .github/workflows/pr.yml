@@ -30,6 +30,11 @@ jobs:
     #       POSTGRES_USER: kanastra_user
     #       POSTGRES_PASSWORD: mypassword
 
+    container:
+      image: docker:latest
+      options: --privileged
+
+
     steps:
 
       - name: Checkout code
@@ -38,11 +43,11 @@ jobs:
       - name: Display Branch
         run: echo "This is the Branch ${{ github.ref }}"
 
-      - name: Install Docker
-        run: |
-          sudo apt-get remove -y docker.io containerd.io
-          sudo apt-get update
-          sudo apt-get install -y docker.io
+      # - name: Install Docker
+      #   run: |
+      #     sudo apt-get remove -y docker.io containerd.io
+      #     sudo apt-get update
+      #     sudo apt-get install -y docker.io
 
       - name: Build and start backend and database containers
         run: |
@@ -50,7 +55,7 @@ jobs:
 
       - name: Run run.sh script inside Docker container
         run: |
-          docker exec -it back bash -c "cd /app && chmod +x run.sh && ./run.sh"
+          docker exec back bash -c "cd /app && chmod +x run.sh && ./run.sh"
 
       - name: Testes Passaram
         run: |
