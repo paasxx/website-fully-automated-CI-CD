@@ -57,6 +57,7 @@ jobs:
         run: |
           docker exec back bash -c "cd /app && chmod +x run.sh && ./run.sh"
 
+
       - name: Testes Passaram
         run: |
           echo "testes passaram"
