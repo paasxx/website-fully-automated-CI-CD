@@ -48,7 +48,7 @@ jobs:
         run: |
             docker-compose -f docker-compose.yml up -d db web
 
-       - name: Run run.sh script inside Docker container
+      - name: Run run.sh script inside Docker container
         run: |
           docker exec -it back bash -c "cd /app/kanastra && chmod +x run.sh && ./run.sh"
 
