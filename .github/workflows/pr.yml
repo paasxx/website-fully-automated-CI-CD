@@ -1,7 +1,6 @@
 name: Quality Assurance
 
-on: 
-
+on:
   pull_request:
     branches:
       - main
@@ -16,10 +15,9 @@ on:
   workflow_call:
 
 jobs:
-
   quality-assurance:
     name: Quality Assurance
-    runs on: ubuntu-latest
+    runs-on: ubuntu-latest
     # container:
     #   # image: python:3.9
     #   # options: --user root
@@ -35,18 +33,18 @@ jobs:
     steps:
 
       - name: Checkout code
-      - uses: actions/checkout@v2
+        uses: actions/checkout@v2
 
       - name: Display Branch
         run: echo "This is the Branch ${{ github.ref }}"
 
       - name: Install Docker
         run: |
-        sudo apt-get update
-        sudo apt-get install -y docker.io
+          sudo apt-get update
+          sudo apt-get install -y docker.io
 
       - name: Build and start backend and database containers
-          run: |
+        run: |
             docker-compose -f docker-compose.yml up -d db web
 
       - name: Run run.sh script
@@ -56,9 +54,3 @@ jobs:
           ./run.sh  # Executa o script run.sh
 
       - name: Testes Passaram
-        run: |
-          echo "testes passaram"
-
-          
-
-
