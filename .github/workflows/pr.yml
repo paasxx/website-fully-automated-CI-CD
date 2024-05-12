@@ -48,11 +48,9 @@ jobs:
         run: |
             docker-compose -f docker-compose.yml up -d db web
 
-      - name: Run run.sh script
+       - name: Run run.sh script inside Docker container
         run: |
-          cd backend/kanastra  # Navega até o diretório do seu projeto Django
-          chmod +x run.sh  # Dá permissões de execução ao script
-          ./run.sh  # Executa o script run.sh
+          docker exec -it back bash -c "cd /app/kanastra && chmod +x run.sh && ./run.sh"
 
       - name: Testes Passaram
         run: |
