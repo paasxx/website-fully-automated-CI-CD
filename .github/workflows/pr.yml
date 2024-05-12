@@ -51,7 +51,7 @@ jobs:
 
       - name: Build and start backend and database containers
         run: |
-            docker-compose -f docker-compose.yml up -d db web
+            docker-compose -f docker-compose.yml up --build -d db web
 
       - name: Print current directory and list files
         run: |
