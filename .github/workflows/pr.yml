@@ -62,6 +62,15 @@ jobs:
         run: |
           docker exec back bash -c "cd /backend/kanastra && chmod +x run.sh && ./run.sh"
 
+      - name: Print current directory and list files
+        run: |
+          pwd
+          ls -l
+
+      # - name: Run run.sh script inside Docker container
+      #   run: |
+      #     docker exec back bash -c "cd /backend/kanastra && chmod +x run.sh && ./run.sh"
+
 
       - name: Testes Passaram
         run: |
