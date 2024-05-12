@@ -54,3 +54,5 @@ jobs:
           ./run.sh  # Executa o script run.sh
 
       - name: Testes Passaram
+        run: |
+          echo "testes passaram"
