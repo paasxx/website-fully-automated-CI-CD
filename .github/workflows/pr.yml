@@ -1,36 +1,75 @@
-name: Django CI
+name: Quality Assurance
 
 on:
-  push:
-    branches: [ "staging" ]
   pull_request:
-    branches: [ "staging" ]
+    branches:
+      - main
+      - staging
+
+  workflow_dispatch:
+    inputs:
+      manual_deploy:
+        description: 'Trigger manual deployment'
+        default: 'true'
+
+  workflow_call:
 
 jobs:
-  build:
-
+  quality-assurance:
+    name: Quality Assurance
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 4
-      matrix:
-        python-version: [3.7, 3.8, 3.9]
+    # container:
+    #   # image: python:3.9
+    #   # options: --user root
+
+    # services:
+    #   db:
+    #     image: postgres:14.2-alpine
+    #     env:
+    #       POSTGRES_DB: kanastra_db
+    #       POSTGRES_USER: kanastra_user
+    #       POSTGRES_PASSWORD: mypassword
+
+    container:
+      image: docker:latest
+      options: --privileged
+
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
 
-    - name: Navigate to directory with requirements.txt
-      run: cd backend
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Install Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    - name: Run Tests
-      run: |
+      - name: Display Branch
+        run: echo "This is the Branch ${{ github.ref }}"
 
-        cd backend/kanastra
-        python manage.py test
+      # - name: Install Docker
+      #   run: |
+      #     sudo apt-get remove -y docker.io containerd.io
+      #     sudo apt-get update
+      #     sudo apt-get install -y docker.io
+
+      - name: Build and start backend and database containers
+        run: |
+            docker-compose -f docker-compose.yml up -d db web
+
+      - name: Print current directory and list files
+        run: |
+          pwd
+          ls -l
+
+      - name: Run run.sh script inside Docker container
+        run: |
+          docker exec back bash -c "ls /app"
+          docker exec back bash -c "ls -la /app"
+          docker exec back bash -c "chmod +x /run.sh && /run.sh"
+
+
+      # - name: Run run.sh script inside Docker container
+      #   run: |
+      #     docker exec back bash -c "cd /backend/kanastra && chmod +x run.sh && ./run.sh"
+
+
+      - name: Testes Passaram
+        run: |
+          echo "testes passaram"
