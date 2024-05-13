@@ -51,12 +51,21 @@ jobs:
 
       - name: Build and start backend and database containers
         run: |
-            docker-compose up -d db web
+            docker-compose -f docker-compose.yml up -d db web
 
       - name: Print current directory and list files
         run: |
           pwd
           ls -l
+
+      - name: Check if run.sh exists
+        run: ls -l /caminho/do/script/run.sh
+
+      - name: Check back container logs
+        run: docker logs back
+
+      - name: Check if run.sh exists inside container
+        run: docker exec back ls 
 
       - name: Run run.sh script inside Docker container
         run: |
