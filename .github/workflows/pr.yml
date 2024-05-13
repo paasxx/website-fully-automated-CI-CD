@@ -58,8 +58,6 @@ jobs:
           pwd
           ls -l
 
-      - name: Check if run.sh exists
-        run: ls -l /caminho/do/script/run.sh
 
       - name: Check back container logs
         run: docker logs back
