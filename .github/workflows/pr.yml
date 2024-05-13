@@ -53,11 +53,15 @@ jobs:
         run: |
             docker-compose -f docker-compose.yml up -d db web
 
+      - name: Build and start backend and database containers
+        run: |
+            docker ps -a
+
         
 
       - name: Run run.sh script inside Docker container
         run: |
-          docker exec back bash -c "run.sh"
+          docker exec back bash -c "chmod +x ./run.sh && ./run.sh"
 
 
       - name: Testes Passaram
