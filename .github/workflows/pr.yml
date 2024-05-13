@@ -1,85 +1,23 @@
-name: Quality Assurance
+name: Build and Deploy
 
 on:
-  pull_request:
+  push:
     branches:
       - main
-      - staging
-
-  workflow_dispatch:
-    inputs:
-      manual_deploy:
-        description: 'Trigger manual deployment'
-        default: 'true'
-
-  workflow_call:
 
 jobs:
-  quality-assurance:
-    name: Quality Assurance
+  build_and_deploy:
     runs-on: ubuntu-latest
-    # container:
-    #   # image: python:3.9
-    #   # options: --user root
-
-    # services:
-    #   db:
-    #     image: postgres:14.2-alpine
-    #     env:
-    #       POSTGRES_DB: kanastra_db
-    #       POSTGRES_USER: kanastra_user
-    #       POSTGRES_PASSWORD: mypassword
-
-    container:
-      image: docker:latest
-      options: --privileged
-
 
     steps:
-
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Display Branch
-        run: echo "This is the Branch ${{ github.ref }}"
+      - name: Navigate to directory with Dockerfile
+        run: cd backend
 
-      # - name: Install Docker
-      #   run: |
-      #     sudo apt-get remove -y docker.io containerd.io
-      #     sudo apt-get update
-      #     sudo apt-get install -y docker.io
+      - name: Build Docker image
+        run: docker build -t my_django_app .
 
-      - name: Display logs for db service
-        run: docker-compose -f docker-compose.yml logs db
-
-      - name: Display logs for web service
-        run: docker-compose -f docker-compose.yml logs web
-
-
-      - name: Print current directory and list files
-        run: |
-          pwd
-          ls -l
-
-
-      - name: Check back container logs
-        run: docker logs back
-
-      - name: Check if run.sh exists inside container
-        run: docker exec back ls 
-
-      - name: Run run.sh script inside Docker container
-        run: |
-          docker exec back bash -c "ls /app"
-          docker exec back bash -c "ls -la /app"
-          docker exec back bash -c "chmod +x /run.sh && /run.sh"
-
-
-      # - name: Run run.sh script inside Docker container
-      #   run: |
-      #     docker exec back bash -c "cd /backend/kanastra && chmod +x run.sh && ./run.sh"
-
-
-      - name: Testes Passaram
-        run: |
-          echo "testes passaram"
+      - name: Run Docker container
+        run: docker run -d -p 8000:8000 --name my_django_container my_django_app
