@@ -23,13 +23,17 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Print current directory
-      run: pwd
+      run: |
+        pwd
+        ls
 
     - name: Navigate to directory with manage.py and requirements.txt
       run: cd backend
 
     - name: Print current directory
-      run: pwd
+      run: |
+        pwd
+        ls
 
     - name: Install Dependencies
       run: |
