@@ -28,7 +28,7 @@ jobs:
         ls
 
     - name: Navigate to directory with manage.py and requirements.txt
-      run: cd backend
+      run: cd /home/runner/work/kanastra/kanastra/backend
 
     - name: Print current directory
       run: |
