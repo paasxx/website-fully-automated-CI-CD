@@ -57,7 +57,7 @@ jobs:
 
       - name: Run run.sh script inside Docker container
         run: |
-          docker exec back  -c "cd backend/kanastra && chmod +x run.sh && ./run.sh"
+          docker exec back bash -c "cd backend/kanastra && chmod +x run.sh && ./run.sh"
 
 
       - name: Testes Passaram
