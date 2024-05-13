@@ -49,9 +49,12 @@ jobs:
       #     sudo apt-get update
       #     sudo apt-get install -y docker.io
 
-      - name: Build and start backend and database containers
-        run: |
-            docker-compose -f docker-compose.yml up -d db web logs
+      - name: Display logs for db service
+        run: docker-compose -f docker-compose.yml logs db
+
+      - name: Display logs for web service
+        run: docker-compose -f docker-compose.yml logs web
+
 
       - name: Print current directory and list files
         run: |
