@@ -51,7 +51,7 @@ jobs:
 
       - name: Build and start backend and database containers
         run: |
-            docker-compose -f docker-compose.yml up -d db web
+            docker-compose -f docker-compose-actions.yml up -d db web
 
       - name: Build and start backend and database containers
         run: |
@@ -64,10 +64,21 @@ jobs:
         run: |
             docker exec back bash -c "cd /bin && ls" 
 
-        
+      - name: Print container logs
+        run: docker logs back
+
+      - name: Run Django server manually
+        run: docker exec back python manage.py runserver 0.0.0.0:8000
+
+
+
       - name: Run run.sh script inside Docker container
         run: |
           docker exec back bash -c "chmod +x ./run.sh && ./run.sh"
+
+      - name: Print container logs
+        run: docker logs back
+
 
 
       - name: Testes Passaram

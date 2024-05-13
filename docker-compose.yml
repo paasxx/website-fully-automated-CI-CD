@@ -4,8 +4,8 @@ services:
   db:
     image: postgres
     container_name: kanastra-db
-    # volumes:
-    #   - postgres_data:/var/lib/postgresql/data/
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
 
     environment:
       POSTGRES_DB: kanastra_db
@@ -20,8 +20,8 @@ services:
     image: back
     container_name: back
     build: ./backend
-    # volumes:
-    #   - ./backend/kanastra:/app
+    volumes:
+      - ./backend/kanastra:/app
     ports:
       - "8000:8000"
     depends_on:
