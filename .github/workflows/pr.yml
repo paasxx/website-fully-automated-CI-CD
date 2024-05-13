@@ -22,8 +22,14 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+      - name: Print current directory
+      run: pwd
+
     - name: Navigate to directory with manage.py and requirements.txt
-      run: cd backend/kanastra
+      run: cd backend
+
+    - name: Print current directory
+      run: pwd
 
     - name: Install Dependencies
       run: |
