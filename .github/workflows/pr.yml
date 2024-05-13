@@ -58,8 +58,12 @@ jobs:
             docker ps -a
 
       - name: List all contents inside the container
+        run: docker exec back ls /
+
+      - name: List all contents inside the container
         run: |
-            docker exec back bash -c "cd /app && ls"
+            docker exec back bash -c "cd /bin && ls"
+
         
       - name: Run run.sh script inside Docker container
         run: |
