@@ -57,7 +57,7 @@ jobs:
 
       - name: Run run.sh script inside Docker container
         run: |
-          docker exec back bash -c "chmod +x ./run.sh && ./run.sh"
+          docker exec back bash -c "./run.sh"
 
 
       - name: Testes Passaram
