@@ -1,0 +1,26 @@
+.file-info {
+    display: flex;
+    /* Use flexbox para alinhar os itens horizontalmente */
+    align-items: center;
+    /* Alinhe verticalmente ao centro */
+}
+
+.uploaded-files-container {
+    text-align: left;
+    margin-top: 0px;
+    color: $text-color;
+    font-size: 14px;
+
+    ul {
+        padding: 0;
+        list-style-type: none;
+    }
+
+    li {
+        margin-bottom: 5px;
+    }
+
+    span {
+        margin-right: 10px;
+    }
+}

@@ -1,0 +1,41 @@
+.upload-form {
+    margin-top: 0px;
+
+    h2 {
+        margin-bottom: 15px;
+    }
+
+    input[type='file'] {
+        display: none;
+        // Hide the default file input
+    }
+
+    label {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 5px;
+        background-color: $primary-color;
+        color: #ffffffc2;
+        cursor: pointer;
+        transition: background-color 0.3s;
+
+        &:hover {
+            background-color: $secondary-color;
+        }
+    }
+
+    button {
+        margin-left: 10px;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: $primary-color;
+        color: #ffffffc2;
+        cursor: pointer;
+        transition: background-color 0.3s;
+
+        &:hover {
+            background-color: $secondary-color;
+        }
+    }
+}

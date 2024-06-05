@@ -1,0 +1,81 @@
+name: Quality Assurance
+
+on:
+  pull_request:
+    branches:
+      - main
+      - staging
+
+  workflow_dispatch:
+    inputs:
+      manual_deploy:
+        description: 'Trigger manual deployment'
+        default: 'true'
+
+  workflow_call:
+
+jobs:
+  quality-assurance:
+    name: Quality Assurance
+    runs-on: ubuntu-latest
+    # container:
+    #   # image: python:3.9
+    #   # options: --user root
+
+    # services:
+    #   db:
+    #     image: postgres:14.2-alpine
+    #     env:
+    #       POSTGRES_DB: kanastra_db
+    #       POSTGRES_USER: kanastra_user
+    #       POSTGRES_PASSWORD: mypassword
+
+    container:
+      image: docker:latest
+      options: --privileged
+
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Display Branch
+        run: echo "This is the Branch ${{ github.ref }}"
+
+      # - name: Install Docker
+      #   run: |
+      #     sudo apt-get remove -y docker.io containerd.io
+      #     sudo apt-get update
+      #     sudo apt-get install -y docker.io
+
+      - name: Build and start backend and database containers
+        run: |
+            docker-compose -f docker-compose-actions.yml up -d db web
+
+      - name: Build and start backend and database containers
+        run: |
+            docker ps -a
+
+      - name: List all contents inside the container
+        run: docker exec back ls /
+
+      - name: List all contents inside the container
+        run: |
+            docker exec back bash -c "cd /app && ls" 
+
+      - name: List all contents inside the container
+        run: |
+            docker exec back bash -c "cd /var && ls" 
+
+      - name: Run run.sh script inside Docker container
+        run: |
+          docker exec back bash -c "chmod +x ./tests.sh && ./tests.sh"
+
+      - name: Print container logs
+        run: docker logs back
+
+
+      - name: Testes Passaram
+        run: |
+          echo "testes passaram"

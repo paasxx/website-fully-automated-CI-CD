@@ -7,8 +7,8 @@ const UploadedFilesList = () => {
 
 
     return (
-        <div className="uploaded-files-container">
-
+        <div className="uploaded-files-container" >
+            <h2>Uploaded Files</h2>
             <ul>
                 {uploadedFiles.map((file, index) => (
                     <li key={index} className='file-info'>
@@ -24,3 +24,7 @@ const UploadedFilesList = () => {
 };
 
 export default UploadedFilesList;
+
+
+
+

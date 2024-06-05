@@ -1,0 +1,16 @@
+.background {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: $dark-background-color;
+    border: none;
+    /* Remove border */
+    /* Dark gray background color */
+}
+
+body,
+html {
+    margin: 0;
+    padding: 0;
+}

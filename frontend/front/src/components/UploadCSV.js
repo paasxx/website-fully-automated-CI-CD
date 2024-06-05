@@ -1,20 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUploadedFiles } from './UploadedFilesContext';
+import { FaSpinner } from 'react-icons/fa'; // Example with React Icons
+
 
 const UploadCSV = () => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [uploading, setUploading] = useState(false);
     const { updateUploadedFiles } = useUploadedFiles();
+    const [uploadStartTime, setUploadStartTime] = useState(null);
+    const [uploadTime, setUploadTime] = useState(0); // State to hold the upload time
+
+    useEffect(() => {
+        let interval;
+        if (uploading) {
+            interval = setInterval(() => {
+                const currentTime = new Date();
+                const elapsedTime = (currentTime - uploadStartTime) / 1000; // Calculate elapsed time in seconds
+                setUploadTime(elapsedTime);
+            }, 1000); // Update every second
+        } else {
+            clearInterval(interval); // Clear interval when upload is finished
+            setUploadTime(0)
+        }
+
+        return () => clearInterval(interval); // Cleanup on unmount or when uploading is finished
+    }, [uploading, uploadStartTime]);
 
     const handleFileChange = (event) => {
         setSelectedFile(event.target.files[0]);
+        setUploadStartTime(new Date());
     };
+
+    const formatTime = (timeInSeconds) => {
+        return Math.floor(timeInSeconds); // Show only seconds
+    };
+
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+
         if (selectedFile) {
             setUploading(true);
+            setUploadStartTime(new Date());
             const formData = new FormData();
             formData.append('csv_file', selectedFile);
 
@@ -44,12 +72,14 @@ const UploadCSV = () => {
     };
 
     return (
-        <div>
+        <div className="upload-form">
             <h2>Upload CSV</h2>
-            <form onSubmit={handleSubmit} className="upload-form" encType="multipart/form-data">
-                <input type="file" onChange={handleFileChange} accept=".csv" name="csv_file" />
+            <form onSubmit={handleSubmit} encType="multipart/form-data">
+                <input type="file" id="csv_file" onChange={handleFileChange} accept=".csv" name="csv_file" className="file-input" />
+                <label htmlFor="csv_file">Choose File</label>
                 <button type="submit" disabled={uploading}>Upload</button>
-                {uploading && <p>Uploading...</p>}
+                {selectedFile && <p>File: {selectedFile.name}</p>}
+                {uploading && <p><FaSpinner className="spinner" /> Uploading... ({formatTime(uploadTime)} seconds)</p>}
             </form>
 
 
