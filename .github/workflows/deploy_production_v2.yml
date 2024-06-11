@@ -35,7 +35,7 @@ jobs:
         run: |
           docker buildx build --platform linux/amd64 -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/frontend:latest --push ./frontend
 
-          - name: Install ECS CLI
+      - name: Install ECS CLI
         run: |
           sudo curl -Lo /usr/local/bin/ecs-cli https://amazon-ecs-cli.s3.amazonaws.com/ecs-cli-linux-amd64-latest
           sudo chmod +x /usr/local/bin/ecs-cli
