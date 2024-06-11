@@ -4,7 +4,7 @@ on:
   pull_request:
     branches:
       - main
-      - staging
+      - staging  #isso aqui deve sumir no futuro pois so vai pra deploy o que ta na main
 
   workflow_dispatch:
     inputs:
