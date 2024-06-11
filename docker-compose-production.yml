@@ -26,6 +26,9 @@ services:
     image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/frontend:latest
     ports:
       - "3000:3000"
+    networks:
+      - kanastra-network
 
-volumes:
-  postgres_data:
+networks:
+  kanastra-network:
+    driver: bridge
