@@ -102,6 +102,15 @@ jobs:
           aws ecs register-task-definition \
             --cli-input-json file://ecs-task-def.json
 
+      - name: Create ECS Service
+        run: |
+          aws ecs create-service \
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service-name ${{ secrets.ECS_SERVICE }} \
+            --task-definition kanastra-task \
+            --desired-count 1 \
+            --launch-type FARGATE
+
       - name: Deploy to ECS
         run: |
           aws ecs update-service \
