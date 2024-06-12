@@ -109,7 +109,9 @@ jobs:
             --service-name ${{ secrets.ECS_SERVICE }} \
             --task-definition kanastra-task \
             --desired-count 1 \
-            --launch-type FARGATE
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.AWS_SUBNET }}],securityGroups=[${{ secrets.AWS_SECURITY_GROUP }}],assignPublicIp=ENABLED}"
+
 
       - name: Deploy to ECS
         run: |
