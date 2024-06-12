@@ -40,12 +40,62 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y awscli
 
-      - name: Verify ECS Task Definition File
+
+      - name: Create ECS Task Definition
         run: |
-          if [ ! -f ecs-task-def.json ]; then
-            echo "Error: ecs-task-def.json not found."
-            exit 1
-          fi
+          echo '{
+            "family": "kanastra-task",
+            "networkMode": "awsvpc",
+            "containerDefinitions": [
+              {
+                "name": "db",
+                "image": "postgres",
+                "essential": true,
+                "memory": 512,
+                "cpu": 256,
+                "environment": [
+                  { "name": "POSTGRES_DB", "value": "kanastra_db" },
+                  { "name": "POSTGRES_USER", "value": "kanastra_user" },
+                  { "name": "POSTGRES_PASSWORD", "value": "mypassword" },
+                  { "name": "POSTGRES_PORT", "value": "5432" }
+                ],
+                "portMappings": [
+                  { "containerPort": 5432, "hostPort": 5432 }
+                ]
+              },
+              {
+                "name": "web",
+                "image": "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/backend:latest",
+                "essential": true,
+                "memory": 512,
+                "cpu": 256,
+                "environment": [
+                  { "name": "DB_NAME", "value": "kanastra_db" },
+                  { "name": "DB_USER", "value": "kanastra_user" },
+                  { "name": "DB_PASSWORD", "value": "mypassword" },
+                  { "name": "DB_HOST", "value": "db" },
+                  { "name": "DB_PORT", "value": "5432" }
+                ],
+                "portMappings": [
+                  { "containerPort": 8000, "hostPort": 8000 }
+                ]
+              },
+              {
+                "name": "frontend",
+                "image": "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/frontend:latest",
+                "essential": true,
+                "memory": 512,
+                "cpu": 256,
+                "portMappings": [
+                  { "containerPort": 3000, "hostPort": 3000 }
+                ]
+              }
+            ],
+            "requiresCompatibilities": ["FARGATE"],
+            "cpu": "1024",
+            "memory": "2048",
+            "executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole"
+          }' > ecs-task-def.json
 
       - name: Create ECS Task Definition
         run: |
