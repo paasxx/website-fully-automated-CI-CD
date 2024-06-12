@@ -40,12 +40,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y awscli
 
+      - name: Verify ECS Task Definition File
+        run: |
+          if [ ! -f ecs-task-def.json ]; then
+            echo "Error: ecs-task-def.json not found."
+            exit 1
+          fi
+
       - name: Create ECS Task Definition
         run: |
           aws ecs register-task-definition \
-            --family kanastra-task \
-            --execution-role-arn ${{ secrets.ECS_EXECUTION_ROLE_ARN }} \
-            --container-definitions file://ecs-task-def.json
+            --cli-input-json file://ecs-task-def.json
 
       - name: Deploy to ECS
         run: |
