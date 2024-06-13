@@ -147,14 +147,10 @@ jobs:
           CLUSTER_NAME=${{ secrets.ECS_CLUSTER }}
           TASK_DEFINITION=kanastra-task
 
-          if aws ecs describe-services --cluster $CLUSTER_NAME --services $SERVICE_NAME | grep -q $SERVICE_NAME; then
-            echo "Service exists, updating..."
-            aws ecs update-service \
-              --cluster $CLUSTER_NAME \
-              --service $SERVICE_NAME \
-              --task-definition $TASK_DEFINITION \
-              --force-new-deployment
-          else
+          SERVICE_STATE=$(aws ecs describe-services --cluster $CLUSTER_NAME --services $SERVICE_NAME --query 'services[0].status' --output text 2>&1)
+          echo "Service state: $SERVICE_STATE"
+
+          if echo "$SERVICE_STATE" | grep -q "MISSING"; then
             echo "Service does not exist, creating..."
             aws ecs create-service \
               --cluster $CLUSTER_NAME \
@@ -163,4 +159,14 @@ jobs:
               --desired-count 1 \
               --launch-type FARGATE \
               --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.AWS_SUBNET }}],securityGroups=[${{ secrets.AWS_SECURITY_GROUP }}],assignPublicIp=ENABLED}"
+          elif echo "$SERVICE_STATE" | grep -q "ACTIVE"; then
+            echo "Service exists, updating..."
+            aws ecs update-service \
+              --cluster $CLUSTER_NAME \
+              --service $SERVICE_NAME \
+              --task-definition $TASK_DEFINITION \
+              --force-new-deployment
+          else
+            echo "Service is in state $SERVICE_STATE, waiting for it to become active..."
+            # Add logic to wait or handle other states if necessary
           fi
