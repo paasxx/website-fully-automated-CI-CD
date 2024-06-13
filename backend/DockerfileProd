@@ -10,6 +10,9 @@ COPY requirements.txt .
 # Instala as dependências do projeto
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY wait-for-it.sh /usr/local/bin/wait-for-it.sh
+RUN chmod +x /usr/local/bin/wait-for-it.sh
+
 # Copia os arquivos do projeto para o contêiner
 COPY kanastra/ /app
 

@@ -39,6 +39,10 @@ jobs:
             echo "::set-output name=exists::false"
           fi
 
+      - name: Copy wait-for-it script to backend directory
+        run: |
+          cp wait-for-it.sh ./backend/wait-for-it.sh
+
       - name: Build and push backend Docker image
         if: steps.backend-image-check.outputs.exists == 'false'
         run: |
@@ -69,11 +73,6 @@ jobs:
       - name: Create CloudWatch Logs group
         run: |
           aws logs create-log-group --log-group-name /ecs/kanastra || true
-
-      - name: Copy wait-for-it script
-        run: |
-          cp wait-for-it.sh /usr/local/bin/wait-for-it.sh
-          chmod +x /usr/local/bin/wait-for-it.sh
 
 
       - name: Create ECS Task Definition
