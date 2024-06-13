@@ -150,7 +150,7 @@ jobs:
           TASK_DEFINITION=kanastra-task
           SERVICE_STATE=$(aws ecs describe-services --cluster $CLUSTER_NAME --services $SERVICE_NAME --query 'services[0].status' --output text 2>&1)
           echo "Service state: $SERVICE_STATE"
-          if echo "$SERVICE_STATE" | grep -q "MISSING"; then
+          if [ "$SERVICE_STATE" == "MISSING" ] || [ "$SERVICE_STATE" == "None" ]; then
             echo "Service does not exist, creating..."
             aws ecs create-service \
               --cluster $CLUSTER_NAME \
