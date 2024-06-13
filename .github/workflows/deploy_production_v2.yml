@@ -27,6 +27,10 @@ jobs:
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Copy wait-for-it script to backend directory
+        run: |
+          cp wait-for-it.sh ./backend/wait-for-it.sh
+      
       - name: Check if backend Docker image exists
         id: backend-image-check
         run: |
@@ -39,9 +43,6 @@ jobs:
             echo "::set-output name=exists::false"
           fi
 
-      - name: Copy wait-for-it script to backend directory
-        run: |
-          cp wait-for-it.sh ./backend/wait-for-it.sh
 
       - name: Build and push backend Docker image
         if: steps.backend-image-check.outputs.exists == 'false'
