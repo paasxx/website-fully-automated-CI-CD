@@ -106,25 +106,31 @@ jobs:
             "executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole"
           }' > ecs-task-def.json
 
-      - name: Create ECS Task Definition
+      - name: Register ECS Task Definition
         run: |
           aws ecs register-task-definition \
             --cli-input-json file://ecs-task-def.json
 
-      - name: Create ECS Service
+            - name: Create or Update ECS Service
         run: |
-          aws ecs create-service \
-            --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service-name ${{ secrets.ECS_SERVICE }} \
-            --task-definition kanastra-task \
-            --desired-count 1 \
-            --launch-type FARGATE \
-            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.AWS_SUBNET }}],securityGroups=[${{ secrets.AWS_SECURITY_GROUP }}],assignPublicIp=ENABLED}"
+          SERVICE_NAME=${{ secrets.ECS_SERVICE }}
+          CLUSTER_NAME=${{ secrets.ECS_CLUSTER }}
+          TASK_DEFINITION=kanastra-task
 
-
-      - name: Deploy to ECS
-        run: |
-          aws ecs update-service \
-            --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service ${{ secrets.ECS_SERVICE }} \
-            --force-new-deployment
+          if aws ecs describe-services --cluster $CLUSTER_NAME --services $SERVICE_NAME | grep -q $SERVICE_NAME; then
+            echo "Service exists, updating..."
+            aws ecs update-service \
+              --cluster $CLUSTER_NAME \
+              --service $SERVICE_NAME \
+              --task-definition $TASK_DEFINITION \
+              --force-new-deployment
+          else
+            echo "Service does not exist, creating..."
+            aws ecs create-service \
+              --cluster $CLUSTER_NAME \
+              --service-name $SERVICE_NAME \
+              --task-definition $TASK_DEFINITION \
+              --desired-count 1 \
+              --launch-type FARGATE \
+              --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.AWS_SUBNET }}],securityGroups=[${{ secrets.AWS_SECURITY_GROUP }}],assignPublicIp=ENABLED}"
+          fi
