@@ -21,10 +21,10 @@ EXPOSE 8000
 ##### então talvez seja melhor rodar pelo container depois de subir
 
 # # Comando para fazer as migrações
-# RUN python manage.py makemigrations
+RUN python manage.py makemigrations
 
 # # Comando para aplicar as migrações
-# RUN python manage.py migrate
+RUN python manage.py migrate
 
 # # Comando para iniciar o servidor Django
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
