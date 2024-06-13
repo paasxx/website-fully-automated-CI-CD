@@ -146,12 +146,19 @@ jobs:
           SERVICE_NAME=${{ secrets.ECS_SERVICE }}
           CLUSTER_NAME=${{ secrets.ECS_CLUSTER }}
           TASK_DEFINITION=kanastra-task
-
           SERVICE_STATE=$(aws ecs describe-services --cluster $CLUSTER_NAME --services $SERVICE_NAME --query 'services[0].status' --output text 2>&1)
           echo "Service state: $SERVICE_STATE"
-
           if echo "$SERVICE_STATE" | grep -q "MISSING"; then
             echo "Service does not exist, creating..."
+            aws ecs create-service \
+              --cluster $CLUSTER_NAME \
+              --service-name $SERVICE_NAME \
+              --task-definition $TASK_DEFINITION \
+              --desired-count 1 \
+              --launch-type FARGATE \
+              --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.AWS_SUBNET }}],securityGroups=[${{ secrets.AWS_SECURITY_GROUP }}],assignPublicIp=ENABLED}"
+          elif echo "$SERVICE_STATE" | grep -q "INACTIVE"; then
+            echo "Service is inactive, creating a new service..."
             aws ecs create-service \
               --cluster $CLUSTER_NAME \
               --service-name $SERVICE_NAME \
