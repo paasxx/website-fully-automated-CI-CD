@@ -70,6 +70,11 @@ jobs:
         run: |
           aws logs create-log-group --log-group-name /ecs/kanastra || true
 
+      - name: Copy wait-for-it script
+        run: |
+          cp wait-for-it.sh /usr/local/bin/wait-for-it.sh
+          chmod +x /usr/local/bin/wait-for-it.sh
+
 
       - name: Create ECS Task Definition
         run: |
@@ -109,7 +114,7 @@ jobs:
                 "portMappings": [
                   { "containerPort": 8000, "hostPort": 8000 }
                 ],
-                "command": ["sh", "-c", "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"],
+                "command": ["/usr/local/bin/wait-for-it.sh", "db:5432", "--", "sh", "-c", "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"],
                 "logConfiguration": {
                   "logDriver": "awslogs",
                   "options": {
