@@ -27,11 +27,37 @@ jobs:
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Check if backend Docker image exists
+        id: backend-image-check
+        run: |
+          IMAGE_TAG=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/backend:latest
+          if aws ecr describe-images --repository-name backend --image-ids imageTag=latest; then
+            echo "Backend image exists."
+            echo "::set-output name=exists::true"
+          else
+            echo "Backend image does not exist."
+            echo "::set-output name=exists::false"
+          fi
+
       - name: Build and push backend Docker image
+        if: steps.backend-image-check.outputs.exists == 'false'
         run: |
           docker buildx build --platform linux/amd64 -f ./backend/DockerfileProd -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/backend:latest --push ./backend
 
+      - name: Check if frontend Docker image exists
+        id: frontend-image-check
+        run: |
+          IMAGE_TAG=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/frontend:latest
+          if aws ecr describe-images --repository-name frontend --image-ids imageTag=latest; then
+            echo "Frontend image exists."
+            echo "::set-output name=exists::true"
+          else
+            echo "Frontend image does not exist."
+            echo "::set-output name=exists::false"
+          fi
+
       - name: Build and push frontend Docker image
+        if: steps.frontend-image-check.outputs.exists == 'false'
         run: |
           docker buildx build --platform linux/amd64 -f ./frontend/DockerfileProd -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/frontend:latest --push ./frontend
 
@@ -39,6 +65,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y awscli
+
+      - name: Create CloudWatch Logs group
+        run: |
+          aws logs create-log-group --log-group-name /ecs/kanastra || true
 
 
       - name: Create ECS Task Definition
