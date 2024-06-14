@@ -83,7 +83,6 @@ jobs:
                 "name": "db",
                 "image": "postgres",
                 "essential": true,
-                "hostname": "db",
                 "memory": 512,
                 "cpu": 256,
                 "environment": [
@@ -114,7 +113,7 @@ jobs:
                   { "name": "DB_NAME", "value": "kanastra_db" },
                   { "name": "DB_USER", "value": "kanastra_user" },
                   { "name": "DB_PASSWORD", "value": "mypassword" },
-                  { "name": "DB_HOST", "value": "db" },
+                  { "name": "DB_HOST", "value": "localhost" },
                   { "name": "DB_PORT", "value": "5432" }
                 ],
                 "portMappings": [
