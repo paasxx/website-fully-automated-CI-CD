@@ -93,7 +93,15 @@ jobs:
                 ],
                 "portMappings": [
                   { "containerPort": 5432, "hostPort": 5432 }
-                ]
+                ],
+                "logConfiguration": {
+                  "logDriver": "awslogs",
+                  "options": {
+                    "awslogs-group": "/ecs/kanastra",
+                    "awslogs-region": "${{ secrets.AWS_REGION }}",
+                    "awslogs-stream-prefix": "db"
+                  }
+                }
               },
               {
                 "name": "web",
@@ -120,7 +128,7 @@ jobs:
                   "options": {
                     "awslogs-group": "/ecs/kanastra",
                     "awslogs-region": "${{ secrets.AWS_REGION }}",
-                    "awslogs-stream-prefix": "ecs"
+                    "awslogs-stream-prefix": "web"
                   }
                 }
               },
@@ -132,7 +140,15 @@ jobs:
                 "cpu": 256,
                 "portMappings": [
                   { "containerPort": 3000, "hostPort": 3000 }
-                ]
+                ],
+                "logConfiguration": {
+                  "logDriver": "awslogs",
+                  "options": {
+                    "awslogs-group": "/ecs/kanastra",
+                    "awslogs-region": "${{ secrets.AWS_REGION }}",
+                    "awslogs-stream-prefix": "frontend"
+                  }
+                }
               }
             ],
             "requiresCompatibilities": ["FARGATE"],
