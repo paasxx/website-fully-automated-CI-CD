@@ -3,7 +3,7 @@
 
 #!/usr/bin/env bash
 
-TIMEOUT=300
+TIMEOUT=15
 QUIET=0
 HOST="$1"
 PORT="$2"
