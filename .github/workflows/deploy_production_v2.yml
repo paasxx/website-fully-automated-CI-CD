@@ -83,6 +83,7 @@ jobs:
                 "name": "db",
                 "image": "postgres",
                 "essential": true,
+                "hostname": "db",
                 "memory": 512,
                 "cpu": 256,
                 "environment": [
