@@ -81,7 +81,7 @@ jobs:
             "containerDefinitions": [
               {
                 "name": "db",
-                "image": "postgres",
+                "image": "postgres:13",
                 "essential": true,
                 "memory": 512,
                 "cpu": 256,
