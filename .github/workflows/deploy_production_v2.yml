@@ -178,7 +178,7 @@ jobs:
                 --task-definition $TASK_DEFINITION \
                 --force-new-deployment
               break
-            elif [ "$SERVICE_STATE" == "INACTIVE" ] || [ "$SERVICE_STATE" == "None"]; then
+            elif [ "$SERVICE_STATE" == "INACTIVE" ] || [ "$SERVICE_STATE" == "None" ]; then
               echo "Service is inactive, creating a new service..."
               aws ecs create-service \
                 --cluster $CLUSTER_NAME \
