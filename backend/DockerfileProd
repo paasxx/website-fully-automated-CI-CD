@@ -35,4 +35,4 @@ EXPOSE 8000
 ########################################################################################################
 
 # Dummy command to keep the container running
-CMD ["/usr/local/bin/wait-for-it.sh", "db:5432", "--", "sh", "-c", "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+CMD ["tail", "-f", "/dev/null"]

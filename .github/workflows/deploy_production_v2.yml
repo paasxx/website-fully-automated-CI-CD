@@ -119,6 +119,10 @@ jobs:
                 "portMappings": [
                   { "containerPort": 8000, "hostPort": 8000 }
                 ],
+                "command": [
+                  "sh", "-c",
+                  "echo 'Waiting for 10 seconds...' && sleep 10 && echo 'Starting application...' && python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+                ],
                 "logConfiguration": {
                   "logDriver": "awslogs",
                   "options": {
