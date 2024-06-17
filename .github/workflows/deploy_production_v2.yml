@@ -121,7 +121,7 @@ jobs:
                 ],
                 "command": [
                   "sh", "-c",
-                  "echo 'Waiting for 10 seconds...' && sleep 10 && echo 'Starting application...' && python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+                  "echo 'Waiting for DB to be ready...' && /usr/local/bin/wait-for-it.sh db:5432 -- echo 'DB is ready, starting application...' && python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
                 ],
                 "logConfiguration": {
                   "logDriver": "awslogs",
@@ -178,7 +178,7 @@ jobs:
                 --task-definition $TASK_DEFINITION \
                 --force-new-deployment
               break
-            elif [ "$SERVICE_STATE" == "INACTIVE" ] || [ "$SERVICE_STATE" == "None" ]; then
+            elif [ "$SERVICE_STATE" == "INACTIVE" ]; then
               echo "Service is inactive, creating a new service..."
               aws ecs create-service \
                 --cluster $CLUSTER_NAME \
