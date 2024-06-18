@@ -44,7 +44,7 @@ jobs:
       - name: Build and push backend Docker image
         if: steps.backend-image-check.outputs.exists == 'false'
         run: |
-          docker buildx build --platform linux/amd64 -f ./backend/DockerfileProd -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/backend:latest --push ./backend
+          docker buildx build --platform linux/amd64,linux/arm64 -f ./backend/DockerfileProd -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/backend:latest --push ./backend
 
       - name: Check if frontend Docker image exists
         id: frontend-image-check
@@ -61,7 +61,7 @@ jobs:
       - name: Build and push frontend Docker image
         if: steps.frontend-image-check.outputs.exists == 'false'
         run: |
-          docker buildx build --platform linux/amd64 -f ./frontend/DockerfileProd -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/frontend:latest --push ./frontend
+          docker buildx build --platform linux/amd64,linux/arm64 -f ./frontend/DockerfileProd -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/frontend:latest --push ./frontend
 
       - name: Install AWS CLI
         run: |
