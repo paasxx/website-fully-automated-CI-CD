@@ -121,16 +121,30 @@ jobs:
                   { "containerPort": 8000,
                     "protocol": "tcp" }
                 ],
-                "command": [
-                  "sh", "-c",
-                  "echo 'Waiting for DB to be ready...' && /usr/local/bin/wait-for-it.sh db:5432 -- echo 'DB is ready, starting application...' && python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
-                ],
                 "logConfiguration": {
                   "logDriver": "awslogs",
                   "options": {
                     "awslogs-group": "/ecs/kanastra",
                     "awslogs-region": "${{ secrets.AWS_REGION }}",
                     "awslogs-stream-prefix": "web"
+                  }
+                }
+              },
+              {
+                "name": "frontend",
+                "image": "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/frontend:latest",
+                "essential": true,
+                "memory": 512,
+                "cpu": 256,
+                "portMappings": [
+                  { "containerPort": 3000, "hostPort": 3000 }
+                ],
+                "logConfiguration": {
+                  "logDriver": "awslogs",
+                  "options": {
+                    "awslogs-group": "/ecs/kanastra",
+                    "awslogs-region": "${{ secrets.AWS_REGION }}",
+                    "awslogs-stream-prefix": "frontend"
                   }
                 }
               }
