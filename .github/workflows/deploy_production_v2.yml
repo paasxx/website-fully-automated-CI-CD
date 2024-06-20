@@ -123,7 +123,7 @@ jobs:
                 ],
                 "command": [
                   "sh", "-c",
-                  "echo 'Waiting for DB to be ready...' && /usr/local/bin/wait-for-it.sh 127.0.0.1:5432 -- echo 'DB is ready, starting application...' && python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+                  "echo 'Waiting for DB to be ready...'  && python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
                 ],
                 "logConfiguration": {
                   "logDriver": "awslogs",
