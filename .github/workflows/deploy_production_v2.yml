@@ -118,7 +118,7 @@ jobs:
                   { "name": "DB_NAME", "value": "kanastra_db" },
                   { "name": "DB_USER", "value": "kanastra_user" },
                   { "name": "DB_PASSWORD", "value": "mypassword" },
-                  { "name": "DB_HOST", "value": "db" },
+                  { "name": "DB_HOST", "value": "127.0.0.1" },
                   { "name": "DB_PORT", "value": "5432" }
                 ],
                 "portMappings": [
@@ -134,7 +134,7 @@ jobs:
                 "command": [
                   "sh",
                   "-c",
-                  "python test_db_connection.py && python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+                  "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
                 ],
                 "logConfiguration": {
                   "logDriver": "awslogs",
