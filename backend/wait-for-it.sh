@@ -1,14 +1,24 @@
 #!/usr/bin/env bash
+# Use this script to test if a given TCP host/port are available
 
-# wait-for-it.sh
-host="$1"
-shift
-cmd="$@"
+TIMEOUT=60
+QUIET=0
+HOST="$1"
+PORT="$2"
 
-until nc -z "$host" 5432; do
-  >&2 echo "Postgres is unavailable - sleeping"
-  sleep 1
+echo "Waiting for $HOST:$PORT to be available..."
+
+for i in `seq $TIMEOUT` ; do
+    echo "Attempt $i: Checking connection to $HOST:$PORT..."
+    nc -zv "$HOST" "$PORT" > /dev/null 2>&1
+    result=$?
+    if [ $result -eq 0 ] ; then
+        echo "Connection to $HOST:$PORT succeeded."
+        exit 0
+    fi
+    echo "Attempt $i: Connection to $HOST:$PORT failed."
+    sleep 1
 done
 
->&2 echo "Postgres is up - executing command"
-exec $cmd
+echo "Operation timed out after $TIMEOUT seconds" >&2
+exit 1
