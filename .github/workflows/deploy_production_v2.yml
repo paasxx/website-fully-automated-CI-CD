@@ -68,6 +68,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y awscli
 
+      - name: Describe Subnets
+        run: |
+          aws ec2 describe-subnets --filters "Name=vpc-id,Values=vpc-0f5bf2ad08748ff0f"
+
       - name: Create CloudWatch Logs group
         run: |
           aws logs create-log-group --log-group-name /ecs/kanastra || true
@@ -114,7 +118,7 @@ jobs:
                   { "name": "DB_NAME", "value": "kanastra_db" },
                   { "name": "DB_USER", "value": "kanastra_user" },
                   { "name": "DB_PASSWORD", "value": "mypassword" },
-                  { "name": "DB_HOST", "value": "127.0.0.1" },
+                  { "name": "DB_HOST", "value": "db" },
                   { "name": "DB_PORT", "value": "5432" }
                 ],
                 "portMappings": [
