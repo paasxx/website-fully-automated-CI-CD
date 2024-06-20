@@ -79,31 +79,31 @@ jobs:
             "family": "kanastra-task",
             "networkMode": "awsvpc",
             "containerDefinitions": [
-              {
-                "name": "db",
-                "image": "postgres",
-                "essential": true,
-                "memory": 512,
-                "cpu": 256,
-                "environment": [
-                  { "name": "POSTGRES_DB", "value": "kanastra_db" },
-                  { "name": "POSTGRES_USER", "value": "kanastra_user" },
-                  { "name": "POSTGRES_PASSWORD", "value": "mypassword" },
-                  { "name": "POSTGRES_PORT", "value": "5432" }
-                ],
-                "portMappings": [
-                  { "containerPort": 5432,
-                    "protocol": "tcp" }
-                ],
-                "logConfiguration": {
-                  "logDriver": "awslogs",
-                  "options": {
-                    "awslogs-group": "/ecs/kanastra",
-                    "awslogs-region": "${{ secrets.AWS_REGION }}",
-                    "awslogs-stream-prefix": "db"
-                  }
-                }
-              },
+              # {
+              #   "name": "db",
+              #   "image": "postgres",
+              #   "essential": true,
+              #   "memory": 512,
+              #   "cpu": 256,
+              #   "environment": [
+              #     { "name": "POSTGRES_DB", "value": "kanastra_db" },
+              #     { "name": "POSTGRES_USER", "value": "kanastra_user" },
+              #     { "name": "POSTGRES_PASSWORD", "value": "mypassword" },
+              #     { "name": "POSTGRES_PORT", "value": "5432" }
+              #   ],
+              #   "portMappings": [
+              #     { "containerPort": 5432,
+              #       "protocol": "tcp" }
+              #   ],
+              #   "logConfiguration": {
+              #     "logDriver": "awslogs",
+              #     "options": {
+              #       "awslogs-group": "/ecs/kanastra",
+              #       "awslogs-region": "${{ secrets.AWS_REGION }}",
+              #       "awslogs-stream-prefix": "db"
+              #     }
+              #   }
+              # },
               {
                 "name": "web",
                 "image": "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/backend:latest",
