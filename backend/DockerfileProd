@@ -13,6 +13,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY wait-for-it.sh /usr/local/bin/wait-for-it.sh
 RUN chmod +x /usr/local/bin/wait-for-it.sh
 
+# Copy the test_db_connection.py script
+COPY test_db_connection.py /app/
+
 # Copia os arquivos do projeto para o contêiner
 COPY kanastra/ /app
 
