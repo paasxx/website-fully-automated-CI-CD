@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Espera o banco de dados estar pronto
-/usr/local/bin/wait-for-it.sh db:5432 --timeout=60 --strict -- echo "Database is up"
+# /usr/local/bin/wait-for-it.sh db:5432 --timeout=60 --strict -- echo "Database is up"
 
 # Executa as migrações
 python manage.py makemigrations
