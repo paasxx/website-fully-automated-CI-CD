@@ -102,6 +102,13 @@ jobs:
                     "awslogs-region": "${{ secrets.AWS_REGION }}",
                     "awslogs-stream-prefix": "db"
                   }
+                },
+                "healthCheck": {
+                  "command": ["CMD-SHELL", "pg_isready -U kanastra_user"],
+                  "interval": 30,
+                  "timeout": 5,
+                  "retries": 3,
+                  "startPeriod": 60
                 }
               },
               {
@@ -142,6 +149,9 @@ jobs:
                 "essential": true,
                 "memory": 512,
                 "cpu": 256,
+                "environment": [
+                  { "name": "REACT_APP_BACKEND_URL", "value": "http://127.0.0.1:8000/api" },
+                ],
                 "portMappings": [
                   { "containerPort": 3000, "hostPort": 3000 }
                 ],
