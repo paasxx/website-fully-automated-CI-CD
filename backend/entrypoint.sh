@@ -12,5 +12,8 @@ sleep 20
 python manage.py makemigrations
 python manage.py migrate
 
-# Inicia o servidor Django
-exec python manage.py runserver 0.0.0.0:8000
+# # Inicia o servidor Django
+# exec python manage.py runserver 0.0.0.0:8000
+
+# Inicia o servidor Django com Gunicorn
+exec gunicorn kanastra.wsgi:application --bind 0.0.0.0:8000 --workers 3

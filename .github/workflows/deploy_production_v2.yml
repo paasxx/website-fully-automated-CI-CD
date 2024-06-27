@@ -80,6 +80,25 @@ jobs:
             "networkMode": "awsvpc",
             "containerDefinitions": [
               {
+                "name": "nginx",
+                "image": "nginx:latest",
+                "essential": true,
+                "portMappings": [
+                  {
+                    "containerPort": 80,
+                    "hostPort": 80
+                  }
+                ],
+                "logConfiguration": {
+                  "logDriver": "awslogs",
+                  "options": {
+                    "awslogs-group": "/ecs/kanastra",
+                    "awslogs-region": "<AWS_REGION>",
+                    "awslogs-stream-prefix": "nginx"
+                  }
+                }
+              },
+              {
                 "name": "db",
                 "image": "postgres",
                 "essential": true,
@@ -105,7 +124,7 @@ jobs:
                 }
               },
               {
-                "name": "web",
+                "name": "backend",
                 "image": "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/backend:latest",
                 "essential": true,
                 "memory": 512,
@@ -132,7 +151,7 @@ jobs:
                   "options": {
                     "awslogs-group": "/ecs/kanastra",
                     "awslogs-region": "${{ secrets.AWS_REGION }}",
-                    "awslogs-stream-prefix": "web"
+                    "awslogs-stream-prefix": "backend"
                   }
                 }
               },
@@ -143,7 +162,7 @@ jobs:
                 "memory": 512,
                 "cpu": 256,
                 "environment": [
-                  { "name": "REACT_APP_BACKEND_URL", "value": "http://127.0.0.1:8000/api" }
+                  { "name": "REACT_APP_BACKEND_URL", "value": "http://nginx:8000/api" }
                 ],
                 "portMappings": [
                   { "containerPort": 3000, "hostPort": 3000 }

@@ -8,14 +8,24 @@ WORKDIR /app
 COPY front/ /app
 
 # Instala as dependências do projeto
-RUN npm install && npm install axios && npm rebuild node-sass
+RUN npm install --silent
+RUN npm install axios --silent
+RUN npm rebuild node-sass --silent
 
+# Build do projeto React
+RUN npm run build
 
-# Abre a porta 3000 para acessar o servidor de desenvolvimento do React
-EXPOSE 3000
+# Configuração do Nginx para servir o build do React
+FROM nginx:latest
 
-# Comando para iniciar o servidor de desenvolvimento do React quando o contêiner for executado
-CMD ["npm", "start"]
+# Remove o arquivo de configuração padrão do Nginx
+RUN rm /etc/nginx/conf.d/default.conf
 
-#Comando para rodar o container porém sem iniciar npm start, que deve ser feito manualmente entrando no container.
-# CMD ["sleep", "infinity"]
+# Copia o arquivo de configuração customizado do Nginx
+COPY frontend/nginx.conf /etc/nginx/conf.d/
+
+# Copia os arquivos do build do React para o diretório de trabalho do Nginx
+COPY --from=0 /app/build /usr/share/nginx/html
+
+# Define o comando para iniciar o servidor Nginx quando o contêiner for executado
+CMD ["nginx", "-g", "daemon off;"]
