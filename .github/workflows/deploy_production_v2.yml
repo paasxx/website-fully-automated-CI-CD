@@ -102,13 +102,6 @@ jobs:
                     "awslogs-region": "${{ secrets.AWS_REGION }}",
                     "awslogs-stream-prefix": "db"
                   }
-                },
-                "healthCheck": {
-                  "command": ["CMD-SHELL", "pg_isready -U kanastra_userr"],
-                  "interval": 30,
-                  "timeout": 5,
-                  "retries": 3,
-                  "startPeriod": 60
                 }
               },
               {
