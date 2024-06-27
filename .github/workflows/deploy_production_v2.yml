@@ -142,27 +142,6 @@ jobs:
                     "awslogs-stream-prefix": "web"
                   }
                 }
-              },
-              {
-                "name": "frontend",
-                "image": "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/frontend:latest",
-                "essential": true,
-                "memory": 512,
-                "cpu": 256,
-                "environment": [
-                  { "name": "REACT_APP_BACKEND_URL", "value": "http://0.0.0.0:8000/api" }
-                ],
-                "portMappings": [
-                  { "containerPort": 3000, "hostPort": 3000 }
-                ],
-                "logConfiguration": {
-                  "logDriver": "awslogs",
-                  "options": {
-                    "awslogs-group": "/ecs/kanastra",
-                    "awslogs-region": "${{ secrets.AWS_REGION }}",
-                    "awslogs-stream-prefix": "frontend"
-                  }
-                }
               }
             ],
             "requiresCompatibilities": ["FARGATE"],
