@@ -93,7 +93,7 @@ jobs:
                   "logDriver": "awslogs",
                   "options": {
                     "awslogs-group": "/ecs/kanastra",
-                    "awslogs-region": "<AWS_REGION>",
+                    "awslogs-region": "${{ secrets.AWS_REGION }}",
                     "awslogs-stream-prefix": "nginx"
                   }
                 }
