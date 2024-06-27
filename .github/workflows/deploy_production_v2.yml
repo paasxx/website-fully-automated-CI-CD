@@ -104,7 +104,7 @@ jobs:
                   }
                 },
                 "healthCheck": {
-                  "command": ["CMD-SHELL", "pg_isready -U kanastra_db"],
+                  "command": ["CMD-SHELL", "pg_isready -U kanastra_userr"],
                   "interval": 30,
                   "timeout": 5,
                   "retries": 3,
@@ -121,7 +121,7 @@ jobs:
                   { "name": "DB_NAME", "value": "kanastra_db" },
                   { "name": "DB_USER", "value": "kanastra_user" },
                   { "name": "DB_PASSWORD", "value": "mypassword" },
-                  { "name": "DB_HOST", "value": "db" },
+                  { "name": "DB_HOST", "value": "127.0.0.1" },
                   { "name": "DB_PORT", "value": "5432" }
                 ],
                 "portMappings": [
