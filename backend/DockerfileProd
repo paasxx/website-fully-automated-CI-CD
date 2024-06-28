@@ -19,8 +19,18 @@ COPY test_db_connection.py /app
 # Copia os arquivos do projeto para o contêiner
 COPY kanastra/ /app
 
-# Abre a porta 8000 para acessar o servidor Django
-EXPOSE 8000
+# Instala o Nginx
+RUN apt-get update && apt-get install -y nginx
+
+# Remove o arquivo de configuração padrão do Nginx
+RUN rm /etc/nginx/sites-enabled/default
+
+# Copia o arquivo de configuração customizado do Nginx
+COPY nginx.conf /etc/nginx/sites-available/
+RUN ln -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/
+
+# Abre a porta 80 para acessar o servidor Nginx
+EXPOSE 80
 
 # Copia o script de entrada e o torna executável
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
@@ -28,21 +38,3 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Define o script de entrada como o comando padrão
 CMD ["entrypoint.sh"]
-
-########################################################################################################
-##### Fique ciente que se o docker do banco de dados não estiver funcional essas etapas abaixo falharão, 
-##### então talvez seja melhor rodar pelo container depois de subir
-
-# # Comando para fazer as migrações
-# RUN python manage.py makemigrations
-
-# # Comando para aplicar as migrações
-# RUN python manage.py migrate
-
-# # Comando para iniciar o servidor Django
-# CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-
-########################################################################################################
-
-# Dummy command to keep the container running
-# CMD ["tail", "-f", "/dev/null"]
