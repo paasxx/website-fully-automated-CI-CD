@@ -160,7 +160,7 @@ jobs:
                 "memory": 512,
                 "cpu": 256,
                 "environment": [
-                  { "name": "REACT_APP_BACKEND_URL", "value": "http://nginx:8000/api" }
+                  { "name": "REACT_APP_BACKEND_URL", "value": "http://nginx:80/api" }
                 ],
                 "portMappings": [
                   { "containerPort": 3000 }
