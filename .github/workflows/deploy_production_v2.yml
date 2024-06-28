@@ -111,8 +111,7 @@ jobs:
                   { "name": "POSTGRES_PORT", "value": "5432" }
                 ],
                 "portMappings": [
-                  { "containerPort": 5432,
-                    "protocol": "tcp" }
+                  { "containerPort": 5432}
                 ],
                 "logConfiguration": {
                   "logDriver": "awslogs",
@@ -137,8 +136,7 @@ jobs:
                   { "name": "DB_PORT", "value": "5432" }
                 ],
                 "portMappings": [
-                  { "containerPort": 8000,
-                    "protocol": "tcp" }
+                  { "containerPort": 8000}
                 ],
                 "dependsOn": [
                     {
@@ -162,10 +160,10 @@ jobs:
                 "memory": 512,
                 "cpu": 256,
                 "environment": [
-                  { "name": "REACT_APP_BACKEND_URL", "value": "http://nginx:80/api" }
+                  { "name": "REACT_APP_BACKEND_URL", "value": "http://nginx:8000/api" }
                 ],
                 "portMappings": [
-                  { "containerPort": 3000, "hostPort": 3000 }
+                  { "containerPort": 3000 }
                 ],
                 "logConfiguration": {
                   "logDriver": "awslogs",
