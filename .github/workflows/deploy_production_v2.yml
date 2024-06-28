@@ -85,8 +85,8 @@ jobs:
                 "essential": true,
                 "portMappings": [
                   {
-                    "containerPort": 80,
-                    "hostPort": 80
+                    "containerPort": 80
+                
                   }
                 ],
                 "logConfiguration": {
