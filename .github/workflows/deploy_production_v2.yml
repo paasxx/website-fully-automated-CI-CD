@@ -146,6 +146,12 @@ jobs:
                 "portMappings": [
                   { "containerPort": 3000 }
                 ],
+                "dependsOn": [
+                    {
+                        "containerName": "backend",
+                        "condition": "START"
+                    }
+                ],
                 "logConfiguration": {
                   "logDriver": "awslogs",
                   "options": {
