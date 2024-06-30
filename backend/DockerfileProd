@@ -30,7 +30,7 @@ COPY nginx.conf /etc/nginx/sites-available/
 RUN ln -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/
 
 # Abre a porta 80 para acessar o servidor Nginx
-EXPOSE 80
+EXPOSE 8000
 
 # Copia o script de entrada e o torna executável
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh

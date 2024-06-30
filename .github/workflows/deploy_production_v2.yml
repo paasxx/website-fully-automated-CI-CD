@@ -117,7 +117,7 @@ jobs:
                   { "name": "DB_PORT", "value": "5432" }
                 ],
                 "portMappings": [
-                  { "containerPort": 80}
+                  { "containerPort": 8000}
                 ],
                 "dependsOn": [
                     {
@@ -141,10 +141,10 @@ jobs:
                 "memory": 512,
                 "cpu": 256,
                 "environment": [
-                  { "name": "REACT_APP_BACKEND_URL", "value": "http://127.0.0.1:80/api" }
+                  { "name": "REACT_APP_BACKEND_URL", "value": "http://127.0.0.1:8000/api" }
                 ],
                 "portMappings": [
-                  { "containerPort": 3000 }
+                  { "containerPort": 80 }
                 ],
                 "dependsOn": [
                     {
