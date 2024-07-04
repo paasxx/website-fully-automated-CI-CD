@@ -4,7 +4,7 @@ import { useUploadedFiles } from './UploadedFilesContext';
 const UploadedFilesList = () => {
     const { uploadedFiles } = useUploadedFiles();
 
-
+    console.log('Uploaded Files:', uploadedFiles); // Log the uploaded files
 
     return (
         <div className="uploaded-files-container" >
