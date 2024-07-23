@@ -141,7 +141,7 @@ jobs:
                 "memory": 512,
                 "cpu": 256,
                 "environment": [
-                  { "name": "REACT_APP_BACKEND_URL", "value": "http://127.0.0.1:8000" }
+                  { "name": "REACT_APP_BACKEND_URL", "value": "http://backend:8000" }
                 ],
                 "portMappings": [
                   { "containerPort": 80 }
