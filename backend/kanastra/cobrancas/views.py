@@ -2,6 +2,7 @@ from django.shortcuts import render
 
 # Create your views here.
 from rest_framework.decorators import api_view
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
 from django.http import JsonResponse
 from .models import Cobranca, Arquivo
@@ -28,6 +29,7 @@ def measure_time(func):
     return wrapper
 
 
+@csrf_exempt
 @api_view(["POST"])
 @measure_time
 def upload_csv(request):
