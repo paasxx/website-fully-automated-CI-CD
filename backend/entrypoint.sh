@@ -10,6 +10,7 @@ sleep 20
 python manage.py makemigrations
 python manage.py migrate
 
+python manage.py collectstatic
 
 # Inicia o servidor Django com Gunicorn
 gunicorn kanastra.wsgi:application --bind unix:/tmp/gunicorn.sock --workers 3 &
