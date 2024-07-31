@@ -19,15 +19,15 @@ COPY test_db_connection.py /app
 # Copia os arquivos do projeto para o contêiner
 COPY kanastra/ /app
 
-# # Instala o Nginx
-# RUN apt-get update && apt-get install -y nginx
+# Instala o Nginx
+RUN apt-get update && apt-get install -y nginx
 
-# # Remove o arquivo de configuração padrão do Nginx
-# RUN rm /etc/nginx/sites-enabled/default
+# Remove o arquivo de configuração padrão do Nginx
+RUN rm /etc/nginx/sites-enabled/default
 
-# # Copia o arquivo de configuração customizado do Nginx
-# COPY nginx.conf /etc/nginx/sites-available/
-# RUN ln -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/
+# Copia o arquivo de configuração customizado do Nginx
+COPY nginx.conf /etc/nginx/sites-available/
+RUN ln -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/
 
 # Abre a porta 80 para acessar o servidor Nginx
 EXPOSE 8000
