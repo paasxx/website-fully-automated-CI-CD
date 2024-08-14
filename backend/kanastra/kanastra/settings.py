@@ -153,3 +153,10 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 ALLOWED_HOSTS = ["*"]
+
+# Configurações adicionais de segurança
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
+SECURE_BROWSER_XSS_FILTER = False
+SECURE_CONTENT_TYPE_NOSNIFF = False
+X_FRAME_OPTIONS = "DENY"
