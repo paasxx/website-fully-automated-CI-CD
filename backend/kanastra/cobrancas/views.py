@@ -16,6 +16,7 @@ from datetime import datetime
 from .email_engine import *
 
 
+@csrf_exempt
 def measure_time(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -55,6 +56,7 @@ def upload_csv(request):
         return JsonResponse({"error": "Método inválido."}, status=400)
 
 
+@csrf_exempt
 def process_csv(csv_file):
     # Lógica para processar o arquivo CSV e salvar os dados no banco de dados
     # Aqui você irá ler o arquivo CSV e iterar sobre as linhas para extrair os dados
@@ -103,6 +105,7 @@ def process_csv(csv_file):
         print(e)
 
 
+@csrf_exempt
 @api_view(["GET"])
 def list_files(request):
     arquivos = Arquivo.objects.all().order_by("-data_envio")
@@ -119,6 +122,7 @@ def list_files(request):
     return Response(data)
 
 
+@csrf_exempt
 @api_view(["POST"])
 def save_file_name(request):
     if request.method == "POST":
@@ -131,6 +135,7 @@ def save_file_name(request):
             return Response({"error": "File name not given!."}, status=400)
 
 
+@csrf_exempt
 @api_view(["POST"])
 def send_emails_from_database(request):
     if request.method == "POST":
