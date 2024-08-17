@@ -64,7 +64,7 @@ jobs:
           REACT_APP_BACKEND_URL: "http://127.0.0.1:8000/api"  # Passando a variável de ambiente do GitHub Secrets
         run: |
           docker buildx build --platform linux/amd64 \
-          --build-arg REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL \  # Passando a variável de ambiente como argumento de build
+          --build-arg REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL \
           -f ./frontend/DockerfileProd \
           -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/frontend:latest \
           --push ./frontend
