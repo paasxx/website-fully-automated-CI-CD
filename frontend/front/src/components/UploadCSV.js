@@ -46,6 +46,8 @@ const UploadCSV = () => {
             setUploadStartTime(new Date());
             const formData = new FormData();
             formData.append('csv_file', selectedFile);
+            console.log(axiosInstance.defaults.baseURL);
+
 
             try {
                 const response = await axiosInstance.post('/upload-csv/', formData, {
