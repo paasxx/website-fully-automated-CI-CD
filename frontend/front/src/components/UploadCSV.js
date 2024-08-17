@@ -46,7 +46,8 @@ const UploadCSV = () => {
             setUploadStartTime(new Date());
             const formData = new FormData();
             formData.append('csv_file', selectedFile);
-            console.log(axiosInstance.defaults.baseURL);
+            console.log("Backend URL: ", process.env.REACT_APP_BACKEND_URL);
+            console.log("Backend URL 2: ", axiosInstance.defaults.baseURL);
 
 
             try {
