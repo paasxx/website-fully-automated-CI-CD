@@ -190,7 +190,7 @@ jobs:
                 --cluster $CLUSTER_NAME \
                 --service $SERVICE_NAME \
                 --task-definition $TASK_DEFINITION \
-                --load-balancers "targetGroupArn=arn:aws:elasticloadbalancing:${{ secrets.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:targetgroup/backend-target-group/arn:aws:elasticloadbalancing:us-east-1:851725467698:targetgroup/backend-target-group/c40862c033156136,containerName=backend,containerPort=8000" \
+                --load-balancers "targetGroupArn=arn:aws:elasticloadbalancing:${{ secrets.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:targetgroup/backend-target-group/c40862c033156136,containerName=backend,containerPort=8000" \
                 --force-new-deployment
               break
             elif [ "$SERVICE_STATE" == "INACTIVE" ] || [ "$SERVICE_STATE" == "None" ]; then
@@ -199,7 +199,7 @@ jobs:
                 --cluster $CLUSTER_NAME \
                 --service-name $SERVICE_NAME \
                 --task-definition $TASK_DEFINITION \
-                --load-balancers "targetGroupArn=arn:aws:elasticloadbalancing:${{ secrets.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:targetgroup/backend-target-group/arn:aws:elasticloadbalancing:us-east-1:851725467698:targetgroup/backend-target-group/c40862c033156136,containerName=backend,containerPort=8000" \
+                --load-balancers "targetGroupArn=arn:aws:elasticloadbalancing:${{ secrets.AWS_REGION }}:${{ secrets.AWS_ACCOUNT_ID }}:targetgroup/backend-target-group/c40862c033156136,containerName=backend,containerPort=8000" \
                 --desired-count 1 \
                 --launch-type FARGATE \
                 --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.AWS_SUBNET }}],securityGroups=[${{ secrets.AWS_SECURITY_GROUP }}],assignPublicIp=ENABLED}"
