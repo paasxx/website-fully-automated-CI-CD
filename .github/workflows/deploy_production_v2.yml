@@ -168,7 +168,14 @@ jobs:
             "requiresCompatibilities": ["FARGATE"],
             "cpu": "1024",
             "memory": "2048",
-            "executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole"
+            "executionRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole",
+            "loadBalancers": [
+              {
+                "targetGroupArn": "arn:aws:elasticloadbalancing:us-east-1:851725467698:targetgroup/backend-target-group/c40862c033156136",
+                "containerName": "backend",
+                "containerPort": 8000
+              }
+            ]
           }' > ecs-task-def.json
 
       - name: Register ECS Task Definition
