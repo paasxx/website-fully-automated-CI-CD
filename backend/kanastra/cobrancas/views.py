@@ -16,6 +16,10 @@ from datetime import datetime
 from .email_engine import *
 
 
+def health_check(request):
+    return JsonResponse({"status": "ok"})
+
+
 @csrf_exempt
 def measure_time(func):
     @wraps(func)
