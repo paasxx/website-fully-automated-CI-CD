@@ -16,7 +16,7 @@ python manage.py collectstatic --no-input
 echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@example.com', 'adminpass')" | python manage.py shell
 
 # Inicia o servidor Django com Gunicorn
-gunicorn kanastra.wsgi:application --bind unix:/tmp/gunicorn.sock --workers 3 &
+gunicorn kanastra.wsgi:application --bind unix:/tmp/gunicorn.sock --workers 3 --timeout 120 &
 
 # Inicia o servidor Nginx
 nginx -g "daemon off;"
