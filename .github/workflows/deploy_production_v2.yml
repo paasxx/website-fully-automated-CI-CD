@@ -139,7 +139,6 @@ jobs:
                     "awslogs-stream-prefix": "backend"
                   }
                 },
-                "dnsServers": ["169.254.169.253"]
               },
               {
                 "name": "frontend",
