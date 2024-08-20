@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Espera o banco de dados estar pronto
-/usr/local/bin/wait-for-it.sh 127.0.0.1:5432 --timeout=60 --strict -- echo "Database is up"
+/usr/local/bin/wait-for-it.sh db:5432 --timeout=60 --strict -- echo "Database is up"
 
 # # Espera até que o banco de dados esteja acessível
 # until pg_isready -h 127.0.0.1 -p 5432; do
