@@ -17,7 +17,7 @@ from .email_engine import *
 
 
 def health_check(request):
-    return JsonResponse({"status": "ok"})
+    return JsonResponse({"status": "ok"}, status=200)
 
 
 @csrf_exempt
