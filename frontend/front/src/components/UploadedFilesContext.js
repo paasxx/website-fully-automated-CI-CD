@@ -14,12 +14,12 @@ export const UploadedFilesProvider = ({ children }) => {
     const updateUploadedFiles = async () => {
         try {
             // Make an API request to fetch the uploaded files
-            const response = await axiosInstance.get('/list-files/');
+            const response = await axiosInstance.get('/list-files');
             // Update the uploadedFiles state with the fetched data
             console.log('API Response:', response.data); // Log the API response
             setUploadedFiles(response.data);
         } catch (error) {
-            console.log('Endpoint:', axiosInstance.get('/list-files/')); // Log the API response
+            console.log('Endpoint:', axiosInstance.get('/list-files')); // Log the API response
             console.error('Error fetching uploaded files:', error);
         }
     };

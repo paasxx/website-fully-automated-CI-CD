@@ -58,6 +58,21 @@ CORS_ALLOW_ALL_ORIGINS = True
 #     'https://example.com',    # Outra origem permitida
 # ]
 
+# Opcional: Permitir headers e métodos específicos
+CORS_ALLOW_HEADERS = [
+    "content-type",
+    "authorization",
+    "x-csrftoken",
+]
+
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "DELETE",
+    "PATCH",
+]
+
 ROOT_URLCONF = "kanastra.urls"
 
 TEMPLATES = [
