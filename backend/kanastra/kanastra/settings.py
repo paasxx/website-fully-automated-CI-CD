@@ -63,6 +63,10 @@ CORS_ALLOW_HEADERS = [
     "content-type",
     "authorization",
     "x-csrftoken",
+    "accept",
+    "origin",
+    "access-control-request-method",
+    "access-control-request-headers",
 ]
 
 CORS_ALLOW_METHODS = [
