@@ -38,4 +38,4 @@ EXPOSE 8000
 
 
 # Define o script de entrada como o comando padrão
-CMD ["python", "test_db_connection.py"]
+CMD ["entrypoint.sh"]

@@ -9,6 +9,13 @@
 #   sleep 2
 # done
 
+# Executa o teste de conexão com o banco de dados
+python /app/test_db_connection.py
+if [ $? -ne 0 ]; then
+  echo "Database connection test failed. Exiting..."
+  exit 1
+fi
+
 
 # Adiciona um atraso de 10 segundos
 sleep 10
