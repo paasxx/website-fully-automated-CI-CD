@@ -61,7 +61,7 @@ jobs:
       - name: Build and push frontend Docker image
         if: steps.frontend-image-check.outputs.exists == 'false'
         env:
-          REACT_APP_BACKEND_URL: "http://teste-load-balancer-72339033.us-east-1.elb.amazonaws.com/api"  # Passando a variável de ambiente do GitHub Secrets
+          REACT_APP_BACKEND_URL: "http://teste-load-balancer-72339033.us-east-1.elb.amazonaws.com"  # Passando a variável de ambiente do GitHub Secrets
         run: |
           docker buildx build --platform linux/amd64 \
           --build-arg REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL \

@@ -48,7 +48,7 @@ const UploadCSV = () => {
             formData.append('csv_file', selectedFile);
 
             try {
-                const response = await axiosInstance.post('/upload-csv', formData, {
+                const response = await axiosInstance.post('/upload-csv/', formData, {
                     headers: {
                         "Content-Type": "multipart/form-data",
                     },
@@ -56,7 +56,7 @@ const UploadCSV = () => {
                 console.log('Response:', response.data);
                 if (response.status === 200) {
                     console.log('CSV file uploaded successfully');
-                    await axiosInstance.post('/save-file-name', { nome_arquivo: selectedFile.name },);
+                    await axiosInstance.post('/save-file-name/', { nome_arquivo: selectedFile.name },);
                     console.log('File name saved successfully');
                     updateUploadedFiles(); // Fetch the updated list of uploaded files
                 } else {
