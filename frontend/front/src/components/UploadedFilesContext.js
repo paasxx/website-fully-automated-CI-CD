@@ -19,7 +19,6 @@ export const UploadedFilesProvider = ({ children }) => {
             console.log('API Response:', response.data); // Log the API response
             setUploadedFiles(response.data);
         } catch (error) {
-            console.log('Endpoint:', axiosInstance.get('/list-files/')); // Log the API response
             console.error('Error fetching uploaded files:', error);
         }
     };
