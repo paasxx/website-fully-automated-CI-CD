@@ -33,7 +33,7 @@ echo "from django.contrib.auth import get_user_model; User = get_user_model(); U
 echo "from cobrancas.models import Cobranca; Cobranca.objects.create(nome='Cliente 1', documento='12345678901', email='cliente1@example.com', valor='100.00', data_vencimento='2024-09-01', uuid='uuid-1'); Cobranca.objects.create(nome='Cliente 2', documento='98765432109', email='cliente2@example.com', valor='200.00', data_vencimento='2024-09-15', uuid='uuid-2')" | python manage.py shell
 
 # Inicia o servidor Django com Gunicorn
-gunicorn kanastra.wsgi:application --bind unix:/tmp/gunicorn.sock --workers 3 --timeout 120 &
+gunicorn kanastra.wsgi:application --bind unix:/tmp/gunicorn.sock --workers 3 --timeout 250 &
 
 # Inicia o servidor Nginx
 nginx -g "daemon off;"
