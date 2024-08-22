@@ -1,4 +1,5 @@
 import React from 'react';
+import UploadCSV from './components/UploadCSV';
 import UploadedFilesList from './components/UploadedFilesList';
 import { UploadedFilesProvider } from './components/UploadedFilesContext';
 import Navbar from './components/Navbar';
