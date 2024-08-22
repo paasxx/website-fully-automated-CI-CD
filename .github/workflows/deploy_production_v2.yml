@@ -131,7 +131,7 @@ jobs:
                 "healthCheck": {
                   "command": [
                     "CMD-SHELL",
-                    "curl -f http://teste-load-balancer-72339033.us-east-1.elb.amazonaws.com/api/health/ || exit 1"
+                    "curl -f http://127.0.0.1/api/health/ || exit 1"
                   ],
                   "interval": 30,
                   "timeout": 5,
