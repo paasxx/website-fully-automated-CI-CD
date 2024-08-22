@@ -19,7 +19,7 @@ export const UploadedFilesProvider = ({ children }) => {
             console.log('API Response:', response.data); // Log the API response
             setUploadedFiles(response.data);
         } catch (error) {
-            console.error('Error fetching uploaded files:', error);
+            //console.error('Error fetching uploaded files:', error);
         }
     };
 
