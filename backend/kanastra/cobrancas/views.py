@@ -114,7 +114,7 @@ def process_csv(csv_file):
 def list_files(request):
     arquivos = Arquivo.objects.all().order_by("-data_envio")
     if not arquivos:
-        return Response({"message": "No File Found!"}, status=400)
+        return Response({"message": "No File Found!"}, status=404)
 
     data = [
         {
