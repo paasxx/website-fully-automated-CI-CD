@@ -156,7 +156,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 # Diretório para os arquivos estáticos coletados
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATIC_ROOT = "/app/kanastra/staticfiles"
+
 
 # URL para acessar arquivos estáticos
 STATIC_URL = "/static/"
