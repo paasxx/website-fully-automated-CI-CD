@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const axiosInstance = axios.create({
     baseURL: process.env.REACT_APP_BACKEND_URL,
-    timeout: 150000,
+    timeout: 250000,
 });
 
 // Função para pegar o token CSRF do cookie
