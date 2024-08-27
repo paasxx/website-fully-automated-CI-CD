@@ -1,12 +1,20 @@
-# main.tf
-
 provider "aws" {
   region = var.aws_region
 }
 
+# Criação do repositório ECR para o backend
+resource "aws_ecr_repository" "backend" {
+  name = var.ecr_repo_backend
+}
+
+# Criação do repositório ECR para o frontend
+resource "aws_ecr_repository" "frontend" {
+  name = var.ecr_repo_frontend
+}
+
 # VPC
 resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = var.vpc_cidr_block
   enable_dns_support = true
   enable_dns_hostnames = true
   tags = {
@@ -16,12 +24,22 @@ resource "aws_vpc" "main" {
 
 # Subnets
 resource "aws_subnet" "subnet1" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = "10.0.1.0/24"
-  availability_zone = "us-east-1a"
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.subnet1_cidr_block
+  availability_zone       = "${var.aws_region}a"
   map_public_ip_on_launch = true
   tags = {
     Name = "subnet1"
+  }
+}
+
+resource "aws_subnet" "subnet2" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.subnet2_cidr_block
+  availability_zone       = "${var.aws_region}b"
+  map_public_ip_on_launch = true
+  tags = {
+    Name = "subnet2"
   }
 }
 
@@ -60,7 +78,7 @@ resource "aws_ecs_task_definition" "kanastra" {
 
   container_definitions = jsonencode([{
     name      = "backend"
-    image     = "${var.ecr_repo_backend}:latest"
+    image     = "${aws_ecr_repository.backend.repository_url}:latest"
     memory    = 512
     cpu       = 256
     portMappings = [
@@ -92,7 +110,7 @@ resource "aws_ecs_task_definition" "kanastra" {
     ]
   }, {
     name      = "frontend"
-    image     = "${var.ecr_repo_frontend}:latest"
+    image     = "${aws_ecr_repository.frontend.repository_url}:latest"
     memory    = 512
     cpu       = 256
     portMappings = [
@@ -111,7 +129,7 @@ resource "aws_ecs_service" "backend" {
   desired_count   = 1
   launch_type     = "FARGATE"
   network_configuration {
-    subnets          = [aws_subnet.subnet1.id]
+    subnets          = [aws_subnet.subnet1.id, aws_subnet.subnet2.id]
     security_groups  = [aws_security_group.ecs_sg.id]
     assign_public_ip = true
   }
@@ -120,7 +138,7 @@ resource "aws_ecs_service" "backend" {
     container_name   = "backend"
     container_port   = 8000
   }
-  depends_on = [aws_lb_listener.frontend_listener]
+  depends_on = [aws_lb_listener.backend_listener]
 }
 
 # ECS Service for Frontend
@@ -131,7 +149,7 @@ resource "aws_ecs_service" "frontend" {
   desired_count   = 1
   launch_type     = "FARGATE"
   network_configuration {
-    subnets          = [aws_subnet.subnet1.id]
+    subnets          = [aws_subnet.subnet1.id, aws_subnet.subnet2.id]
     security_groups  = [aws_security_group.ecs_sg.id]
     assign_public_ip = true
   }
@@ -149,7 +167,7 @@ resource "aws_lb" "main" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.ecs_sg.id]
-  subnets            = [aws_subnet.subnet1.id]
+  subnets            = [aws_subnet.subnet1.id, aws_subnet.subnet2.id]
 
   enable_deletion_protection = false
   enable_cross_zone_load_balancing = true
