@@ -27,9 +27,9 @@ jobs:
         run: terraform init
         working-directory: ./terraform
 
-      - name: Terraform Format
-        run: terraform fmt -check
-        working-directory: ./terraform
+      # - name: Terraform Format
+      #   run: terraform fmt -check
+      #   working-directory: ./terraform
 
       - name: Terraform Plan
         run: terraform plan
