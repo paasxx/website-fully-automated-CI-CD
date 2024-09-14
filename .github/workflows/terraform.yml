@@ -23,23 +23,24 @@ jobs:
 
     - name: Terraform Init
       run: terraform init
-      working-directory: ./terraform
+      working-directory: ./terraform/dev
+
 
     - name: Terraform Format
       run: terraform fmt -check
-      working-directory: ./terraform
+      working-directory: ./terraform/dev
 
     - name: Terraform Plan
       run: terraform plan
-      working-directory: ./terraform
+      working-directory: ./terraform/dev
 
     - name: Terraform Apply
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'
+      if: github.ref == 'refs/heads/staging'
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: terraform apply -auto-approve
-      working-directory: ./terraform
+      working-directory: ./terraform/dev
 
   build_and_push:
     runs-on: ubuntu-latest
@@ -56,13 +57,22 @@ jobs:
 
     - name: Build and push backend Docker image
       run: |
-        docker buildx build --platform linux/amd64 -f ./backend/DockerfileProd -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/backend:latest --push ./backend
-    
+        docker buildx build --platform linux/amd64 -f ./backend/DockerfileProd \
+        -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/backend:latest \
+        --push ./backend
+
     - name: Build and push frontend Docker image
       run: |
         docker buildx build --platform linux/amd64 \
-        --build-arg REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL \
+        --build-arg REACT_APP_BACKEND_URL=${{ secrets.REACT_APP_BACKEND_URL }} \
         -f ./frontend/DockerfileProd \
         -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/frontend:latest \
         --push ./frontend
     
+    # - name: Build and push database Docker image (if applicable)
+    #   if: ${{ secrets.DB_IMAGE }} # Apenas inclua isso se você estiver gerando imagem do banco
+    #   run: |
+    #     docker buildx build --platform linux/amd64 \
+    #     -f ./db/Dockerfile \
+    #     -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/db:latest \
+    #     --push ./db
