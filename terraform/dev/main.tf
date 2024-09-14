@@ -1,8 +1,9 @@
+# Data source para obter zonas de disponibilidade
+data "aws_availability_zones" "available" {}
+
 provider "aws" {
   region = var.aws_region
 }
-
-
 
 resource "aws_ecr_repository" "frontend" {
   name = "frontend-repo"
@@ -42,7 +43,7 @@ resource "aws_ecs_task_definition" "frontend" {
     environment = [
       {
         name  = "REACT_APP_BACKEND_URL"
-        value = "http://${aws_lb.app_lb.dns_name}/api/"
+        value = "http://${aws_lb.dev_lb.dns_name}/api/"
       }
     ]
   }])
@@ -59,7 +60,7 @@ resource "aws_ecs_task_definition" "backend_task" {
   container_definitions = jsonencode([
     {
       name      = "backend"
-      image     = "${aws_ecr_repository.backend_repo.repository_url}:latest"
+      image     = "${aws_ecr_repository.backend.repository_url}:latest"
       essential = true
       portMappings = [
         {
@@ -150,7 +151,7 @@ resource "aws_ecs_task_definition" "db_task" {
 resource "aws_ecs_service" "frontend_service" {
   name            = "frontend-service"
   cluster         = aws_ecs_cluster.dev_cluster.id
-  task_definition = aws_ecs_task_definition.frontend_task.arn
+  task_definition = aws_ecs_task_definition.frontend.arn
   desired_count   = 1
   launch_type     = "FARGATE"
   network_configuration {
@@ -159,7 +160,7 @@ resource "aws_ecs_service" "frontend_service" {
     security_groups  = [aws_security_group.dev_sg.id]
   }
   load_balancer {
-    target_group_arn = aws_lb_target_group.backend_target_group.arn
+    target_group_arn = aws_lb_target_group.backend.arn
     container_name   = "frontend"
     container_port   = 80
   }
@@ -177,7 +178,7 @@ resource "aws_ecs_service" "backend_service" {
     security_groups  = [aws_security_group.dev_sg.id]
   }
   load_balancer {
-    target_group_arn = aws_lb_target_group.backend_target_group.arn
+    target_group_arn = aws_lb_target_group.backend.arn
     container_name   = "backend"
     container_port   = 8000
   }
@@ -240,6 +241,7 @@ resource "aws_iam_role_policy_attachment" "ecs_task_role_policy" {
   policy_arn = aws_iam_policy.ecr_access.arn
 }
 
+
 resource "aws_lb" "dev_lb" {
   name                       = "dev-lb"
   internal                   = false
@@ -261,7 +263,7 @@ resource "aws_lb_target_group" "frontend" {
   name     = "frontend-target-group"
   port     = 80
   protocol = "HTTP"
-  vpc_id   = dev_vpc.id
+  vpc_id   = aws_vpc.dev_vpc.id
 
 }
 
@@ -280,8 +282,9 @@ resource "aws_lb_target_group" "backend" {
   name     = "backend-target-group"
   port     = 8000
   protocol = "HTTP"
-  vpc_id   = dev_vpc.id
+  vpc_id   = aws_vpc.dev_vpc.id
 }
+
 
 resource "aws_security_group" "dev_sg" {
   vpc_id = aws_vpc.dev_vpc.id
@@ -312,6 +315,7 @@ resource "aws_security_group" "dev_sg" {
   }
 }
 
+
 resource "aws_vpc" "dev_vpc" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -332,5 +336,4 @@ resource "aws_subnet" "dev_subnet" {
     Name = "dev-subnet-${count.index}"
   }
 }
-
 
