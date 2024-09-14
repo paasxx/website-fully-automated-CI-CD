@@ -64,15 +64,7 @@ jobs:
     - name: Build and push frontend Docker image
       run: |
         docker buildx build --platform linux/amd64 \
-        --build-arg REACT_APP_BACKEND_URL=${{ secrets.REACT_APP_BACKEND_URL }} \
         -f ./frontend/DockerfileProd \
         -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/frontend:latest \
         --push ./frontend
     
-    # - name: Build and push database Docker image (if applicable)
-    #   if: ${{ secrets.DB_IMAGE }} # Apenas inclua isso se você estiver gerando imagem do banco
-    #   run: |
-    #     docker buildx build --platform linux/amd64 \
-    #     -f ./db/Dockerfile \
-    #     -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/db:latest \
-    #     --push ./db
