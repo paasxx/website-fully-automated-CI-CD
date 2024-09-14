@@ -1,8 +1,7 @@
 name: Destroy Infrastructure with Terraform
 
 on:
-  workflow_dispatch: # Permite disparar manualmente o pipeline a partir do GitHub Actions UI
-
+  workflow_dispatch: 
 jobs:
   terraform:
     runs-on: ubuntu-latest
