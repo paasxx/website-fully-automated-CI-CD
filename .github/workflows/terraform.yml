@@ -26,7 +26,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: "us-east-1"
         run: |
-          echo 'resource "aws_s3_bucket" "meu_bucket_terraform" { bucket = "meu_bucket_terraform-pedro-silveira" }' > bucket.tf
+          echo 'resource "aws_s3_bucket" "meu_bucket_terraform" { bucket = "meu-bucket-terraform-pedro-silveira" }' > bucket.tf
           terraform init -var-file=dev.tfvars
           terraform apply -auto-approve -var-file=dev.tfvars -target=aws_s3_bucket.meu_bucket_terraform
         working-directory: ./terraform/dev
@@ -48,7 +48,7 @@ jobs:
 
     - name: Configurar backend S3
       run: |
-        echo 'terraform { backend "s3" { bucket = "meu_bucket_terraform_pedro_silveira" key = "terraform.tfstate" region = "us-east-1" } }' > backend.tf
+        echo 'terraform { backend "s3" { bucket = "meu-bucket-terraform-pedro-silveira" key = "terraform.tfstate" region = "us-east-1" } }' > backend.tf
       working-directory: ./terraform/dev
 
     - name: Terraform Init (Com Backend)
