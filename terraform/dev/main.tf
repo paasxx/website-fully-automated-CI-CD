@@ -349,7 +349,7 @@ resource "aws_s3_bucket" "meu_bucket_terraform" {
 
 terraform {
   backend "s3" {
-    bucket = "meu-bucket-terraform"
+    bucket = aws_s3_bucket.meu_bucket_terraform.bucket
     key    = "terraform/dev/terraform.tfstate"
     region = "us-east-1"
   }
