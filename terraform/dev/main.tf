@@ -216,7 +216,7 @@ resource "aws_iam_role" "ecs_task_role" {
 }
 
 resource "aws_iam_policy" "ecr_access" {
-  name        = "ecr_access_policy"
+  name        = "ecr_access_policy_dev"
   description = "Policy to access ECR repositories"
 
   policy = jsonencode({
@@ -260,7 +260,7 @@ resource "aws_lb" "dev_lb" {
 
 
 resource "aws_lb_target_group" "frontend_target_group" {
-  name     = "frontend-target-group"
+  name     = "frontend-target-group-dev"
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.dev_vpc.id
@@ -279,7 +279,7 @@ resource "aws_lb_listener" "http_listener" {
 }
 
 resource "aws_lb_target_group" "backend_target_group" {
-  name     = "backend-target-group"
+  name     = "backend-target-group-dev"
   port     = 8000
   protocol = "HTTP"
   vpc_id   = aws_vpc.dev_vpc.id
@@ -337,3 +337,45 @@ resource "aws_subnet" "dev_subnet" {
   }
 }
 
+resource "aws_internet_gateway" "dev_igw" {
+  vpc_id = aws_vpc.dev_vpc.id
+
+  tags = {
+    Name = "dev-igw"
+  }
+}
+
+resource "aws_route_table" "dev_route_table" {
+  vpc_id = aws_vpc.dev_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.dev_igw.id
+  }
+
+  tags = {
+    Name = "dev-route-table"
+  }
+}
+
+resource "aws_route_table_association" "dev_subnet_association" {
+  count          = 2
+  subnet_id      = aws_subnet.dev_subnet[count.index].id
+  route_table_id = aws_route_table.dev_route_table.id
+}
+
+
+resource "aws_dynamodb_table" "terraform_locks" {
+  name         = "terraform-locks"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "LockID"
+
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+
+  tags = {
+    Name = "terraform-locks"
+  }
+}
