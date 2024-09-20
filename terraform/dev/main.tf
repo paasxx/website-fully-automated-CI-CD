@@ -160,7 +160,7 @@ resource "aws_ecs_service" "frontend_service" {
     security_groups  = [aws_security_group.dev_sg.id]
   }
   load_balancer {
-    target_group_arn = aws_lb_target_group.backend.arn
+    target_group_arn = aws_lb_target_group.backend_target_group.arn
     container_name   = "frontend"
     container_port   = 80
   }
@@ -274,7 +274,7 @@ resource "aws_lb_listener" "http_listener" {
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.frontend.arn
+    target_group_arn = aws_lb_target_group.frontend_target_group.arn
   }
 }
 
@@ -334,6 +334,15 @@ resource "aws_subnet" "dev_subnet" {
   map_public_ip_on_launch = true
   tags = {
     Name = "dev-subnet-${count.index}"
+  }
+}
+
+
+terraform {
+  backend "s3" {
+    bucket = "meu-bucket-terraform"
+    key    = "terraform/dev/terraform.tfstate"
+    region = "us-east-1"
   }
 }
 
