@@ -364,18 +364,3 @@ resource "aws_route_table_association" "dev_subnet_association" {
   route_table_id = aws_route_table.dev_route_table.id
 }
 
-
-resource "aws_dynamodb_table" "terraform_locks" {
-  name         = "terraform-locks"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "LockID"
-
-  attribute {
-    name = "LockID"
-    type = "S"
-  }
-
-  tags = {
-    Name = "terraform-locks"
-  }
-}
