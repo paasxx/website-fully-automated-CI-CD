@@ -1,7 +1,9 @@
 name: Destroy Infrastructure with Terraform
 
 on:
-  workflow_dispatch:
+  pull_request:
+    branches:
+      - staging
     
 jobs:
   terraform:
