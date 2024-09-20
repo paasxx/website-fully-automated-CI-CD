@@ -1,6 +1,5 @@
 name: Destroy Infrastructure with Terraform
 
-# Permite o disparo manual da pipeline
 on:
   workflow_dispatch:
     inputs:
