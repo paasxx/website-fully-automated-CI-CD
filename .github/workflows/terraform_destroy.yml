@@ -61,16 +61,8 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
-        aws s3 rm s3://meu-bucket-terraform-pedro-silveira/terraform.tfstate
-        aws s3 rm s3://meu-bucket-terraform-pedro-silveira/terraform.tfstate.backup
-      working-directory: ./terraform/${{ github.event.inputs.environment }}
-
-    - name: Destruir o bucket S3
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      run: |
-        aws s3 rb s3://meu-bucket-terraform-pedro-silveira --force
+        aws s3 rm s3://meu-bucket-terraform-pedro-silveira/terraform.tfstate --region us-east-1 --debug
+        aws s3 rm s3://meu-bucket-terraform-pedro-silveira/terraform.tfstate.backup --region us-east-1 --debug
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Destruir a tabela DynamoDB
@@ -79,4 +71,12 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
         aws dynamodb delete-table --table-name terraform-locks
+      working-directory: ./terraform/${{ github.event.inputs.environment }}
+
+    - name: Destruir o bucket S3
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        aws s3 rb s3://meu-bucket-terraform-pedro-silveira --force
       working-directory: ./terraform/${{ github.event.inputs.environment }}
