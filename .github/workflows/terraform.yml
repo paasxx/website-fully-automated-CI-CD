@@ -26,9 +26,9 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: "us-east-1"
         run: |
-          echo 'resource "aws_s3_bucket" "meu_bucket_terraform" { name = "meu-bucket-terraform" }' > bucket.tf
+          echo 'resource "aws_s3_bucket" "meu_bucket_terraform-pedro-silveira" { name = "meu_bucket_terraform-pedro-silveira" }' > bucket.tf
           terraform init
-          terraform apply -auto-approve -target=aws_s3_bucket.meu_bucket_terraform
+          terraform apply -auto-approve -target=aws_s3_bucket.meu_bucket_terraform-pedro-silveira
         working-directory: ./terraform/dev
 
 
