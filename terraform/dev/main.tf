@@ -337,11 +337,3 @@ resource "aws_subnet" "dev_subnet" {
   }
 }
 
-
-terraform {
-  backend "s3" {
-    bucket = "meu-bucket-terraform-pedro-silveira"
-    key    = "terraform/dev/terraform.tfstate"
-    region = "us-east-1"
-  }
-}
