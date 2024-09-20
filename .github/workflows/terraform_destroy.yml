@@ -21,7 +21,7 @@ jobs:
       with:
         terraform_version: 1.5.5
 
-    - name: Configurar backend S3
+    - name: Configurar backend S3 Bucket
       run: |
         echo 'terraform { 
           backend "s3" { 
