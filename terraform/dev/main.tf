@@ -251,7 +251,9 @@ resource "aws_lb" "dev_lb" {
   enable_http2                     = true
 
   tags = {
+
     Name = "dev-lb"
+
   }
 }
 
