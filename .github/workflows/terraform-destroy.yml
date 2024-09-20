@@ -1,7 +1,8 @@
 name: Destroy Infrastructure with Terraform
 
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
+    
 jobs:
   terraform:
     runs-on: ubuntu-latest
