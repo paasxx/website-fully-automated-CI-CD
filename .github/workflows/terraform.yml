@@ -55,6 +55,7 @@ jobs:
             region = "us-east-1" 
           } 
         }' > backend.tf  
+        terraform fmt backend.tf  # Formata automaticamente o arquivo gerado
       working-directory: ./terraform/dev
 
     - name: Terraform Init (Com Backend)
