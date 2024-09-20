@@ -1,9 +1,13 @@
 name: Destroy Infrastructure with Terraform
 
+# Permite o disparo manual da pipeline
 on:
-  push:
-    branches:
-      - teste-terraform
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Escolha o ambiente para destruir (ex: dev, staging, prod)'
+        required: true
+        default: 'dev'
 
 jobs:
   terraform:
@@ -28,25 +32,42 @@ jobs:
           } 
         }' > backend.tf
         terraform fmt backend.tf  # Formata automaticamente o arquivo gerado
-      working-directory: ./terraform/dev
+      working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Terraform Init
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: terraform init -var-file=dev.tfvars
-      working-directory: ./terraform/dev
+      working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Terraform Plan
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: terraform plan -var-file=dev.tfvars
-      working-directory: ./terraform/dev
+      working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Terraform Destroy
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: terraform destroy -auto-approve -var-file=dev.tfvars
-      working-directory: ./terraform/dev
+      working-directory: ./terraform/${{ github.event.inputs.environment }}
+
+    - name: Remover estado do Terraform do S3
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        aws s3 rm s3://meu-bucket-terraform-pedro-silveira/terraform.tfstate
+        aws s3 rm s3://meu-bucket-terraform-pedro-silveira/terraform.tfstate.backup
+      working-directory: ./terraform/${{ github.event.inputs.environment }}
+
+    - name: Destruir o bucket S3
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        aws s3 rb s3://meu-bucket-terraform-pedro-silveira --force
+      working-directory: ./terraform/${{ github.event.inputs.environment }}

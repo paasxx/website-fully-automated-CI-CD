@@ -53,6 +53,8 @@ jobs:
             bucket = "meu-bucket-terraform-pedro-silveira" 
             key    = "terraform.tfstate" 
             region = "us-east-1" 
+            dynamodb_table = "terraform-locks" # Nome da tabela DynamoDB
+            encrypt = true # Criptografa o estado no S3
           } 
         }' > backend.tf  
         terraform fmt backend.tf  # Formata automaticamente o arquivo gerado
