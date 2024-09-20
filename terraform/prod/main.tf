@@ -9,7 +9,7 @@ resource "aws_ecs_task_definition" "frontend_task_prod" {
   container_definitions = jsonencode([
     {
       name      = "frontend"
-      image     = "${var.ecr_registry}/frontend:latest"
+      image     = "${frontend_repo_url}/frontend:latest"
       essential = true
       portMappings = [
         {
@@ -57,7 +57,7 @@ resource "aws_ecs_task_definition" "backend_task_prod" {
         },
         {
           name  = "DB_PASSWORD"
-          value = var.db_password  # Usando a variável
+          value = var.db_password # Usando a variável
         },
         {
           name  = "DB_HOST"
@@ -111,7 +111,7 @@ resource "aws_ecs_task_definition" "db_task_prod" {
         },
         {
           name  = "POSTGRES_PASSWORD"
-          value = var.db_password  # Usando a variável
+          value = var.db_password # Usando a variável
         }
       ]
       logConfiguration = {
