@@ -28,7 +28,7 @@ jobs:
         run: |
           echo 'resource "aws_s3_bucket" "meu_bucket_terraform" { name = "meu_bucket_terraform_pedro_silveira" }' > bucket.tf
           terraform init -var-file=dev.tfvars
-          terraform apply -auto-approve -target=aws_s3_bucket.meu_bucket_terraform
+          terraform apply -auto-approve -var-file=dev.tfvars -target=aws_s3_bucket.meu_bucket_terraform
         working-directory: ./terraform/dev
 
 
