@@ -337,15 +337,6 @@ resource "aws_subnet" "dev_subnet" {
   }
 }
 
-resource "aws_s3_bucket" "meu_bucket_terraform" {
-  bucket = "meu-bucket-terraform"
-  acl    = "private"
-  region = "us-east-1"
-  tags = {
-    Name        = "meu-bucket-terraform"
-    Environment = "dev"
-  }
-}
 
 terraform {
   backend "s3" {
