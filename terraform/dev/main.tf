@@ -259,7 +259,7 @@ resource "aws_lb" "dev_lb" {
 }
 
 
-resource "aws_lb_target_group" "frontend" {
+resource "aws_lb_target_group" "frontend_target_group" {
   name     = "frontend-target-group"
   port     = 80
   protocol = "HTTP"
@@ -278,7 +278,7 @@ resource "aws_lb_listener" "http_listener" {
   }
 }
 
-resource "aws_lb_target_group" "backend" {
+resource "aws_lb_target_group" "backend_target_group" {
   name     = "backend-target-group"
   port     = 8000
   protocol = "HTTP"
