@@ -46,9 +46,15 @@ jobs:
       with:
         terraform_version: 1.5.5
 
-    - name: Configurar backend S3
+    - name: Configurar backend S3  # [CORRIGIDO]: Agora os parâmetros estão em linhas separadas.
       run: |
-        echo 'terraform { backend "s3" { bucket = "meu-bucket-terraform-pedro-silveira" key = "terraform.tfstate" region = "us-east-1" } }' > backend.tf
+        echo 'terraform { 
+          backend "s3" { 
+            bucket = "meu-bucket-terraform-pedro-silveira" 
+            key    = "terraform.tfstate" 
+            region = "us-east-1" 
+          } 
+        }' > backend.tf  
       working-directory: ./terraform/dev
 
     - name: Terraform Init (Com Backend)
