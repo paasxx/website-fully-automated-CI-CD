@@ -178,7 +178,7 @@ resource "aws_ecs_service" "backend_service" {
     security_groups  = [aws_security_group.dev_sg.id]
   }
   load_balancer {
-    target_group_arn = aws_lb_target_group.backend.arn
+    target_group_arn = aws_lb_target_group.backend_target_group.arn
     container_name   = "backend"
     container_port   = 8000
   }
