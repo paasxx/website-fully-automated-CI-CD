@@ -97,6 +97,7 @@ jobs:
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
       run: terraform apply -auto-approve -var-file=dev.tfvars -var "aws_region=${{ secrets.AWS_REGION }}"
       working-directory: ./terraform/dev
 
@@ -112,6 +113,10 @@ jobs:
 
     - name: Log in to Amazon ECR
       uses: aws-actions/amazon-ecr-login@v1
+      env:
+        AWS_REGION: ${{ secrets.AWS_REGION }} 
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }} 
 
     - name: Build and push backend Docker image
       run: |
