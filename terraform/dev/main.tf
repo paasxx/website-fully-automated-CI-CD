@@ -96,6 +96,7 @@ resource "aws_ecs_task_definition" "backend_task" {
   ])
 }
 
+
 resource "aws_ecs_task_definition" "db_task" {
   family                   = "db-task"
   network_mode             = "awsvpc"
