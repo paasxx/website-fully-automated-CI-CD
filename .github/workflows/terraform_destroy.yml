@@ -56,20 +56,20 @@ jobs:
       run: terraform destroy -auto-approve -var-file=dev.tfvars
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
-    - name: Remover estado do Terraform do S3
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      run: |
-        aws s3 rm s3://meu-bucket-terraform-pedro-silveira/terraform.tfstate --region us-east-1 --debug
-      working-directory: ./terraform/${{ github.event.inputs.environment }}
-
     - name: Destruir a tabela DynamoDB
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
         aws dynamodb delete-table --table-name terraform-locks
+      working-directory: ./terraform/${{ github.event.inputs.environment }}
+
+    - name: Remover estado do Terraform do S3
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        aws s3 rm s3://meu-bucket-terraform-pedro-silveira/terraform.tfstate --region us-east-1 --debug
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Destruir o bucket S3

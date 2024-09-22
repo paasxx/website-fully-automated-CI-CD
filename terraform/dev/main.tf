@@ -13,18 +13,12 @@ resource "aws_ecr_repository" "backend" {
   name = "backend-repo"
 }
 
-# Adiciona o repositório ECR à política de acesso do ECS
-resource "aws_iam_role_policy_attachment" "ecs_ecr" {
-  policy_arn = aws_iam_policy.ecr_access.arn
-  role       = aws_iam_role.ecs_task_role.name
-}
-
 
 resource "aws_ecs_cluster" "dev_cluster" {
   name = "dev-cluster"
 }
 
-resource "aws_ecs_task_definition" "frontend" {
+resource "aws_ecs_task_definition" "frontend_task" {
   family                   = "frontend-task"
   execution_role_arn       = aws_iam_role.ecs_task_role.arn
   network_mode             = "awsvpc"
@@ -83,7 +77,7 @@ resource "aws_ecs_task_definition" "backend_task" {
         },
         {
           name  = "DB_HOST"
-          value = "127.0.0.1"
+          value = "db-task.local"
         },
         {
           name  = "DB_PORT"
@@ -152,7 +146,7 @@ resource "aws_ecs_task_definition" "db_task" {
 resource "aws_ecs_service" "frontend_service" {
   name            = "frontend-service"
   cluster         = aws_ecs_cluster.dev_cluster.id
-  task_definition = aws_ecs_task_definition.frontend.arn
+  task_definition = aws_ecs_task_definition.frontend_task.arn
   desired_count   = 1
   launch_type     = "FARGATE"
   network_configuration {
