@@ -49,9 +49,10 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
         aws ecr list-images --repository-name frontend-repo --region us-east-1 --query 'imageIds[*]' --output json | \
-        jq -c '.[]' | \
-        xargs -I {} aws ecr batch-delete-image --repository-name frontend-repo --image-ids {} --region us-east-1
+        jq -c '.[] | { imageDigest: .imageDigest, imageTag: .imageTag }' | \
+        xargs -I {} aws ecr batch-delete-image --repository-name frontend-repo --image-ids '{}' --region us-east-1
       working-directory: ./terraform/${{ github.event.inputs.environment }}
+
 
     # Remover todas as imagens do repositório ECR backend-repo
     - name: Remover todas as imagens do ECR backend-repo
@@ -60,7 +61,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
         aws ecr list-images --repository-name backend-repo --region us-east-1 --query 'imageIds[*]' --output json | \
-        jq -c '.[]' | \
+        jq -c '.[]' | { imageDigest: .imageDigest, imageTag: .imageTag }' | \
         xargs -I {} aws ecr batch-delete-image --repository-name backend-repo --image-ids {} --region us-east-1
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 

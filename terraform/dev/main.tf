@@ -358,10 +358,10 @@ resource "aws_security_group" "db_sg" {
   }
 
   egress {
-    from_port       = var.db_port
-    to_port         = var.db_port
-    protocol        = "tcp"
-    security_groups = [aws_security_group.backend_sg.id] # Permitir apenas o backend
+    from_port   = 0
+    to_port     = 0
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # Permitir acesso à internet
   }
 
   tags = {
