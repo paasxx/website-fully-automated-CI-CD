@@ -62,7 +62,7 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
-        aws dynamodb describe-table --table-name terraform-locks
+        aws dynamodb describe-table --table-name terraform-locks --region us-east-1
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     # Remover todos os itens da tabela DynamoDB (se necessário)
@@ -71,8 +71,8 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
-        aws dynamodb scan --table-name terraform-locks --attributes-to-get LockID --query "Items[].LockID.S" --output text | \
-        xargs -I {} aws dynamodb delete-item --table-name terraform-locks --key '{"LockID": {"S": "{}"}}'
+        aws dynamodb scan --table-name terraform-locks --attributes-to-get LockID --query "Items[].LockID.S" --output text --region us-east-1 | \
+        xargs -I {} aws dynamodb delete-item --table-name terraform-locks --key '{"LockID": {"S": "{}"}}' --region us-east-1
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Destruir a tabela DynamoDB
@@ -80,7 +80,7 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
-        aws dynamodb delete-table --table-name terraform-locks
+        aws dynamodb delete-table --table-name terraform-locks --region us-east-1
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Remover estado do Terraform do S3
@@ -108,4 +108,3 @@ jobs:
         aws s3 rb s3://meu-bucket-terraform-pedro-silveira --force --region us-east-1
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
-      
