@@ -195,7 +195,7 @@ resource "aws_ecs_service" "db_service" {
   network_configuration {
     subnets          = aws_subnet.dev_subnet[*].id
     assign_public_ip = true
-    security_groups  = [aws_security_group.dev_db.id]
+    security_groups  = [aws_security_group.db_sg.id]
   }
   service_registries {
     registry_arn = aws_service_discovery_service.db_service_discovery.arn
@@ -374,34 +374,6 @@ resource "aws_security_group" "frontend_sg" {
   }
 }
 
-resource "aws_security_group" "dev_sg" {
-  vpc_id = aws_vpc.dev_vpc.id
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "all"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 8000
-    to_port     = 8000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "dev-sg"
-  }
-}
 
 
 resource "aws_vpc" "dev_vpc" {
