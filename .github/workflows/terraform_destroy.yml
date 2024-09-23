@@ -42,27 +42,22 @@ jobs:
       run: terraform init -var-file=dev.tfvars
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
-    # Remover todas as imagens do repositório ECR frontend-repo
-    - name: Remover todas as imagens do ECR frontend-repo
+    # Deletar o repositório ECR frontend-repo
+    - name: Deletar repositório ECR frontend-repo
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
-        aws ecr list-images --repository-name frontend-repo --region us-east-1 --query 'imageIds[*]' --output json | \
-        jq -c '.[] | { imageDigest: .imageDigest, imageTag: .imageTag }' | \
-        xargs -I {} aws ecr batch-delete-image --repository-name frontend-repo --image-ids '{}' --region us-east-1
+        aws ecr delete-repository --repository-name frontend-repo --force --region us-east-1
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
-
-    # Remover todas as imagens do repositório ECR backend-repo
-    - name: Remover todas as imagens do ECR backend-repo
+    # Deletar o repositório ECR backend-repo
+    - name: Deletar repositório ECR backend-repo
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
-        aws ecr list-images --repository-name backend-repo --region us-east-1 --query 'imageIds[*]' --output json | \
-        jq -c '.[]' | { imageDigest: .imageDigest, imageTag: .imageTag }' | \
-        xargs -I {} aws ecr batch-delete-image --repository-name backend-repo --image-ids {} --region us-east-1
+        aws ecr delete-repository --repository-name backend-repo --force --region us-east-1
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Terraform Plan
