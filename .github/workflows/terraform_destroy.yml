@@ -50,7 +50,7 @@ jobs:
       run: |
         aws ecr list-images --repository-name frontend-repo --region us-east-1 --query 'imageIds[*]' --output json | \
         jq -c '.[] | { imageDigest: .imageDigest, imageTag: .imageTag }' | \
-        xargs -I {} aws ecr batch-delete-image --repository-name frontend-repo --image-ids '{}' --region us-east-1
+        xargs -r -I {} aws ecr batch-delete-image --repository-name frontend-repo --image-ids '{}' --region us-east-1
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
 
@@ -62,7 +62,7 @@ jobs:
       run: |
         aws ecr list-images --repository-name backend-repo --region us-east-1 --query 'imageIds[*]' --output json | \
         jq -c '.[]' | { imageDigest: .imageDigest, imageTag: .imageTag }' | \
-        xargs -I {} aws ecr batch-delete-image --repository-name backend-repo --image-ids {} --region us-east-1
+        xargs -r -I {} aws ecr batch-delete-image --repository-name backend-repo --image-ids {} --region us-east-1
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Terraform Plan
