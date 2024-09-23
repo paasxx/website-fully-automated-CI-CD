@@ -42,7 +42,7 @@ jobs:
       run: terraform init -var-file=dev.tfvars
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
-    # Deletar o repositório ECR frontend-repo
+      # Deletar o repositório ECR frontend-repo
     - name: Deletar repositório ECR frontend-repo
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
