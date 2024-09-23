@@ -49,6 +49,12 @@ resource "aws_ecs_task_definition" "frontend_task" {
         awslogs-stream-prefix = "frontend"
       }
     }
+    dependsOn = [
+      {
+        containerName = "backend"
+        condition     = "HEALTHY"
+      }
+    ]
   }])
 }
 
@@ -97,10 +103,23 @@ resource "aws_ecs_task_definition" "backend_task" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = "/ecs/kanastra-dev"
+          awslogs-group         = "/ecs/backend"
           awslogs-region        = var.aws_region
           awslogs-stream-prefix = "backend"
         }
+      }
+      dependsOn = [
+        {
+          containerName = "db"
+          condition     = "START"
+        }
+      ]
+      healthCheck = {
+        command     = ["CMD-SHELL", "curl -f http://localhost:8000/api/health || exit 1"]
+        interval    = 30
+        timeout     = 5
+        retries     = 3
+        startPeriod = 60
       }
     }
   ])
