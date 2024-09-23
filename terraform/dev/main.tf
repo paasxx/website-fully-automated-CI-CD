@@ -415,7 +415,9 @@ resource "aws_security_group" "frontend_sg" {
 }
 
 resource "aws_security_group" "alb_sg" {
-  vpc_id = aws_vpc.dev_vpc.id
+  name        = "alb-sg"
+  description = "Security group for ALB"
+  vpc_id      = aws_vpc.dev_vpc.id
 
   ingress {
     from_port   = 80
@@ -424,12 +426,12 @@ resource "aws_security_group" "alb_sg" {
     cidr_blocks = ["0.0.0.0/0"] # Permitir acesso público
   }
 
+  # Allow all outbound traffic
   egress {
-    from_port       = 8000
-    to_port         = 8000
-    protocol        = "tcp"
-    security_groups = [aws_security_group.backend_sg.id] # Permitir tráfego para backend na porta 8000
-    description     = "Allow traffic from ALB to Backend on port 8000"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
