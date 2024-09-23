@@ -19,7 +19,7 @@ resource "aws_ecs_cluster" "dev_cluster" {
 }
 
 resource "aws_ecs_task_definition" "frontend_task" {
-  family                   = "frontend-task"
+  family                   = "dev-frontend-task"
   execution_role_arn       = aws_iam_role.ecs_task_role.arn
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
@@ -40,6 +40,15 @@ resource "aws_ecs_task_definition" "frontend_task" {
         value = "http://${aws_lb.dev_lb.dns_name}/api/"
       }
     ]
+
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        awslogs-group         = "/ecs/frontend"
+        awslogs-region        = var.aws_region
+        awslogs-stream-prefix = "frontend"
+      }
+    }
   }])
 }
 
@@ -59,6 +68,7 @@ resource "aws_ecs_task_definition" "backend_task" {
       portMappings = [
         {
           containerPort = 8000
+          hostPort      = 8000
           protocol      = "tcp"
         }
       ]
@@ -77,7 +87,7 @@ resource "aws_ecs_task_definition" "backend_task" {
         },
         {
           name  = "DB_HOST"
-          value = "db-task.local"
+          value = "db-service.db.local"
         },
         {
           name  = "DB_PORT"
@@ -153,7 +163,7 @@ resource "aws_ecs_service" "frontend_service" {
   network_configuration {
     subnets          = aws_subnet.dev_subnet[*].id
     assign_public_ip = true
-    security_groups  = [aws_security_group.dev_sg.id]
+    security_groups  = [aws_security_group.frontend_sg.id]
   }
 
 }
@@ -167,7 +177,7 @@ resource "aws_ecs_service" "backend_service" {
   network_configuration {
     subnets          = aws_subnet.dev_subnet[*].id
     assign_public_ip = true
-    security_groups  = [aws_security_group.dev_sg.id]
+    security_groups  = [aws_security_group.backend_sg.id]
   }
   load_balancer {
     target_group_arn = aws_lb_target_group.backend_target_group.arn
@@ -185,9 +195,32 @@ resource "aws_ecs_service" "db_service" {
   network_configuration {
     subnets          = aws_subnet.dev_subnet[*].id
     assign_public_ip = true
-    security_groups  = [aws_security_group.dev_sg.id]
+    security_groups  = [aws_security_group.dev_db.id]
+  }
+  service_registries {
+    registry_arn = aws_service_discovery_service.db_service_discovery.arn
   }
 }
+
+resource "aws_service_discovery_private_dns_namespace" "db_namespace" {
+  name = "db.local"
+  vpc  = aws_vpc.dev_vpc.id
+}
+
+resource "aws_service_discovery_service" "db_service_discovery" {
+  name = "db-service"
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.db_namespace.id
+    dns_records {
+      type = "A"
+      ttl  = 60
+    }
+  }
+  health_check_custom_config {
+    failure_threshold = 1
+  }
+}
+
 
 
 
@@ -238,7 +271,7 @@ resource "aws_lb" "dev_lb" {
   name                       = "dev-lb"
   internal                   = false
   load_balancer_type         = "application"
-  security_groups            = [aws_security_group.dev_sg.id]
+  security_groups            = [aws_security_group.backend_sg.id]
   subnets                    = aws_subnet.dev_subnet[*].id
   enable_deletion_protection = false
 
@@ -274,7 +307,72 @@ resource "aws_lb_target_group" "backend_target_group" {
   }
 }
 
+resource "aws_security_group" "db_sg" {
+  vpc_id = aws_vpc.dev_vpc.id
 
+  ingress {
+    from_port       = var.db_port
+    to_port         = var.db_port
+    protocol        = "tcp"
+    security_groups = [aws_security_group.backend_sg.id] # Permitir apenas o backend
+  }
+
+  egress {
+    from_port       = var.db_port
+    to_port         = var.db_port
+    protocol        = "tcp"
+    security_groups = [aws_security_group.backend_sg.id] # Permitir apenas o backend
+  }
+
+  tags = {
+    Name = "db-sg"
+  }
+}
+
+
+resource "aws_security_group" "backend_sg" {
+  vpc_id = aws_vpc.dev_vpc.id
+
+  ingress {
+    from_port       = 8000
+    to_port         = 8000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.frontend_sg.id] # Permitir apenas o frontend
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "all"
+    cidr_blocks = ["0.0.0.0/0"] # Permitir acesso à internet
+  }
+
+  tags = {
+    Name = "backend-sg"
+  }
+}
+
+resource "aws_security_group" "frontend_sg" {
+  vpc_id = aws_vpc.dev_vpc.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # Permitir acesso público
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "all"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "frontend-sg"
+  }
+}
 
 resource "aws_security_group" "dev_sg" {
   vpc_id = aws_vpc.dev_vpc.id
@@ -354,3 +452,17 @@ resource "aws_route_table_association" "dev_subnet_association" {
   route_table_id = aws_route_table.dev_route_table.id
 }
 
+resource "aws_cloudwatch_log_group" "frontend_log_group" {
+  name              = "/ecs/frontend"
+  retention_in_days = 7 # Defina o tempo de retenção dos logs
+}
+
+resource "aws_cloudwatch_log_group" "backend_log_group" {
+  name              = "/ecs/backend"
+  retention_in_days = 7
+}
+
+resource "aws_cloudwatch_log_group" "db_log_group" {
+  name              = "/ecs/db"
+  retention_in_days = 7
+}
