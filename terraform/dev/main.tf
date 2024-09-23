@@ -261,7 +261,8 @@ resource "aws_iam_policy" "ecr_access" {
           "ecr:GetDownloadUrlForLayer",
           "ecr:BatchCheckLayerAvailability",
           "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage"
+          "ecr:BatchGetImage",
+          "ecr:GetAuthorizationToken"
         ],
         Effect   = "Allow",
         Resource = "*"
@@ -273,6 +274,30 @@ resource "aws_iam_policy" "ecr_access" {
 resource "aws_iam_role_policy_attachment" "ecs_task_role_policy" {
   role       = aws_iam_role.ecs_task_role.name
   policy_arn = aws_iam_policy.ecr_access.arn
+}
+
+resource "aws_iam_policy" "cloudwatch_logs_access" {
+  name        = "cloudwatch_logs_access_policy"
+  description = "Policy to allow ECS tasks to send logs to CloudWatch"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Effect   = "Allow",
+        Resource = "arn:aws:logs:*:*:log-group:/ecs/*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_role_cloudwatch_policy" {
+  role       = aws_iam_role.ecs_task_role.name
+  policy_arn = aws_iam_policy.cloudwatch_logs_access.arn
 }
 
 
