@@ -285,6 +285,7 @@ resource "aws_iam_policy" "cloudwatch_logs_access" {
     Statement = [
       {
         Action = [
+          "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ],
@@ -305,7 +306,7 @@ resource "aws_lb" "dev_lb" {
   name                       = "dev-lb"
   internal                   = false
   load_balancer_type         = "application"
-  security_groups            = [aws_security_group.backend_sg.id]
+  security_groups            = [aws_security_group.alb_sg.id]
   subnets                    = aws_subnet.dev_subnet[*].id
   enable_deletion_protection = false
 
@@ -376,7 +377,7 @@ resource "aws_security_group" "backend_sg" {
     from_port       = 8000
     to_port         = 8000
     protocol        = "tcp"
-    security_groups = [aws_security_group.frontend_sg.id] # Permitir apenas o frontend
+    security_groups = [aws_security_group.alb_sg.id] # Permitir apenas o frontend
   }
 
   egress {
@@ -412,6 +413,30 @@ resource "aws_security_group" "frontend_sg" {
     Name = "frontend-sg"
   }
 }
+
+resource "aws_security_group" "alb_sg" {
+  vpc_id = aws_vpc.dev_vpc.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # Permitir acesso público
+  }
+
+  egress {
+    from_port       = 8000
+    to_port         = 8000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.backend_sg.id] # Permitir tráfego para backend na porta 8000
+    description     = "Allow traffic from ALB to Backend on port 8000"
+  }
+
+  tags = {
+    Name = "alb-sg"
+  }
+}
+
 
 
 
