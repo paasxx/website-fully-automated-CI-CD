@@ -49,12 +49,7 @@ resource "aws_ecs_task_definition" "frontend_task" {
         awslogs-stream-prefix = "frontend"
       }
     }
-    dependsOn = [
-      {
-        containerName = "backend"
-        condition     = "HEALTHY"
-      }
-    ]
+
   }])
 }
 
@@ -108,12 +103,7 @@ resource "aws_ecs_task_definition" "backend_task" {
           awslogs-stream-prefix = "backend"
         }
       }
-      dependsOn = [
-        {
-          containerName = "db"
-          condition     = "START"
-        }
-      ]
+
       healthCheck = {
         command     = ["CMD-SHELL", "curl -f http://localhost:8000/api/health || exit 1"]
         interval    = 30
@@ -321,8 +311,13 @@ resource "aws_lb_target_group" "backend_target_group" {
   protocol    = "HTTP"
   vpc_id      = aws_vpc.dev_vpc.id
   target_type = "ip"
+
   health_check {
-    path = "/api/health"
+    path                = "/api/health"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
   }
 }
 
