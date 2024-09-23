@@ -121,13 +121,13 @@ jobs:
     - name: Build and push backend Docker image
       run: |
         docker buildx build --platform linux/amd64 -f ./backend/DockerfileProd \
-        -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/backend:latest \
+        -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/backend-repo:latest \
         --push ./backend
 
     - name: Build and push frontend Docker image
       run: |
         docker buildx build --platform linux/amd64 \
         -f ./frontend/DockerfileProd \
-        -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/frontend:latest \
+        -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/frontend-repo:latest \
         --push ./frontend
     
