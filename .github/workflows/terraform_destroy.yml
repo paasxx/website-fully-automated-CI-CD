@@ -42,6 +42,22 @@ jobs:
       run: terraform init -var-file=dev.tfvars
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
+      - name: Remover repositório ECR frontend-repo do estado do Terraform
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        terraform state rm aws_ecr_repository.frontend_repo
+      working-directory: ./terraform/${{ github.event.inputs.environment }}
+    
+    - name: Remover repositório ECR backend-repo do estado do Terraform
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        terraform state rm aws_ecr_repository.backend_repo
+      working-directory: ./terraform/${{ github.event.inputs.environment }}
+
       # Deletar o repositório ECR frontend-repo
     - name: Deletar repositório ECR frontend-repo
       env:
