@@ -31,6 +31,9 @@ COPY nginx.conf /etc/nginx/conf.d/
 # Copia os arquivos do build do React para o diretório de trabalho do Nginx
 COPY --from=0 /app/build /usr/share/nginx/html
 
+# Substitui as variáveis de ambiente no arquivo de configuração do Nginx
+RUN envsubst '$REACT_APP_BACKEND_URL' < /etc/nginx/conf.d/nginx.conf > /etc/nginx/conf.d/nginx.conf
+
 
 # Define o comando para iniciar o servidor Nginx quando o contêiner for executado
 CMD ["nginx", "-g", "daemon off;"]
