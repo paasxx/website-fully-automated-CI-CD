@@ -340,7 +340,7 @@ resource "aws_lb_target_group" "backend_target_group" {
 
   health_check {
     path                = "/api/health"
-    interval            = 60
+    interval            = 120
     timeout             = 10
     healthy_threshold   = 5
     unhealthy_threshold = 3
@@ -371,7 +371,9 @@ resource "aws_security_group" "db_sg" {
 
 
 resource "aws_security_group" "backend_sg" {
-  vpc_id = aws_vpc.dev_vpc.id
+  name        = "backend-sg"
+  description = "Security group for Backend"
+  vpc_id      = aws_vpc.dev_vpc.id
 
   ingress {
     from_port       = 8000
@@ -393,7 +395,9 @@ resource "aws_security_group" "backend_sg" {
 }
 
 resource "aws_security_group" "frontend_sg" {
-  vpc_id = aws_vpc.dev_vpc.id
+  name        = "frontend-sg"
+  description = "Security group for Frontend"
+  vpc_id      = aws_vpc.dev_vpc.id
 
   ingress {
     from_port   = 80
