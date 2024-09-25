@@ -109,7 +109,7 @@ resource "aws_ecs_task_definition" "backend_task" {
         interval    = 30
         timeout     = 5
         retries     = 3
-        startPeriod = 60
+        startPeriod = 120
       }
     }
   ])
@@ -340,10 +340,10 @@ resource "aws_lb_target_group" "backend_target_group" {
 
   health_check {
     path                = "/api/health"
-    interval            = 30
-    timeout             = 5
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
+    interval            = 60
+    timeout             = 10
+    healthy_threshold   = 5
+    unhealthy_threshold = 3
   }
 }
 
