@@ -193,6 +193,9 @@ resource "aws_ecs_service" "backend_service" {
     container_name   = "backend"
     container_port   = 8000
   }
+
+  depends_on = [aws_lb.dev_lb, aws_lb_target_group.backend_target_group]
+
 }
 
 resource "aws_ecs_service" "db_service" {

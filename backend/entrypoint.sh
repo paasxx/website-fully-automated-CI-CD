@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Espera o banco de dados estar pronto
-/usr/local/bin/wait-for-it.sh db-service.db.local:5432 --timeout=60 --strict -- echo "Database is up"
+/usr/local/bin/wait-for-it.sh db-service.db.local:5432 --timeout=120 --strict -- echo "Database is up"
 
 # Executa o teste de conexão com o banco de dados
 python /app/test_db_connection.py
