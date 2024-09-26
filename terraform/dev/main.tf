@@ -175,6 +175,9 @@ resource "aws_ecs_service" "frontend_service" {
     security_groups  = [aws_security_group.frontend_sg.id]
   }
 
+  # Adiciona a dependência no ALB
+  depends_on = [aws_lb.dev_lb]
+
 }
 
 resource "aws_ecs_service" "backend_service" {
