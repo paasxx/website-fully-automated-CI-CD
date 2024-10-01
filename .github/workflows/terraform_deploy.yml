@@ -9,6 +9,10 @@ on:
   # Rodar manualmente com um dispatch
   workflow_dispatch:
     inputs:
+      environment:
+        description: 'Escolha o ambiente para destruir (ex: dev, staging, prod)'
+        required: true
+        default: 'dev'
       password:
         description: 'Senha para rodar o workflow manualmente'
         required: true
