@@ -1,9 +1,12 @@
-name: CD Pipeline
+name: Deploy esteira antiga
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      password:
+        description: 'Senha para rodar o workflow manualmente'
+        required: true
+        type: string
 
 jobs:
   deploy-ecs:
@@ -11,6 +14,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    
+      - name: Check password (for manual dispatch)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          if [ "${{ github.event.inputs.password }}" != "${{ secrets.WORKFLOW_PASSWORD }}" ]; then
+            echo "Senha incorreta!"
+            exit 1
+          fi
+        shell: bash
+        
       - name: Checkout code
         uses: actions/checkout@v2
 
