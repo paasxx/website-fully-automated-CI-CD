@@ -7,12 +7,27 @@ on:
         description: 'Escolha o ambiente para destruir (ex: dev, staging, prod)'
         required: true
         default: 'dev'
+      password:
+        description: 'Senha para rodar o workflow manualmente'
+        required: true
+        type: string
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
 
     steps:
+
+      # Verifica se a senha está correta no dispatch manual
+    - name: Check password (for manual dispatch)
+      if: ${{ github.event_name == 'workflow_dispatch' }}
+      run: |
+        if [ "${{ github.event.inputs.password }}" != "${{ secrets.WORKFLOW_PASSWORD }}" ]; then
+          echo "Senha incorreta!"
+          exit 1
+        fi
+      shell: bash
+
     - name: Checkout repository
       uses: actions/checkout@v3
 

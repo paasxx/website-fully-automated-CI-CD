@@ -1,17 +1,33 @@
 name: Deploy Infrastructure with Terraform
 
 on:
+  # Rodar quando houver um push na branch main (merge)
   push:
     branches:
-      - staging
-  # pull_request:
-  #   branches:
-  #     - staging
+      - main
+
+  # Rodar manualmente com um dispatch
+  workflow_dispatch:
+    inputs:
+      password:
+        description: 'Senha para rodar o workflow manualmente'
+        required: true
+        type: string
 
 jobs:
   create_s3_and_dynamodb:
     runs-on: ubuntu-latest
     steps:
+
+      - name: Check password (for manual dispatch)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          if [ "${{ github.event.inputs.password }}" != "${{ secrets.WORKFLOW_PASSWORD }}" ]; then
+            echo "Senha incorreta!"
+            exit 1
+          fi
+        shell: bash
+
       - name: Checkout repository
         uses: actions/checkout@v3
 
