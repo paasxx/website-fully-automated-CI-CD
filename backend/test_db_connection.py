@@ -13,7 +13,9 @@ def test_connection():
         )
         print("Connection successful")
     except Exception as e:
-        print(f"Connection failed: {e}")
+        print(
+            f"Connection failed to {os.environ['DB_NAME']} at {os.environ['DB_HOST']}: {e}"
+        )
 
 
 if __name__ == "__main__":

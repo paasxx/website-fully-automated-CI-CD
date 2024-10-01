@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Use this script to test if a given TCP host/port are available
 
-TIMEOUT=60
+TIMEOUT=120
 QUIET=0
 HOST="$1"
 PORT="$2"

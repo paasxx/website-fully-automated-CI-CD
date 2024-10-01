@@ -13,7 +13,7 @@ variable "aws_account_id" {
 variable "db_image" {
   description = "Imagem do container para o banco de dados"
   type        = string
-  default     = "postgres:13" # Altere para MySQL, se necessário
+  default     = "postgres" # Altere para MySQL, se necessário
 }
 
 variable "db_user" {
