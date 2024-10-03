@@ -23,6 +23,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
+      - name: Set environment variable
+        run: echo "environment=${{ github.event.inputs.environment || 'dev' }}" >> $GITHUB_ENV
+
       - name: Check password (for manual dispatch)
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
