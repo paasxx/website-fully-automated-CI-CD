@@ -21,7 +21,7 @@ services:
   web:
     image: back
     container_name: back
-    build: ./backend
+    build: ../backend
 
     ##### Retirei o bind mount porque não funcionava no actions
     # volumes:
@@ -40,9 +40,9 @@ services:
   frontend:
     image: front
     container_name: front
-    build: ./frontend
+    build: ../frontend
     volumes:
-      - ./frontend/front:/app
+      - ../frontend/front:/app
     ports:
       - "3000:3000"
 

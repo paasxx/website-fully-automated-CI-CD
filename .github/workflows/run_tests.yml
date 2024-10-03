@@ -51,7 +51,7 @@ jobs:
 
       - name: Build and start backend and database containers
         run: |
-            docker-compose -f docker-compose-tests.yml up -d db web
+            docker-compose -f docker-compose/docker-compose-tests.yml up -d db web
 
       - name: Build and start backend and database containers
         run: |
