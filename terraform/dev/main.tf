@@ -37,7 +37,7 @@ resource "aws_ecs_task_definition" "frontend_task" {
     environment = [
       {
         name  = "REACT_APP_BACKEND_URL"
-        value = "http://${aws_lb.dev_lb.dns_name}/api"
+        value = "https://${aws_lb.backend_lb.dns_name}/api"
       }
     ]
 
@@ -175,8 +175,14 @@ resource "aws_ecs_service" "frontend_service" {
     security_groups  = [aws_security_group.frontend_sg.id]
   }
 
+  load_balancer {
+    target_group_arn = aws_lb_target_group.frontend_target_group.arn
+    container_name   = "frontend"
+    container_port   = 80
+  }
+
   # Adiciona a dependência no ALB
-  depends_on = [aws_lb.dev_lb]
+  depends_on = [aws_lb.frontend_lb]
 
 }
 
@@ -197,7 +203,7 @@ resource "aws_ecs_service" "backend_service" {
     container_port   = 8000
   }
 
-  depends_on = [aws_lb.dev_lb, aws_lb_target_group.backend_target_group]
+  depends_on = [aws_lb.backend_lb, aws_lb_target_group.backend_target_group]
 
 }
 
@@ -308,11 +314,11 @@ resource "aws_iam_role_policy_attachment" "ecs_task_role_cloudwatch_policy" {
 }
 
 
-resource "aws_lb" "dev_lb" {
-  name                       = "dev-lb"
+resource "aws_lb" "backend_lb" {
+  name                       = "backend-lb"
   internal                   = false
   load_balancer_type         = "application"
-  security_groups            = [aws_security_group.alb_sg.id]
+  security_groups            = [aws_security_group.backend_lb_sg.id]
   subnets                    = aws_subnet.dev_subnet[*].id
   enable_deletion_protection = false
 
@@ -321,21 +327,54 @@ resource "aws_lb" "dev_lb" {
 
   tags = {
 
-    Name = "dev-lb"
+    Name = "backend-lb"
 
   }
 }
 
-resource "aws_lb_listener" "frontend_listener" {
-  load_balancer_arn = aws_lb.dev_lb.arn
-  port              = 80
-  protocol          = "HTTP"
+resource "aws_lb" "frontend_lb" {
+  name                             = "frontend-lb"
+  internal                         = false
+  load_balancer_type               = "application"
+  security_groups                  = [aws_security_group.frontend_lb_sg.id]
+  subnets                          = aws_subnet.dev_subnet[*].id
+  enable_deletion_protection       = false
+  enable_cross_zone_load_balancing = true
+  enable_http2                     = true
+
+  tags = {
+    Name = "frontend-lb"
+  }
+}
+
+# Listener HTTPS para o Frontend
+resource "aws_lb_listener" "frontend_https_listener" {
+  load_balancer_arn = aws_lb.frontend_lb.arn
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_acm_certificate.frontend_cert.arn
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.frontend_target_group.arn
+  }
+}
+
+# Listener HTTPS para o Backend
+resource "aws_lb_listener" "backend_https_listener" {
+  load_balancer_arn = aws_lb.backend_lb.arn
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_acm_certificate.backend_cert.arn
 
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.backend_target_group.arn
   }
 }
+
 
 resource "aws_lb_target_group" "backend_target_group" {
   name        = "backend-target-group-dev"
@@ -350,6 +389,21 @@ resource "aws_lb_target_group" "backend_target_group" {
     timeout             = 10
     healthy_threshold   = 5
     unhealthy_threshold = 3
+  }
+}
+
+resource "aws_lb_target_group" "frontend_target_group" {
+  name     = "frontend-target-group"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.dev_vpc.id
+
+  health_check {
+    path                = "/"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
   }
 }
 
@@ -385,7 +439,7 @@ resource "aws_security_group" "backend_sg" {
     from_port       = 8000
     to_port         = 8000
     protocol        = "tcp"
-    security_groups = [aws_security_group.alb_sg.id] # Permitir apenas o frontend
+    security_groups = [aws_security_group.backend_lb_sg.id] # Permitir apenas o frontend
   }
 
   egress {
@@ -406,10 +460,11 @@ resource "aws_security_group" "frontend_sg" {
   vpc_id      = aws_vpc.dev_vpc.id
 
   ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Permitir acesso público
+    from_port = 80
+    to_port   = 80
+    protocol  = "tcp"
+    # cidr_blocks     = ["0.0.0.0/0"] # Permitir acesso público
+    security_groups = [aws_security_group.frontend_lb_sg.id]
   }
 
   egress {
@@ -424,16 +479,17 @@ resource "aws_security_group" "frontend_sg" {
   }
 }
 
-resource "aws_security_group" "alb_sg" {
-  name        = "alb-sg"
+resource "aws_security_group" "frontend_lb_sg" {
+  name        = "frontend-lb-sg"
   description = "Security group for ALB"
   vpc_id      = aws_vpc.dev_vpc.id
 
+
   ingress {
-    from_port   = 80
-    to_port     = 80
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Permitir acesso público
+    cidr_blocks = ["0.0.0.0/0"] # Permitir acesso público na porta 443 (HTTPS)
   }
 
   # Allow all outbound traffic
@@ -446,6 +502,30 @@ resource "aws_security_group" "alb_sg" {
 
   tags = {
     Name = "alb-sg"
+  }
+}
+
+resource "aws_security_group" "backend_lb_sg" {
+  name        = "backend-lb-sg"
+  description = "Security group for Backend Load Balancer"
+  vpc_id      = aws_vpc.dev_vpc.id
+
+  ingress {
+    from_port       = 443
+    to_port         = 443
+    protocol        = "tcp"
+    security_groups = [aws_security_group.frontend_sg.id] # Permitir apenas o frontend
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "backend-lb-sg"
   }
 }
 
@@ -513,4 +593,23 @@ resource "aws_cloudwatch_log_group" "backend_log_group" {
 resource "aws_cloudwatch_log_group" "db_log_group" {
   name              = "/ecs/db"
   retention_in_days = 7
+}
+
+
+resource "aws_acm_certificate" "frontend_cert" {
+  domain_name       = "candlefarm.com.br" # Substitua pelo seu domínio
+  validation_method = "DNS"
+
+  tags = {
+    Name = "frontend-cert"
+  }
+}
+
+resource "aws_acm_certificate" "backend_cert" {
+  domain_name       = aws_lb.backend_lb.dns_name # Substitua pelo seu subdomínio do backend
+  validation_method = "DNS"
+
+  tags = {
+    Name = "backend-cert"
+  }
 }
