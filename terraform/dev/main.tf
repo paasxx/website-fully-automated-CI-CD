@@ -347,7 +347,7 @@ resource "aws_lb" "frontend_lb" {
   }
 }
 
-# Listener HTTPS para o Frontend
+
 resource "aws_lb_listener" "frontend_https_listener" {
   load_balancer_arn = aws_lb.frontend_lb.arn
   port              = 443
@@ -359,7 +359,11 @@ resource "aws_lb_listener" "frontend_https_listener" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.frontend_target_group.arn
   }
+
+  depends_on = [aws_acm_certificate_validation.frontend_cert_validation]
 }
+
+
 
 # Listener HTTPS para o Backend
 resource "aws_lb_listener" "backend_https_listener" {
@@ -393,10 +397,12 @@ resource "aws_lb_target_group" "backend_target_group" {
 }
 
 resource "aws_lb_target_group" "frontend_target_group" {
-  name     = "frontend-target-group"
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.dev_vpc.id
+  name        = "frontend-target-group"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.dev_vpc.id
+  target_type = "ip"
+
 
   health_check {
     path                = "/"
@@ -605,11 +611,23 @@ resource "aws_acm_certificate" "frontend_cert" {
   }
 }
 
-resource "aws_acm_certificate" "backend_cert" {
-  domain_name       = aws_lb.backend_lb.dns_name # Substitua pelo seu subdomínio do backend
-  validation_method = "DNS"
-
-  tags = {
-    Name = "backend-cert"
+resource "aws_route53_record" "frontend_cert_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.frontend_cert.domain_validation_options : dvo.domain_name => {
+      name  = dvo.resource_record_name
+      type  = dvo.resource_record_type
+      value = dvo.resource_record_value
+    }
   }
+  zone_id = aws_route53_zone.main.zone_id # Substitua pelo seu zone_id
+  name    = each.value.name
+  type    = each.value.type
+  ttl     = 60
+  records = [each.value.value]
 }
+
+resource "aws_acm_certificate_validation" "frontend_cert_validation" {
+  certificate_arn         = aws_acm_certificate.frontend_cert.arn
+  validation_record_fqdns = [for record in aws_route53_record.frontend_cert_validation : record.fqdn]
+}
+
