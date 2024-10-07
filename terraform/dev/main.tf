@@ -330,6 +330,11 @@ resource "aws_lb" "backend_lb" {
     Name = "backend-lb"
 
   }
+
+  depends_on = [
+    aws_internet_gateway.dev_igw,
+    aws_subnet.dev_subnet
+  ]
 }
 
 resource "aws_lb" "frontend_lb" {
@@ -345,6 +350,11 @@ resource "aws_lb" "frontend_lb" {
   tags = {
     Name = "frontend-lb"
   }
+
+  depends_on = [
+    aws_internet_gateway.dev_igw,
+    aws_subnet.dev_subnet
+  ]
 }
 
 # Listener HTTPS para o Frontend
