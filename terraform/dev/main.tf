@@ -406,7 +406,7 @@ resource "aws_lb_target_group" "backend_target_group" {
 }
 
 resource "aws_lb_target_group" "frontend_target_group" {
-  name        = "frontend-target-group"
+  name        = "frontend-target-group-dev"
   port        = 80
   protocol    = "HTTP"
   vpc_id      = aws_vpc.dev_vpc.id
