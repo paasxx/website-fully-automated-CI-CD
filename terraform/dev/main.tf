@@ -182,7 +182,7 @@ resource "aws_ecs_service" "frontend_service" {
   }
 
   # Adiciona a dependência no ALB
-  depends_on = [aws_lb.frontend_lb]
+  depends_on = [aws_lb.frontend_lb, aws_lb_target_group.frontend_target_group]
 
 }
 
