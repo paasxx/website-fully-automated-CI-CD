@@ -628,8 +628,9 @@ resource "aws_acm_certificate" "backend_cert" {
   }
 }
 
-data "aws_route53_zone" "my_zone" {
-  name = "candlefarm.com.br" # Domínio do GoDaddy
+# Hosted Zone no Route 53
+resource "aws_route53_zone" "my_zone" {
+  name = "candlefarm.com.br" # Substitua pelo seu domínio
 }
 
 
@@ -637,7 +638,7 @@ data "aws_route53_zone" "my_zone" {
 resource "aws_route53_record" "frontend_cert_validation" {
   for_each = { for dvo in aws_acm_certificate.frontend_cert.domain_validation_options : dvo.domain_name => dvo }
 
-  zone_id = data.aws_route53_zone.my_zone.zone_id
+  zone_id = aws_route53_zone.my_zone.zone_id
   name    = each.value.resource_record_name
   type    = each.value.resource_record_type
   ttl     = 60
@@ -650,7 +651,7 @@ resource "aws_route53_record" "frontend_cert_validation" {
 resource "aws_route53_record" "backend_cert_validation" {
   for_each = { for dvo in aws_acm_certificate.backend_cert.domain_validation_options : dvo.domain_name => dvo }
 
-  zone_id = data.aws_route53_zone.my_zone.zone_id
+  zone_id = aws_route53_zone.my_zone.zone_id
   name    = each.value.resource_record_name
   type    = each.value.resource_record_type
   ttl     = 60
@@ -661,7 +662,7 @@ resource "aws_route53_record" "backend_cert_validation" {
 
 # Registro DNS para o domínio frontend (www.teudominio.com)
 resource "aws_route53_record" "frontend_www" {
-  zone_id = data.aws_route53_zone.my_zone.zone_id
+  zone_id = aws_route53_zone.my_zone.zone_id
   name    = "www.candlefarm.com.br"
   type    = "A"
 
@@ -674,7 +675,7 @@ resource "aws_route53_record" "frontend_www" {
 
 # Registro DNS para o domínio backend (api.teudominio.com)
 resource "aws_route53_record" "backend_api" {
-  zone_id = data.aws_route53_zone.my_zone.zone_id
+  zone_id = aws_route53_zone.my_zone.zone_id
   name    = "api.candlefarm.com.br"
   type    = "A"
 
