@@ -385,6 +385,7 @@ resource "aws_lb_listener" "backend_https_listener" {
     target_group_arn = aws_lb_target_group.backend_target_group.arn
   }
 
+
 }
 
 
@@ -668,16 +669,10 @@ resource "aws_route53_record" "backend_cert_validation" {
   ttl     = 60
   records = [each.value.resource_record_value]
 
-  depends_on = [null_resource.wait_for_cert_validation]
+  depends_on = [aws_acm_certificate.backend_cert]
 }
 
-resource "null_resource" "wait_for_cert_validation" {
-  depends_on = [aws_route53_record.backend_cert_validation]
 
-  provisioner "local-exec" {
-    command = "echo 'Waiting for certificate validation...'"
-  }
-}
 
 # Registro DNS para o domínio frontend (www.teudominio.com)
 resource "aws_route53_record" "frontend_www" {
