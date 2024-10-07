@@ -352,7 +352,7 @@ resource "aws_lb_listener" "frontend_https_listener" {
   load_balancer_arn = aws_lb.frontend_lb.arn
   port              = 443
   protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
   certificate_arn   = aws_acm_certificate.frontend_cert.arn
 
   default_action {
@@ -360,7 +360,6 @@ resource "aws_lb_listener" "frontend_https_listener" {
     target_group_arn = aws_lb_target_group.frontend_target_group.arn
   }
 
-  depends_on = [aws_acm_certificate_validation.frontend_cert_validation]
 }
 
 # Listener HTTPS para o Backend
@@ -368,7 +367,7 @@ resource "aws_lb_listener" "backend_https_listener" {
   load_balancer_arn = aws_lb.backend_lb.arn
   port              = 443
   protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
   certificate_arn   = aws_acm_certificate.backend_cert.arn
 
   default_action {
@@ -376,7 +375,6 @@ resource "aws_lb_listener" "backend_https_listener" {
     target_group_arn = aws_lb_target_group.backend_target_group.arn
   }
 
-  depends_on = [aws_acm_certificate_validation.backend_cert_validation]
 }
 
 
@@ -638,10 +636,10 @@ data "aws_route53_zone" "my_zone" {
 # Validação do Certificado SSL do Frontend via DNS
 resource "aws_route53_record" "frontend_cert_validation" {
   zone_id = data.aws_route53_zone.my_zone.zone_id
-  name    = aws_acm_certificate.frontend_cert.domain_validation_options[0].resource_record_name
-  type    = aws_acm_certificate.frontend_cert.domain_validation_options[0].resource_record_type
+  name    = lookup(aws_acm_certificate.frontend_cert.domain_validation_options[0], "resource_record_name", "")
+  type    = lookup(aws_acm_certificate.frontend_cert.domain_validation_options[0], "resource_record_type", "")
   ttl     = 60
-  records = [aws_acm_certificate.frontend_cert.domain_validation_options[0].resource_record_value]
+  records = [lookup(aws_acm_certificate.frontend_cert.domain_validation_options[0], "resource_record_value", "")]
 
   depends_on = [aws_acm_certificate.frontend_cert]
 }
@@ -649,10 +647,10 @@ resource "aws_route53_record" "frontend_cert_validation" {
 # Validação do Certificado SSL do Backend via DNS
 resource "aws_route53_record" "backend_cert_validation" {
   zone_id = data.aws_route53_zone.my_zone.zone_id
-  name    = aws_acm_certificate.backend_cert.domain_validation_options[0].resource_record_name
-  type    = aws_acm_certificate.backend_cert.domain_validation_options[0].resource_record_type
+  name    = lookup(aws_acm_certificate.backend_cert.domain_validation_options[0], "resource_record_name", "")
+  type    = lookup(aws_acm_certificate.backend_cert.domain_validation_options[0], "resource_record_type", "")
   ttl     = 60
-  records = [aws_acm_certificate.backend_cert.domain_validation_options[0].resource_record_value]
+  records = [lookup(aws_acm_certificate.backend_cert.domain_validation_options[0], "resource_record_value", "")]
 
   depends_on = [aws_acm_certificate.backend_cert]
 }
