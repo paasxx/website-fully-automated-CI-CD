@@ -646,31 +646,31 @@ resource "aws_route53_zone" "my_zone" {
 }
 
 
-# Validação do Certificado SSL do Frontend via DNS
-resource "aws_route53_record" "frontend_cert_validation" {
-  for_each = { for dvo in aws_acm_certificate.frontend_cert.domain_validation_options : dvo.domain_name => dvo }
+# # Validação do Certificado SSL do Frontend via DNS
+# resource "aws_route53_record" "frontend_cert_validation" {
+#   for_each = { for dvo in aws_acm_certificate.frontend_cert.domain_validation_options : dvo.domain_name => dvo }
 
-  zone_id = aws_route53_zone.my_zone.zone_id
-  name    = each.value.resource_record_name
-  type    = each.value.resource_record_type
-  ttl     = 60
-  records = [each.value.resource_record_value]
+#   zone_id = aws_route53_zone.my_zone.zone_id
+#   name    = each.value.resource_record_name
+#   type    = each.value.resource_record_type
+#   ttl     = 60
+#   records = [each.value.resource_record_value]
 
-  depends_on = [aws_acm_certificate.frontend_cert]
-}
+#   depends_on = [aws_acm_certificate.frontend_cert]
+# }
 
-# Validação do Certificado SSL do Backend via DNS
-resource "aws_route53_record" "backend_cert_validation" {
-  for_each = { for dvo in aws_acm_certificate.backend_cert.domain_validation_options : dvo.domain_name => dvo }
+# # Validação do Certificado SSL do Backend via DNS
+# resource "aws_route53_record" "backend_cert_validation" {
+#   for_each = { for dvo in aws_acm_certificate.backend_cert.domain_validation_options : dvo.domain_name => dvo }
 
-  zone_id = aws_route53_zone.my_zone.zone_id
-  name    = each.value.resource_record_name
-  type    = each.value.resource_record_type
-  ttl     = 60
-  records = [each.value.resource_record_value]
+#   zone_id = aws_route53_zone.my_zone.zone_id
+#   name    = each.value.resource_record_name
+#   type    = each.value.resource_record_type
+#   ttl     = 60
+#   records = [each.value.resource_record_value]
 
-  depends_on = [aws_acm_certificate.backend_cert]
-}
+#   depends_on = [aws_acm_certificate.backend_cert]
+# }
 
 
 
