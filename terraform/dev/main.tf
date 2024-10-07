@@ -347,7 +347,7 @@ resource "aws_lb" "frontend_lb" {
   }
 }
 
-
+# Listener HTTPS para o Frontend
 resource "aws_lb_listener" "frontend_https_listener" {
   load_balancer_arn = aws_lb.frontend_lb.arn
   port              = 443
@@ -363,8 +363,6 @@ resource "aws_lb_listener" "frontend_https_listener" {
   depends_on = [aws_acm_certificate_validation.frontend_cert_validation]
 }
 
-
-
 # Listener HTTPS para o Backend
 resource "aws_lb_listener" "backend_https_listener" {
   load_balancer_arn = aws_lb.backend_lb.arn
@@ -377,6 +375,8 @@ resource "aws_lb_listener" "backend_https_listener" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.backend_target_group.arn
   }
+
+  depends_on = [aws_acm_certificate_validation.backend_cert_validation]
 }
 
 
@@ -401,7 +401,7 @@ resource "aws_lb_target_group" "frontend_target_group" {
   port        = 80
   protocol    = "HTTP"
   vpc_id      = aws_vpc.dev_vpc.id
-  target_type = "ip"
+  target_type = "ip" # Alterar para 'ip'
 
 
   health_check {
@@ -603,31 +603,82 @@ resource "aws_cloudwatch_log_group" "db_log_group" {
 
 
 resource "aws_acm_certificate" "frontend_cert" {
-  domain_name       = "candlefarm.com.br" # Substitua pelo seu domínio
+  domain_name       = "www.candlefarm.com.br" # Substitua pelo seu domínio
   validation_method = "DNS"
+
+  subject_alternative_names = ["candlefarm.com.br"]
 
   tags = {
     Name = "frontend-cert"
   }
-}
 
-resource "aws_route53_record" "frontend_cert_validation" {
-  for_each = {
-    for dvo in aws_acm_certificate.frontend_cert.domain_validation_options : dvo.domain_name => {
-      name  = dvo.resource_record_name
-      type  = dvo.resource_record_type
-      value = dvo.resource_record_value
-    }
+  lifecycle {
+    create_before_destroy = true
   }
-  zone_id = aws_route53_zone.main.zone_id # Substitua pelo seu zone_id
-  name    = each.value.name
-  type    = each.value.type
+}
+
+resource "aws_acm_certificate" "backend_cert" {
+  domain_name       = aws_lb.backend_lb.dns_name # Substitua pelo seu subdomínio do backend
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = {
+    Name = "backend-cert"
+  }
+}
+
+data "aws_route53_zone" "my_zone" {
+  name = "candlefarm.com.br" # Domínio do GoDaddy
+}
+
+
+# Validação do Certificado SSL do Frontend via DNS
+resource "aws_route53_record" "frontend_cert_validation" {
+  zone_id = data.aws_route53_zone.my_zone.zone_id
+  name    = aws_acm_certificate.frontend_cert.domain_validation_options[0].resource_record_name
+  type    = aws_acm_certificate.frontend_cert.domain_validation_options[0].resource_record_type
   ttl     = 60
-  records = [each.value.value]
+  records = [aws_acm_certificate.frontend_cert.domain_validation_options[0].resource_record_value]
+
+  depends_on = [aws_acm_certificate.frontend_cert]
 }
 
-resource "aws_acm_certificate_validation" "frontend_cert_validation" {
-  certificate_arn         = aws_acm_certificate.frontend_cert.arn
-  validation_record_fqdns = [for record in aws_route53_record.frontend_cert_validation : record.fqdn]
+# Validação do Certificado SSL do Backend via DNS
+resource "aws_route53_record" "backend_cert_validation" {
+  zone_id = data.aws_route53_zone.my_zone.zone_id
+  name    = aws_acm_certificate.backend_cert.domain_validation_options[0].resource_record_name
+  type    = aws_acm_certificate.backend_cert.domain_validation_options[0].resource_record_type
+  ttl     = 60
+  records = [aws_acm_certificate.backend_cert.domain_validation_options[0].resource_record_value]
+
+  depends_on = [aws_acm_certificate.backend_cert]
 }
 
+# Registro DNS para o domínio frontend (www.teudominio.com)
+resource "aws_route53_record" "frontend_www" {
+  zone_id = data.aws_route53_zone.my_zone.zone_id
+  name    = "www.candlefarm.com.br"
+  type    = "A"
+
+  alias {
+    name                   = aws_lb.frontend_lb.dns_name
+    zone_id                = aws_lb.frontend_lb.zone_id
+    evaluate_target_health = true
+  }
+}
+
+# Registro DNS para o domínio backend (api.teudominio.com)
+resource "aws_route53_record" "backend_api" {
+  zone_id = data.aws_route53_zone.my_zone.zone_id
+  name    = "api.candlefarm.com.br"
+  type    = "A"
+
+  alias {
+    name                   = aws_lb.backend_lb.dns_name
+    zone_id                = aws_lb.backend_lb.zone_id
+    evaluate_target_health = true
+  }
+}
