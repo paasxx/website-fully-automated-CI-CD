@@ -14,3 +14,8 @@ output "frontend_lb_dns" {
 output "backend_lb_dns" {
   value = aws_lb.backend_lb.dns_name
 }
+
+output "route53_ns_records" {
+  description = "NS records for the Route 53 hosted zone"
+  value       = aws_route53_zone.my_zone.name_servers
+}
