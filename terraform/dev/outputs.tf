@@ -19,3 +19,8 @@ output "route53_ns_records" {
   description = "NS records for the Route 53 hosted zone"
   value       = aws_route53_zone.my_zone.name_servers
 }
+
+output "acm_certificate_arn" {
+  description = "The ARN of the ACM certificate"
+  value       = aws_acm_certificate.frontend_cert.arn
+}

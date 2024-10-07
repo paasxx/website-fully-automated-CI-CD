@@ -111,10 +111,6 @@ jobs:
         run: terraform apply -auto-approve -var-file=dev.tfvars -target=aws_acm_certificate.frontend_cert -target=aws_acm_certificate.backend_cert -target=aws_route53_zone.my_zone
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
-      - name: Install jq tool
-        run: |
-          sudo apt-get update
-          sudo apt-get install jq
 
   # Etapa 3: Verificar status do ACM e aguardar até que esteja ISSUED
   check_acm_status:
