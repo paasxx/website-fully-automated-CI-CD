@@ -628,13 +628,6 @@ resource "aws_acm_certificate" "backend_cert" {
   }
 }
 
-# Recurso nulo para aguardar a criação do certificado
-resource "null_resource" "backend_cert_validation_trigger" {
-  depends_on = [aws_acm_certificate.backend_cert]
-  provisioner "local-exec" {
-    command = "echo 'Backend certificate created'"
-  }
-}
 
 # Hosted Zone no Route 53
 resource "aws_route53_zone" "my_zone" {
@@ -665,7 +658,7 @@ resource "aws_route53_record" "backend_cert_validation" {
   ttl     = 60
   records = [each.value.resource_record_value]
 
-  depends_on = [null_resource.backend_cert_validation_trigger]
+  depends_on = [aws_acm_certificate.backend_cert]
 }
 
 # Registro DNS para o domínio frontend (www.teudominio.com)
