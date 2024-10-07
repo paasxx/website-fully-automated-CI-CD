@@ -41,7 +41,15 @@ jobs:
           AWS_REGION: "us-east-1"
         run: |
           echo 'resource "aws_s3_bucket" "meu_bucket_terraform" { bucket = "meu-bucket-terraform-pedro-silveira" }' > bucket.tf
-          echo 'resource "aws_dynamodb_table" "terraform_locks" { name = "terraform-locks" billing_mode = "PAY_PER_REQUEST" hash_key = "LockID" attribute { name = "LockID" type = "S" } }' > dynamodb.tf
+          echo 'resource "aws_dynamodb_table" "terraform_locks" {
+            name         = "terraform-locks"
+            billing_mode = "PAY_PER_REQUEST"
+            hash_key     = "LockID"
+            attribute {
+              name = "LockID"
+              type = "S"
+            }
+          }' > dynamodb.tf
           terraform init -var-file=dev.tfvars
           terraform apply -auto-approve -var-file=dev.tfvars -target=aws_s3_bucket.meu_bucket_terraform -target=aws_dynamodb_table.terraform_locks
         working-directory: ./terraform/${{ github.event.inputs.environment }}
