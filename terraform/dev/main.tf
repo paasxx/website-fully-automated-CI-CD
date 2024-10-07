@@ -626,7 +626,7 @@ resource "aws_acm_certificate" "frontend_cert" {
 }
 
 resource "aws_acm_certificate" "backend_cert" {
-  domain_name       = aws_lb.backend_lb.dns_name # Substitua pelo seu subdomínio do backend
+  domain_name       = "api.candlefarm.com.br" # Substitua pelo seu subdomínio do backend
   validation_method = "DNS"
 
   lifecycle {
