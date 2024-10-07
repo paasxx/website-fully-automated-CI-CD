@@ -116,15 +116,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install jq
 
-      - name: Output Route 53 NS Records
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          terraform output -json | jq '.route53_ns_records[]'
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
   # Etapa 3: Verificar status do ACM e aguardar até que esteja ISSUED
   check_acm_status:
     runs-on: ubuntu-latest
