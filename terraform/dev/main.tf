@@ -677,7 +677,7 @@ resource "aws_route53_record" "frontend_cert_ext_validation" {
   ttl     = 60
   records = [each.value.resource_record_value]
 
-  depends_on = [aws_acm_certificate.frontend_cert]
+  depends_on = [aws_acm_certificate.frontend_cert_ext]
 }
 
 # Validação do Certificado SSL do Backend via DNS
@@ -690,7 +690,7 @@ resource "aws_route53_record" "backend_cert_ext_validation" {
   ttl     = 60
   records = [each.value.resource_record_value]
 
-  depends_on = [aws_acm_certificate.backend_cert]
+  depends_on = [aws_acm_certificate.backend_cert_ext]
 }
 
 

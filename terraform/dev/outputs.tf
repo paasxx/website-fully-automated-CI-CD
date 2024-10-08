@@ -22,7 +22,7 @@ output "route53_ns_records" {
 
 output "acm_certificate_arn" {
   description = "The ARN of the ACM certificate"
-  value       = aws_acm_certificate.frontend_cert.arn
+  value       = aws_acm_certificate.frontend_cert_ext.arn
 }
 
 
