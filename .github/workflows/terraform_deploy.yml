@@ -121,19 +121,19 @@ jobs:
         with:
           terraform_version: 1.5.5
 
-      # - name: Configurar backend S3 e DynamoDB
-      #   run: |
-      #     echo 'terraform {
-      #       backend "s3" {
-      #         bucket = "meu-bucket-terraform-pedro-silveira"
-      #         key    = "terraform.tfstate"
-      #         region = "us-east-1"
-      #         dynamodb_table = "terraform-locks"
-      #         encrypt = true
-      #       }
-      #     }' > backend.tf
-      #     terraform fmt backend.tf
-      #   working-directory: ./terraform/${{ github.event.inputs.environment }}
+      - name: Configurar backend S3 e DynamoDB
+        run: |
+          echo 'terraform {
+            backend "s3" {
+              bucket = "meu-bucket-terraform-pedro-silveira"
+              key    = "terraform.tfstate"
+              region = "us-east-1"
+              dynamodb_table = "terraform-locks"
+              encrypt = true
+            }
+          }' > backend.tf
+          terraform fmt backend.tf
+        working-directory: ./terraform/${{ github.event.inputs.environment }}
 
       - name: Terraform Init
         env:
