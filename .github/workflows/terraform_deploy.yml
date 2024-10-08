@@ -143,14 +143,6 @@ jobs:
         run: terraform init -var-file=dev.tfvars
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
-      - name: Refresh Terraform state
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: terraform refresh
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
       - name: Verificar saída do ARN do Certificado ACM
         run: terraform output -raw acm_certificate_arn
         working-directory: ./terraform/${{ github.event.inputs.environment }}
