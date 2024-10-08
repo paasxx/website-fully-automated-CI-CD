@@ -611,7 +611,7 @@ resource "aws_cloudwatch_log_group" "db_log_group" {
 }
 
 
-resource "aws_acm_certificate" "frontend_cert" {
+resource "aws_acm_certificate" "frontend_cert_ext" {
   domain_name       = "www.candlefarm.com.br" # Substitua pelo seu domínio
   validation_method = "DNS"
 
@@ -626,8 +626,36 @@ resource "aws_acm_certificate" "frontend_cert" {
   }
 }
 
-resource "aws_acm_certificate" "backend_cert" {
+resource "aws_acm_certificate" "backend_cert_ext" {
   domain_name       = "api.candlefarm.com.br" # Substitua pelo seu subdomínio do backend
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = {
+    Name = "backend-cert"
+  }
+}
+
+resource "aws_acm_certificate" "frontend_cert" {
+  domain_name       = "frontend.temp.yourdomain.com.br" # Substitua pelo seu domínio
+  validation_method = "DNS"
+
+  subject_alternative_names = ["frontend.temp.yourdomain.com.br"]
+
+  tags = {
+    Name = "frontend-cert"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_acm_certificate" "backend_cert" {
+  domain_name       = "backend.temp.yourdomain.com.br" # Substitua pelo seu subdomínio do backend
   validation_method = "DNS"
 
   lifecycle {
@@ -671,6 +699,37 @@ resource "aws_route53_zone" "my_zone" {
 
 #   depends_on = [aws_acm_certificate.backend_cert]
 # }
+
+# Hosted Zone provisória no Route 53
+resource "aws_route53_zone" "temp_zone" {
+  name = "temp.yourdomain.com" # Domínio temporário
+}
+
+# Registro DNS provisório para o frontend
+resource "aws_route53_record" "frontend_temp" {
+  zone_id = aws_route53_zone.temp_zone.zone_id
+  name    = "frontend.temp.yourdomain.com.br"
+  type    = "A"
+
+  alias {
+    name                   = aws_lb.frontend_lb.dns_name
+    zone_id                = aws_lb.frontend_lb.zone_id
+    evaluate_target_health = true
+  }
+}
+
+# Registro DNS provisório para o backend
+resource "aws_route53_record" "backend_temp" {
+  zone_id = aws_route53_zone.temp_zone.zone_id
+  name    = "backend.temp.yourdomain.com.br"
+  type    = "A"
+
+  alias {
+    name                   = aws_lb.backend_lb.dns_name
+    zone_id                = aws_lb.backend_lb.zone_id
+    evaluate_target_health = true
+  }
+}
 
 
 
