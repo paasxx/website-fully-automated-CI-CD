@@ -139,7 +139,7 @@ jobs:
               encrypt = true
             }
           }' > backend.tf
-          terraform init -var-file=dev.tfvars
+          terraform fmt backend.tf  # Formata automaticamente o arquivo gerado
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
       - name: Terraform Init (Com Backend)
@@ -148,13 +148,6 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
         run: terraform init -var-file=dev.tfvars
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
-      - name: Terraform Format
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: terraform fmt -check
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
       - name: Terraform Plan
