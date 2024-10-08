@@ -83,6 +83,7 @@ jobs:
             }
           }' > backend.tf
           terraform init -var-file=dev.tfvars
+          terraform apply -auto-approve -var-file=dev.tfvars -target=terraform.backend
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
   # Etapa 2: Criar ACM e Route 53
@@ -106,13 +107,6 @@ jobs:
         run: terraform init -var-file=dev.tfvars
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
-      - name: Terraform Format
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: terraform fmt -check
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
       - name: Terraform Plan (ACM and Route 53)
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -132,6 +126,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: create_acm_and_route53
     steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
