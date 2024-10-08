@@ -365,20 +365,11 @@ resource "aws_lb_listener" "frontend_https_listener" {
   ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
   # certificate_arn   = aws_acm_certificate.frontend_cert_ext.arn
 
-  # default_action {
-  #   type             = "forward"
-  #   target_group_arn = aws_lb_target_group.frontend_target_group.arn
-  # }
-
   default_action {
-    type = "redirect"
-    redirect {
-      protocol    = "HTTPS"
-      port        = "443"
-      host        = aws_api_gateway_deployment.frontend_deployment.invoke_url
-      status_code = "HTTP_301"
-    }
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.frontend_target_group.arn
   }
+
 
 }
 
@@ -390,22 +381,11 @@ resource "aws_lb_listener" "backend_https_listener" {
   ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
   # certificate_arn   = aws_acm_certificate.backend_cert_ext.arn
 
-  # default_action {
-  #   type             = "forward"
-  #   target_group_arn = aws_lb_target_group.backend_target_group.arn
-
-  # }
-
   default_action {
-    type = "redirect"
-    redirect {
-      protocol    = "HTTPS"
-      port        = "443"
-      host        = aws_api_gateway_deployment.backend_deployment.invoke_url
-      status_code = "HTTP_301"
-    }
-  }
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backend_target_group.arn
 
+  }
 
 }
 
