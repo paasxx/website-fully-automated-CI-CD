@@ -99,7 +99,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: terraform plan -var-file=dev.tfvars -target=aws_acm_certificate.frontend_cert -target=aws_acm_certificate.backend_cert -target=aws_route53_zone.temp_zone
+        run: terraform plan -var-file=dev.tfvars -target=aws_acm_certificate.frontend_cert_ext -target=aws_acm_certificate.backend_cert_ext -target=aws_route53_zone.my_zone
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
       - name: Terraform Apply (ACM and Route 53)
@@ -107,7 +107,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: terraform apply -auto-approve -var-file=dev.tfvars -target=aws_acm_certificate.frontend_cert -target=aws_acm_certificate.backend_cert -target=aws_route53_zone.temp_zone
+        run: terraform apply -auto-approve -var-file=dev.tfvars -target=aws_acm_certificate.frontend_cert_ext -target=aws_acm_certificate.backend_cert_ext -target=aws_route53_zone.my_zone
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
 
@@ -202,10 +202,6 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
         run: terraform init -var-file=dev.tfvars
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
-      - name: Verificar saída do ARN do Certificado ACM
-        run: terraform output -raw acm_certificate_arn
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
       - name: Listar todos os outputs do Terraform

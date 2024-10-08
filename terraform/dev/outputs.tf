@@ -24,3 +24,14 @@ output "acm_certificate_arn" {
   description = "The ARN of the ACM certificate"
   value       = aws_acm_certificate.frontend_cert.arn
 }
+
+
+# Output the API Gateway URL (HTTPS) for frontend
+output "frontend_api_gateway_url" {
+  value = aws_api_gateway_deployment.frontend_deployment.invoke_url
+}
+
+# Output the API Gateway URL (HTTPS) for backend
+output "backend_api_gateway_url" {
+  value = aws_api_gateway_deployment.backend_deployment.invoke_url
+}

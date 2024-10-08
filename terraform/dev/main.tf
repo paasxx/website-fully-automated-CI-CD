@@ -363,11 +363,21 @@ resource "aws_lb_listener" "frontend_https_listener" {
   port              = 443
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
-  certificate_arn   = aws_acm_certificate.frontend_cert.arn
+  # certificate_arn   = aws_acm_certificate.frontend_cert_ext.arn
+
+  # default_action {
+  #   type             = "forward"
+  #   target_group_arn = aws_lb_target_group.frontend_target_group.arn
+  # }
 
   default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.frontend_target_group.arn
+    type = "redirect"
+    redirect {
+      protocol    = "HTTPS"
+      port        = "443"
+      host        = aws_api_gateway_deployment.frontend_deployment.invoke_url
+      status_code = "HTTP_301"
+    }
   }
 
 }
@@ -378,11 +388,22 @@ resource "aws_lb_listener" "backend_https_listener" {
   port              = 443
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
-  certificate_arn   = aws_acm_certificate.backend_cert.arn
+  # certificate_arn   = aws_acm_certificate.backend_cert_ext.arn
+
+  # default_action {
+  #   type             = "forward"
+  #   target_group_arn = aws_lb_target_group.backend_target_group.arn
+
+  # }
 
   default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.backend_target_group.arn
+    type = "redirect"
+    redirect {
+      protocol    = "HTTPS"
+      port        = "443"
+      host        = aws_api_gateway_deployment.backend_deployment.invoke_url
+      status_code = "HTTP_301"
+    }
   }
 
 
@@ -639,34 +660,6 @@ resource "aws_acm_certificate" "backend_cert_ext" {
   }
 }
 
-resource "aws_acm_certificate" "frontend_cert" {
-  domain_name       = "frontend.temp.yourdomain.com.br" # Substitua pelo seu domínio
-  validation_method = "DNS"
-
-  subject_alternative_names = ["frontend.temp.yourdomain.com.br"]
-
-  tags = {
-    Name = "frontend-cert"
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_acm_certificate" "backend_cert" {
-  domain_name       = "backend.temp.yourdomain.com.br" # Substitua pelo seu subdomínio do backend
-  validation_method = "DNS"
-
-  lifecycle {
-    create_before_destroy = true
-  }
-
-  tags = {
-    Name = "backend-cert"
-  }
-}
-
 
 # Hosted Zone no Route 53
 resource "aws_route53_zone" "my_zone" {
@@ -675,10 +668,10 @@ resource "aws_route53_zone" "my_zone" {
 
 
 # Validação do Certificado SSL do Frontend via DNS
-resource "aws_route53_record" "frontend_cert_validation" {
-  for_each = { for dvo in aws_acm_certificate.frontend_cert.domain_validation_options : dvo.domain_name => dvo }
+resource "aws_route53_record" "frontend_cert_ext_validation" {
+  for_each = { for dvo in aws_acm_certificate.frontend_cert_ext.domain_validation_options : dvo.domain_name => dvo }
 
-  zone_id = aws_route53_zone.temp_zone.zone_id
+  zone_id = aws_route53_zone.my_zone.zone_id
   name    = each.value.resource_record_name
   type    = each.value.resource_record_type
   ttl     = 60
@@ -688,10 +681,10 @@ resource "aws_route53_record" "frontend_cert_validation" {
 }
 
 # Validação do Certificado SSL do Backend via DNS
-resource "aws_route53_record" "backend_cert_validation" {
-  for_each = { for dvo in aws_acm_certificate.backend_cert.domain_validation_options : dvo.domain_name => dvo }
+resource "aws_route53_record" "backend_cert_ext_validation" {
+  for_each = { for dvo in aws_acm_certificate.backend_cert_ext.domain_validation_options : dvo.domain_name => dvo }
 
-  zone_id = aws_route53_zone.temp_zone.zone_id
+  zone_id = aws_route53_zone.my_zone.zone_id
   name    = each.value.resource_record_name
   type    = each.value.resource_record_type
   ttl     = 60
@@ -699,38 +692,6 @@ resource "aws_route53_record" "backend_cert_validation" {
 
   depends_on = [aws_acm_certificate.backend_cert]
 }
-
-# Hosted Zone provisória no Route 53
-resource "aws_route53_zone" "temp_zone" {
-  name = "temp.yourdomain.com" # Domínio temporário
-}
-
-# Registro DNS provisório para o frontend
-resource "aws_route53_record" "frontend_temp" {
-  zone_id = aws_route53_zone.temp_zone.zone_id
-  name    = "frontend.temp.yourdomain.com.br"
-  type    = "A"
-
-  alias {
-    name                   = aws_lb.frontend_lb.dns_name
-    zone_id                = aws_lb.frontend_lb.zone_id
-    evaluate_target_health = true
-  }
-}
-
-# Registro DNS provisório para o backend
-resource "aws_route53_record" "backend_temp" {
-  zone_id = aws_route53_zone.temp_zone.zone_id
-  name    = "backend.temp.yourdomain.com.br"
-  type    = "A"
-
-  alias {
-    name                   = aws_lb.backend_lb.dns_name
-    zone_id                = aws_lb.backend_lb.zone_id
-    evaluate_target_health = true
-  }
-}
-
 
 
 # Registro DNS para o domínio frontend (www.teudominio.com)
@@ -758,3 +719,73 @@ resource "aws_route53_record" "backend_api" {
     evaluate_target_health = true
   }
 }
+
+
+# API Gateway para fornecer um endpoint HTTPS temporário para o frontend
+resource "aws_api_gateway_rest_api" "frontend_api" {
+  name        = "FrontendTemporaryAPI"
+  description = "Temporary API Gateway for HTTPS access to frontend"
+}
+
+resource "aws_api_gateway_resource" "frontend_resource" {
+  rest_api_id = aws_api_gateway_rest_api.frontend_api.id
+  parent_id   = aws_api_gateway_rest_api.frontend_api.root_resource_id
+  path_part   = "frontend"
+}
+
+resource "aws_api_gateway_method" "frontend_method" {
+  rest_api_id   = aws_api_gateway_rest_api.frontend_api.id
+  resource_id   = aws_api_gateway_resource.frontend_resource.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "frontend_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.frontend_api.id
+  resource_id             = aws_api_gateway_resource.frontend_resource.id
+  http_method             = aws_api_gateway_method.frontend_method.http_method
+  type                    = "HTTP_PROXY"
+  uri                     = "https://${aws_lb.frontend_lb.dns_name}"
+  integration_http_method = "GET"
+}
+
+resource "aws_api_gateway_deployment" "frontend_deployment" {
+  rest_api_id = aws_api_gateway_rest_api.frontend_api.id
+  stage_name  = "prod"
+}
+
+
+
+# API Gateway para fornecer um endpoint HTTPS temporário para o backend
+resource "aws_api_gateway_rest_api" "backend_api" {
+  name        = "BackendTemporaryAPI"
+  description = "Temporary API Gateway for HTTPS access to backend"
+}
+
+resource "aws_api_gateway_resource" "backend_resource" {
+  rest_api_id = aws_api_gateway_rest_api.backend_api.id
+  parent_id   = aws_api_gateway_rest_api.backend_api.root_resource_id
+  path_part   = "backend"
+}
+
+resource "aws_api_gateway_method" "backend_method" {
+  rest_api_id   = aws_api_gateway_rest_api.backend_api.id
+  resource_id   = aws_api_gateway_resource.backend_resource.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "backend_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.backend_api.id
+  resource_id             = aws_api_gateway_resource.backend_resource.id
+  http_method             = aws_api_gateway_method.backend_method.http_method
+  type                    = "HTTP_PROXY"
+  uri                     = "https://${aws_lb.backend_lb.dns_name}"
+  integration_http_method = "GET"
+}
+
+resource "aws_api_gateway_deployment" "backend_deployment" {
+  rest_api_id = aws_api_gateway_rest_api.backend_api.id
+  stage_name  = "prod"
+}
+
