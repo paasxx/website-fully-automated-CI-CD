@@ -15,3 +15,11 @@ output "backend_lb_dns" {
   value = aws_lb.backend_lb.dns_name
 }
 
+output "frontend_lb_zone_id" {
+  value = aws_lb.frontend_lb.zone_id
+}
+
+output "backend_lb_zone_id" {
+  value = aws_lb.backend_lb.zone_id
+}
+
