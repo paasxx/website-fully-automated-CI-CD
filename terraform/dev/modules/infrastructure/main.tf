@@ -571,10 +571,10 @@ resource "aws_security_group" "backend_lb_sg" {
   # }
 
   ingress {
-    from_port   = 8000
-    to_port     = 8000
+    from_port   = 80
+    to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Permitir acesso público na porta 8000 (HTTP)
+    cidr_blocks = ["0.0.0.0/0"] # Permitir acesso público na porta 80 (HTTP)
   }
 
 
