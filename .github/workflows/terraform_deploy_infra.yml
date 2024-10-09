@@ -109,8 +109,8 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: terraform plan -var-file=dev.tfvars
-        working-directory: ./terraform/${{ github.event.inputs.environment }}/modules/infrastructure
+        run: terraform plan -var-file=dev.tfvars -target=module.infrastructure
+        working-directory: ./terraform/${{ github.event.inputs.environment }}
 
 
       - name: Terraform Apply
@@ -119,8 +119,8 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: terraform apply -auto-approve -var-file=dev.tfvars -var "aws_region=${{ secrets.AWS_REGION }}"
-        working-directory: ./terraform/${{ github.event.inputs.environment }}/modules/infrastructure
+        run: terraform apply -auto-approve -var-file=dev.tfvars -target=module.infrastructure
+        working-directory: ./terraform/${{ github.event.inputs.environment }}
 
 
   print_terraform_outputs_and_state:
