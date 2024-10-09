@@ -82,7 +82,6 @@ jobs:
   bootstrap_destroy:
     needs: terraform  # Executa após o job principal de terraform
     runs-on: ubuntu-latest
-    if: github.event.inputs.environment == 'bootstrap'
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
