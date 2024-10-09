@@ -37,7 +37,7 @@ resource "aws_ecs_task_definition" "frontend_task" {
     environment = [
       {
         name  = "REACT_APP_BACKEND_URL"
-        value = "https://${aws_lb.backend_lb.dns_name}/api"
+        value = "http://${aws_lb.backend_lb.dns_name}/api"
       }
     ]
 
@@ -323,7 +323,7 @@ resource "aws_lb" "backend_lb" {
   enable_deletion_protection = false
 
   enable_cross_zone_load_balancing = true
-  enable_http2                     = true
+  #   enable_http2                     = true
 
   tags = {
 
@@ -345,7 +345,7 @@ resource "aws_lb" "frontend_lb" {
   subnets                          = aws_subnet.dev_subnet[*].id
   enable_deletion_protection       = false
   enable_cross_zone_load_balancing = true
-  enable_http2                     = true
+  #   enable_http2                     = true
 
   tags = {
     Name = "frontend-lb"
@@ -357,13 +357,27 @@ resource "aws_lb" "frontend_lb" {
   ]
 }
 
+# # Listener HTTPS para o Frontend
+# resource "aws_lb_listener" "frontend_https_listener" {
+#   load_balancer_arn = aws_lb.frontend_lb.arn
+#   port              = 443
+#   protocol          = "HTTPS"
+#   ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
+#   certificate_arn   = module.hosted_zone_acm.frontend_cert_ext.arn
+
+#   default_action {
+#     type             = "forward"
+#     target_group_arn = aws_lb_target_group.frontend_target_group.arn
+#   }
+
+
+# }
+
 # Listener HTTPS para o Frontend
 resource "aws_lb_listener" "frontend_https_listener" {
   load_balancer_arn = aws_lb.frontend_lb.arn
-  port              = 443
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
-  certificate_arn   = module.hosted_zone_acm.frontend_cert_ext.arn
+  port              = 80
+  protocol          = "HTTP"
 
   default_action {
     type             = "forward"
@@ -373,13 +387,29 @@ resource "aws_lb_listener" "frontend_https_listener" {
 
 }
 
+
+# # Listener HTTPS para o Backend
+# resource "aws_lb_listener" "backend_https_listener" {
+#   load_balancer_arn = aws_lb.backend_lb.arn
+#   port              = 443
+#   protocol          = "HTTPS"
+#   ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
+#   certificate_arn   = module.hosted_zone_acm.backend_cert_ext.arn
+
+#   default_action {
+#     type             = "forward"
+#     target_group_arn = aws_lb_target_group.backend_target_group.arn
+
+#   }
+
+# }
+
+
 # Listener HTTPS para o Backend
 resource "aws_lb_listener" "backend_https_listener" {
   load_balancer_arn = aws_lb.backend_lb.arn
-  port              = 443
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
-  certificate_arn   = module.hosted_zone_acm.backend_cert_ext.arn
+  port              = 80
+  protocol          = "HTTP"
 
   default_action {
     type             = "forward"
@@ -399,10 +429,10 @@ resource "aws_lb_target_group" "backend_target_group" {
 
   health_check {
     path                = "/api/health/"
-    interval            = 120
-    timeout             = 10
+    interval            = 30
+    timeout             = 5
     healthy_threshold   = 5
-    unhealthy_threshold = 3
+    unhealthy_threshold = 2
   }
 }
 
