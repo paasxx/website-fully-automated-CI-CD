@@ -14,9 +14,53 @@ on:
 
 
 jobs:
+
+  # Etapa 1: Criar S3 e DynamoDB
+  create_s3_and_dynamodb:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check password (for manual dispatch)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          if [ "${{ github.event.inputs.password }}" != "${{ secrets.WORKFLOW_PASSWORD }}" ]; then
+            echo "Senha incorreta!"
+            exit 1
+          fi
+        shell: bash
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.5
+
+      - name: Terraform Init (Create S3 Bucket and DynamoDB Table)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "us-east-1"
+        run: |
+          echo 'resource "aws_s3_bucket" "meu_bucket_terraform" { bucket = "meu-bucket-terraform-pedro-silveira" }' > bucket.tf
+          echo 'resource "aws_dynamodb_table" "terraform_locks" {
+            name         = "terraform-locks"
+            billing_mode = "PAY_PER_REQUEST"
+            hash_key     = "LockID"
+            attribute {
+              name = "LockID"
+              type = "S"
+            }
+          }' > dynamodb.tf
+          terraform init -var-file=dev.tfvars
+          terraform apply -auto-approve -var-file=dev.tfvars -target=aws_s3_bucket.meu_bucket_terraform -target=aws_dynamodb_table.terraform_locks
+        working-directory: ./terraform/${{ github.event.inputs.environment }}
+
+
   # Etapa 4: Provisionar o restante da infraestrutura
   terraform:
     runs-on: ubuntu-latest
+    needs: create_s3_and_dynamodb
     steps:
       - name: Check password (for manual dispatch)
         if: ${{ github.event_name == 'workflow_dispatch' }}
