@@ -15,9 +15,12 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
 
     steps:
-
       # Verifica se a senha está correta no dispatch manual
     - name: Check password (for manual dispatch)
       if: ${{ github.event_name == 'workflow_dispatch' }}
@@ -36,134 +39,74 @@ jobs:
       with:
         terraform_version: 1.5.5
 
-    - name: Configurar backend S3 Bucket
-      env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-      run: |
-        echo 'terraform { 
-          backend "s3" { 
-            bucket = "meu-bucket-terraform-pedro-silveira" 
-            key    = "terraform.tfstate" 
-            region = "us-east-1" 
-            dynamodb_table = "terraform-locks"
-            encrypt = true
-          } 
-        }' > backend.tf
-        terraform fmt backend.tf  # Formata automaticamente o arquivo gerado
-      working-directory: ./terraform/${{ github.event.inputs.environment }}
-
     - name: Terraform Init
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: terraform init -var-file=dev.tfvars
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Listar estado do Terraform
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: terraform state list
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Remover repositório ECR frontend-repo do estado do Terraform
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
         terraform state rm aws_ecr_repository.frontend || true
       working-directory: ./terraform/${{ github.event.inputs.environment }}
     
     - name: Remover repositório ECR backend-repo do estado do Terraform
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
         terraform state rm aws_ecr_repository.backend || true
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
       # Deletar o repositório ECR frontend-repo
     - name: Deletar repositório ECR frontend-repo
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
         aws ecr delete-repository --repository-name frontend-repo --force --region us-east-1  || true
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     # Deletar o repositório ECR backend-repo
     - name: Deletar repositório ECR backend-repo
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
         aws ecr delete-repository --repository-name backend-repo --force --region us-east-1  || true
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Terraform Plan
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: terraform plan -var-file=dev.tfvars
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Terraform Destroy
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: terraform destroy -auto-approve -var-file=dev.tfvars
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     # Verificar o status da tabela DynamoDB antes de tentar deletá-la
     - name: Verificar status da tabela DynamoDB
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
         aws dynamodb describe-table --table-name terraform-locks --region us-east-1
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     # Remover todos os itens da tabela DynamoDB (se necessário)
     - name: Remover todos os itens da tabela DynamoDB
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
         aws dynamodb scan --table-name terraform-locks --attributes-to-get LockID --query "Items[].LockID.S" --output text --region us-east-1 | \
         xargs -I {} aws dynamodb delete-item --table-name terraform-locks --key '{"LockID": {"S": "{}"}}' --region us-east-1
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Destruir a tabela DynamoDB
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
         aws dynamodb delete-table --table-name terraform-locks --region us-east-1
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Remover estado do Terraform do S3
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
         aws s3 rm s3://meu-bucket-terraform-pedro-silveira/terraform.tfstate --region us-east-1 --debug
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
      # Remover todos os objetos do bucket S3
     - name: Remover todos os objetos do bucket S3
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
         aws s3 rm s3://meu-bucket-terraform-pedro-silveira --recursive --region us-east-1
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Destruir o bucket S3
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       run: |
         aws s3 rb s3://meu-bucket-terraform-pedro-silveira --force --region us-east-1
       working-directory: ./terraform/${{ github.event.inputs.environment }}
