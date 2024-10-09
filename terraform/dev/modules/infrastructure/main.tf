@@ -531,11 +531,18 @@ resource "aws_security_group" "frontend_lb_sg" {
   vpc_id      = aws_vpc.dev_vpc.id
 
 
+  # ingress {
+  #   from_port   = 443
+  #   to_port     = 443
+  #   protocol    = "tcp"
+  #   cidr_blocks = ["0.0.0.0/0"] # Permitir acesso público na porta 443 (HTTPS)
+  # }
+
   ingress {
-    from_port   = 443
-    to_port     = 443
+    from_port   = 80
+    to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Permitir acesso público na porta 443 (HTTPS)
+    cidr_blocks = ["0.0.0.0/0"] # Permitir acesso público na porta 80 (HTTP)
   }
 
   # Allow all outbound traffic
@@ -556,12 +563,20 @@ resource "aws_security_group" "backend_lb_sg" {
   description = "Security group for Backend Load Balancer"
   vpc_id      = aws_vpc.dev_vpc.id
 
+  # ingress {
+  #   from_port       = 443
+  #   to_port         = 443
+  #   protocol        = "tcp"
+  #   security_groups = [aws_security_group.frontend_sg.id] # Permitir apenas o frontend
+  # }
+
   ingress {
-    from_port       = 443
-    to_port         = 443
-    protocol        = "tcp"
-    security_groups = [aws_security_group.frontend_sg.id] # Permitir apenas o frontend
+    from_port   = 8000
+    to_port     = 8000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # Permitir acesso público na porta 8000 (HTTP)
   }
+
 
   egress {
     from_port   = 0

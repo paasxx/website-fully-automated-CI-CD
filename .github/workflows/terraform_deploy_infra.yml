@@ -150,7 +150,7 @@ jobs:
               encrypt = true
             }
           }' > backend.tf
-          terraform init -var-file=dev.tfvars
+          terraform fmt backend.tf  # Formata automaticamente o arquivo gerado
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
       - name: Terraform Init
