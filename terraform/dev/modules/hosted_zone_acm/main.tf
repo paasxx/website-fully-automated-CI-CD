@@ -72,7 +72,7 @@ resource "aws_route53_record" "frontend_www" {
   type    = "A"
 
   alias {
-    name                   = aws_lb.frontend_lb.dns_name
+    name                   = var.frontend_lb_dns
     zone_id                = aws_lb.frontend_lb.zone_id
     evaluate_target_health = true
   }
@@ -85,7 +85,7 @@ resource "aws_route53_record" "backend_api" {
   type    = "A"
 
   alias {
-    name                   = aws_lb.backend_lb.dns_name
+    name                   = var.backend_lb_dns
     zone_id                = aws_lb.backend_lb.zone_id
     evaluate_target_health = true
   }
