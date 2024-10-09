@@ -40,7 +40,7 @@ jobs:
         terraform_version: 1.5.5
 
     - name: Terraform Init
-      run: terraform init -var-file=dev.tfvars
+      run: terraform init -var-file=${{ github.event.inputs.environment }}.tfvars
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Listar estado do Terraform
@@ -49,12 +49,12 @@ jobs:
 
     - name: Remover repositório ECR frontend-repo do estado do Terraform
       run: |
-        terraform state rm aws_ecr_repository.frontend || true
+        terraform state rm module.infrastructure.aws_ecr_repository.frontend || true
       working-directory: ./terraform/${{ github.event.inputs.environment }}
     
     - name: Remover repositório ECR backend-repo do estado do Terraform
       run: |
-        terraform state rm aws_ecr_repository.backend || true
+        terraform state rm module.infrastructure.aws_ecr_repository.backend || true
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
       # Deletar o repositório ECR frontend-repo
@@ -70,44 +70,78 @@ jobs:
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Terraform Plan
-      run: terraform plan -var-file=dev.tfvars
+      run: terraform plan -target=module.infrastructure -var-file=dev.tfvars
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Terraform Destroy
-      run: terraform destroy -auto-approve -var-file=dev.tfvars
+      run: terraform destroy -target=module.infrastructure -auto-approve -var-file=dev.tfvars
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
-    # Verificar o status da tabela DynamoDB antes de tentar deletá-la
-    - name: Verificar status da tabela DynamoDB
-      run: |
-        aws dynamodb describe-table --table-name terraform-locks --region us-east-1
-      working-directory: ./terraform/${{ github.event.inputs.environment }}
 
-    # Remover todos os itens da tabela DynamoDB (se necessário)
-    - name: Remover todos os itens da tabela DynamoDB
-      run: |
-        aws dynamodb scan --table-name terraform-locks --attributes-to-get LockID --query "Items[].LockID.S" --output text --region us-east-1 | \
-        xargs -I {} aws dynamodb delete-item --table-name terraform-locks --key '{"LockID": {"S": "{}"}}' --region us-east-1
-      working-directory: ./terraform/${{ github.event.inputs.environment }}
+  # Job para destruir o bootstrap
+  bootstrap_destroy:
+    needs: terraform  # Executa após o job principal de terraform
+    runs-on: ubuntu-latest
+    if: github.event.inputs.environment == 'bootstrap'
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
 
-    - name: Destruir a tabela DynamoDB
-      run: |
-        aws dynamodb delete-table --table-name terraform-locks --region us-east-1
-      working-directory: ./terraform/${{ github.event.inputs.environment }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Remover estado do Terraform do S3
-      run: |
-        aws s3 rm s3://meu-bucket-terraform-pedro-silveira/terraform.tfstate --region us-east-1 --debug
-      working-directory: ./terraform/${{ github.event.inputs.environment }}
+      - name: Set up Terraform for Bootstrap
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.5
 
-     # Remover todos os objetos do bucket S3
-    - name: Remover todos os objetos do bucket S3
-      run: |
-        aws s3 rm s3://meu-bucket-terraform-pedro-silveira --recursive --region us-east-1
-      working-directory: ./terraform/${{ github.event.inputs.environment }}
+      - name: Terraform Init (Bootstrap)
+        run: terraform init
+        working-directory: ./terraform/bootstrap-backend
 
-    - name: Destruir o bucket S3
-      run: |
-        aws s3 rb s3://meu-bucket-terraform-pedro-silveira --force --region us-east-1
-      working-directory: ./terraform/${{ github.event.inputs.environment }}
+        # Verificar o status da tabela DynamoDB antes de tentar deletá-la
+      - name: Verificar status da tabela DynamoDB
+        run: |
+          aws dynamodb describe-table --table-name terraform-locks --region us-east-1
+        working-directory: ./terraform/bootstrap-backend
+
+      # Remover todos os itens da tabela DynamoDB
+      - name: Remover todos os itens da tabela DynamoDB
+        run: |
+          aws dynamodb scan --table-name terraform-locks --attributes-to-get LockID --query "Items[].LockID.S" --output text --region us-east-1 | \
+          xargs -I {} aws dynamodb delete-item --table-name terraform-locks --key '{"LockID": {"S": "{}"}}' --region us-east-1
+        working-directory: ./terraform/bootstrap-backend
+
+      # Deletar a tabela DynamoDB
+      - name: Deletar tabela DynamoDB
+        run: |
+          aws dynamodb delete-table --table-name terraform-locks --region us-east-1
+        working-directory: ./terraform/bootstrap-backend
+
+      - name: Remover estado do Terraform do S3
+        run: |
+          aws s3 rm s3://meu-bucket-terraform-pedro-silveira/terraform.tfstate --region us-east-1 --debug
+        working-directory: ./terraform/bootstrap-backend
+
+
+      - name: Esvaziar todos os objetos do bucket S3
+        run: |
+          aws s3 rm s3://meu-bucket-terraform-pedro-silveira --recursive --region us-east-1
+        working-directory: ./terraform/bootstrap-backend
+
+      
+      # Deletar o bucket S3
+      - name: Deletar bucket S3
+        run: |
+          aws s3 rb s3://meu-bucket-terraform-pedro-silveira --force --region us-east-1
+        working-directory: ./terraform/bootstrap-backend
+
+      # Executa o destroy do bootstrap
+      - name: Terraform Destroy (Bootstrap)
+        run: terraform destroy -auto-approve
+        working-directory: ./terraform/bootstrap-backend
+
+
 

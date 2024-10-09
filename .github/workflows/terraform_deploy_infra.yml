@@ -38,12 +38,11 @@ jobs:
         with:
           terraform_version: 1.5.5
 
-      - name: Terraform Init (Create S3 Bucket and DynamoDB Table)
+      - name: Terraform Apply (Create S3 Bucket and DynamoDB Table)
         run: |
-          terraform apply -auto-approve -var-file=dev.tfvars \
-            -target=aws_s3_bucket.meu_bucket_terraform \
-            -target=aws_dynamodb_table.terraform_locks
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
+            terraform init
+            terraform apply -auto-approve -var-file=dev.tfvars
+        working-directory: ./terraform/bootstrap-backend
 
 
   # Etapa 4: Provisionar o restante da infraestrutura
