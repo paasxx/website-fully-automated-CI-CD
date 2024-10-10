@@ -12,11 +12,14 @@ on:
           required: true
           type: string
 
-
 jobs:
-  # Etapa 4: Provisionar o restante da infraestrutura
-  terraform:
+  create_s3_and_dynamodb:
     runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+
     steps:
       - name: Check password (for manual dispatch)
         if: ${{ github.event_name == 'workflow_dispatch' }}
@@ -26,6 +29,31 @@ jobs:
             exit 1
           fi
         shell: bash
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.5
+
+      - name: Terraform Apply (Create S3 Bucket and DynamoDB Table)
+        run: |
+            terraform init
+            terraform apply -auto-approve -var-file=dev.tfvars
+        working-directory: ./terraform/bootstrap-backend
+
+
+  # Etapa 4: Provisionar o restante da infraestrutura
+  terraform:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+    needs: create_s3_and_dynamodb
+    steps:
     
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -35,52 +63,27 @@ jobs:
         with:
           terraform_version: 1.5.5
 
-      - name: Configurar backend S3 e DynamoDB
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          echo 'terraform {
-            backend "s3" {
-              bucket = "meu-bucket-terraform-pedro-silveira"
-              key    = "terraform.tfstate"
-              region = "us-east-1"
-              dynamodb_table = "terraform-locks"
-              encrypt = true
-            }
-          }' > backend.tf
-          terraform fmt backend.tf  # Formata automaticamente o arquivo gerado
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
       - name: Terraform Init (Com Backend)
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
         run: terraform init -var-file=dev.tfvars
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
       - name: Terraform Plan
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: terraform plan -var-file=dev.tfvars
-        working-directory: ./terraform/${{ github.event.inputs.environment }}/modules/infrastructure
+        run: terraform plan -var-file=dev.tfvars -target=module.infrastructure
+        working-directory: ./terraform/${{ github.event.inputs.environment }}
 
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: terraform apply -auto-approve -var-file=dev.tfvars -var "aws_region=${{ secrets.AWS_REGION }}"
-        working-directory: ./terraform/${{ github.event.inputs.environment }}/modules/infrastructure
+        run: terraform apply -auto-approve -var-file=dev.tfvars -target=module.infrastructure
+        working-directory: ./terraform/${{ github.event.inputs.environment }}
 
 
   print_terraform_outputs_and_state:
     runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
     needs: terraform
     steps:
       - name: Checkout repository
@@ -91,29 +94,7 @@ jobs:
         with:
           terraform_version: 1.5.5
 
-      - name: Configurar backend S3 e DynamoDB
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          echo 'terraform {
-            backend "s3" {
-              bucket = "meu-bucket-terraform-pedro-silveira"
-              key    = "terraform.tfstate"
-              region = "us-east-1"
-              dynamodb_table = "terraform-locks"
-              encrypt = true
-            }
-          }' > backend.tf
-          terraform init -var-file=dev.tfvars
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
       - name: Terraform Init
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
         run: terraform init -var-file=dev.tfvars
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
@@ -128,6 +109,10 @@ jobs:
   # Etapa 5: Build and Push Docker Images
   build_and_push:
     runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
     needs: terraform
     steps:
       - name: Checkout repository
@@ -138,10 +123,6 @@ jobs:
 
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
-        env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Build and push backend Docker image
         run: |
