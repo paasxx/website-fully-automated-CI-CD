@@ -18,9 +18,14 @@ module "hosted_zone_acm" {
   source = "./modules/hosted_zone_acm"
 
   # Passe os valores de saída dos LBs como variáveis
-  frontend_lb_dns = module.infrastructure.frontend_lb_dns
-  backend_lb_dns  = module.infrastructure.backend_lb_dns
-  frontend_lb_id  = module.infrastructure.frontend_lb_zone_id
-  backend_lb_id   = module.infrastructure.backend_lb_zone_id
+  frontend_lb_dns           = module.infrastructure.frontend_lb_dns
+  backend_lb_dns            = module.infrastructure.backend_lb_dns
+  frontend_lb_id            = module.infrastructure.frontend_lb_zone_id
+  backend_lb_id             = module.infrastructure.backend_lb_zone_id
+  frontend_lb_arn           = module.infrastructure.frontend_lb_arn
+  backend_lb_arn            = module.infrastructure.backend_lb_arn
+  frontend_target_group_arn = module.infrastructure.frontend_target_group_arn
+  backend_target_group_arn  = module.infrastructure.backend_target_group_arn
 }
+
 

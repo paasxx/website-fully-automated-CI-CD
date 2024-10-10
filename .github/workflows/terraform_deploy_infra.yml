@@ -54,14 +54,6 @@ jobs:
       AWS_REGION: ${{ secrets.AWS_REGION }}
     needs: create_s3_and_dynamodb
     steps:
-      - name: Check password (for manual dispatch)
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        run: |
-          if [ "${{ github.event.inputs.password }}" != "${{ secrets.WORKFLOW_PASSWORD }}" ]; then
-            echo "Senha incorreta!"
-            exit 1
-          fi
-        shell: bash
     
       - name: Checkout repository
         uses: actions/checkout@v3

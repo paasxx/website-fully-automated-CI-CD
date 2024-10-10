@@ -23,3 +23,19 @@ output "backend_lb_zone_id" {
   value = aws_lb.backend_lb.zone_id
 }
 
+output "frontend_lb_arn" {
+  value = aws_lb.frontend_lb.arn
+}
+
+output "backend_lb_arn" {
+  value = aws_lb.backend_lb.arn
+}
+
+output "frontend_target_group_arn" {
+  value = aws_lb_target_group.frontend_target_group.arn
+}
+
+output "backend_target_group_arn" {
+  value = aws_lb_target_group.backend_target_group.arn
+}
+
