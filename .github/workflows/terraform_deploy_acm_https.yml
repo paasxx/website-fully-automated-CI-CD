@@ -1,5 +1,5 @@
 
-name: Deploy Hosted Zone and ACM
+name: Deploy ACM fot HTTPS
 
 on:
     workflow_dispatch:
@@ -40,17 +40,43 @@ jobs:
         with:
           terraform_version: 1.5.5
 
-      - name: Terraform Init (ACM and Route 53)
+      - name: Terraform Init (ACM, HTTPS and DNS)
         run: terraform init -var-file=dev.tfvars
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
-      - name: Terraform Plan (ACM and Route 53)
+      - name: Terraform Plan (ACM, HTTPS and DNS)
         run: terraform plan -var-file=dev.tfvars -target=module.hosted_zone_acm
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
-      - name: Terraform Apply (ACM and Route 53)
+      - name: Terraform Apply (ACM, HTTPS and DNS)
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'
         run: terraform apply -auto-approve -var-file=dev.tfvars -target=module.hosted_zone_acm
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
-   
+  print_terraform_outputs_and_state:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+    needs: provision_https_dns
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.5
+
+      - name: Terraform Init
+        run: terraform init -var-file=dev.tfvars
+        working-directory: ./terraform/${{ github.event.inputs.environment }}
+
+      - name: Listar todos os outputs do Terraform
+        run: terraform output
+        working-directory: ./terraform/${{ github.event.inputs.environment }}
+
+      - name: Imprimir estado completo do Terraform
+        run: terraform show
+        working-directory: ./terraform/${{ github.event.inputs.environment }}

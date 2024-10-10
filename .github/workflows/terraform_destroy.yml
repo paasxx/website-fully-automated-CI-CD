@@ -13,7 +13,7 @@ on:
         type: string
 
 jobs:
-  terraform:
+  infra_destroy:
     runs-on: ubuntu-latest
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -47,28 +47,6 @@ jobs:
       run: terraform state list
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
-    - name: Remover repositório ECR frontend-repo do estado do Terraform
-      run: |
-        terraform state rm module.infrastructure.aws_ecr_repository.frontend || true
-      working-directory: ./terraform/${{ github.event.inputs.environment }}
-    
-    - name: Remover repositório ECR backend-repo do estado do Terraform
-      run: |
-        terraform state rm module.infrastructure.aws_ecr_repository.backend || true
-      working-directory: ./terraform/${{ github.event.inputs.environment }}
-
-      # Deletar o repositório ECR frontend-repo
-    - name: Deletar repositório ECR frontend-repo
-      run: |
-        aws ecr delete-repository --repository-name frontend-repo --force --region us-east-1  || true
-      working-directory: ./terraform/${{ github.event.inputs.environment }}
-
-    # Deletar o repositório ECR backend-repo
-    - name: Deletar repositório ECR backend-repo
-      run: |
-        aws ecr delete-repository --repository-name backend-repo --force --region us-east-1  || true
-      working-directory: ./terraform/${{ github.event.inputs.environment }}
-
     - name: Terraform Plan
       run: terraform plan -target=module.infrastructure -var-file=dev.tfvars
       working-directory: ./terraform/${{ github.event.inputs.environment }}
@@ -77,10 +55,44 @@ jobs:
       run: terraform destroy -target=module.infrastructure -auto-approve -var-file=dev.tfvars
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
+  https_dns_destroy:
+    runs-on: ubuntu-latest
+    needs: infra_destroy
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.5.5
+
+    - name: Terraform Init
+      run: terraform init -var-file=${{ github.event.inputs.environment }}.tfvars
+      working-directory: ./terraform/${{ github.event.inputs.environment }}
+
+    - name: Listar estado do Terraform
+      run: terraform state list
+      working-directory: ./terraform/${{ github.event.inputs.environment }}
+
+    - name: Terraform Plan
+      run: terraform plan -target=module.hosted_zone_acm -var-file=dev.tfvars
+      working-directory: ./terraform/${{ github.event.inputs.environment }}
+
+    - name: Terraform Destroy
+      run: terraform destroy -target=module.hosted_zone_acm -auto-approve -var-file=dev.tfvars
+      working-directory: ./terraform/${{ github.event.inputs.environment }}
+
 
   # Job para destruir o bootstrap
   bootstrap_destroy:
-    needs: terraform  # Executa após o job principal de terraform
+    needs: https_dns_destroy  # Executa após o job principal de terraform
     runs-on: ubuntu-latest
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
