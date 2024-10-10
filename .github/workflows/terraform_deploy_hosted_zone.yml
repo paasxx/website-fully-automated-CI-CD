@@ -49,8 +49,8 @@ jobs:
           terraform plan \
             -var-file=dev.tfvars \
             -target=module.hosted_zone_acm.aws_route53_zone.my_zone \
-            -target=module.hosted_zone_acm.aws_acm_certificate.aws_route53_record.frontend_www
-            -target=module.hosted_zone_acm.aws_acm_certificate.aws_route53_record.backend_api
+            -target=module.hosted_zone_acm.aws_route53_record.frontend_www
+            -target=module.hosted_zone_acm.aws_route53_record.backend_api
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
       - name: Terraform Apply (Hosted Zone)
@@ -60,8 +60,8 @@ jobs:
             -auto-approve \
             -var-file=dev.tfvars \
             -target=module.hosted_zone_acm.aws_route53_zone.my_zone \
-            -target=module.hosted_zone_acm.aws_acm_certificate.aws_route53_record.frontend_www
-            -target=module.hosted_zone_acm.aws_acm_certificate.aws_route53_record.backend_api
+            -target=module.hosted_zone_acm.aws_route53_record.frontend_www
+            -target=module.hosted_zone_acm.aws_route53_record.backend_api
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
   print_terraform_outputs_and_state:
