@@ -91,3 +91,6 @@ jobs:
       - name: Imprimir estado completo do Terraform
         run: terraform show
         working-directory: ./terraform/${{ github.event.inputs.environment }}
+
+
+        
