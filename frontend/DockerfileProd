@@ -8,7 +8,7 @@ WORKDIR /app
 COPY front/ /app
 
 # Instala as dependências do projeto
-RUN npm install --silent
+RUN npm install --verbose
 RUN npm install axios --silent
 RUN npm rebuild node-sass --silent
 
