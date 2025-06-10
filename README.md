@@ -1,6 +1,4 @@
-# Kanastra Challenge
-
-Este é o repositório do Desafio Kanastra. Nele, você encontrará informações sobre como instalar, executar e contribuir para o projeto.
+# Fully Automated Deploy and Destroy Website
 
 
 ## Como Começar
@@ -17,7 +15,7 @@ Siga os passos abaixo para executar o projeto.
 1. Clone este repositório em sua máquina local:
 
 ```bash
-git clone https://github.com/paasxx/kanastra.git
+git clone https://github.com/paasxx/website-fully-automated-CI-CD.git
 ```
 
 2. Navegue até o diretório do frontend:
