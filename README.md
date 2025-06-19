@@ -288,3 +288,152 @@ Essa documentação cobre todos os recursos, conexões e arquitetura da infraest
 │       ├── prod.tfvars
 │       ├── variables.tf
 │       └── versions.tf
+
+
+
+# Documentação de Integração Frontend ↔ Backend com Load Balancers (AWS ECS + Nginx)
+
+## 🌐 Visão Geral
+
+Este projeto consiste em um frontend React e um backend Django, ambos hospedados em contêineres ECS (Fargate), cada um com seu próprio Load Balancer (ALB). A comunicação entre o frontend e o backend é feita via **Nginx**, utilizando o path `/api/` como proxy.
+
+## 📦 Estrutura e Comunicação
+
+```
+[ Usuário ]
+    ↓
+[ Load Balancer do Frontend ]
+    ↓ (Nginx: /api/*)
+[ Frontend Container Nginx ]
+    ↓ (proxy_pass http://LB_backend/api/)
+[ Load Balancer do Backend ]
+    ↓
+[ Backend Django + Gunicorn + Nginx ]
+```
+
+- O React faz chamadas `axios.post('/api/upload-csv')`
+- O Nginx do frontend intercepta `/api/` e **roteia para o Load Balancer do backend**
+- O backend responde e o frontend mostra o resultado
+
+## ⚙️ Backend URL
+
+O backend é configurado dinamicamente com:
+
+```hcl
+# Terraform (frontend ECS Task)
+environment = [
+  {
+    name  = "REACT_APP_BACKEND_URL"
+    value = "http://${aws_lb.backend_lb.dns_name}/api"
+  }
+]
+```
+
+Essa variável é usada no build do React e também no template `nginx.conf.template`.
+
+---
+
+## 📁 nginx.conf do Frontend
+
+```nginx
+server {
+    listen 80;
+    server_name _;
+
+    client_max_body_size 150M;
+
+    location / {
+        root /usr/share/nginx/html;
+        index index.html index.htm;
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass ${REACT_APP_BACKEND_URL};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_connect_timeout 250s;
+        proxy_send_timeout 250s;
+        proxy_read_timeout 250s;
+
+        client_max_body_size 150M;
+    }
+}
+```
+
+> Usamos `envsubst` para substituir `${REACT_APP_BACKEND_URL}` em tempo de build.
+
+---
+
+## 🐳 Dockerfile do Frontend (Final)
+
+```Dockerfile
+FROM node:16 as builder
+
+WORKDIR /app
+COPY front/ /app
+
+RUN npm install --silent
+RUN npm install axios --silent
+RUN npm rebuild node-sass --silent
+
+ARG REACT_APP_BACKEND_URL
+ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
+
+RUN npm run build
+
+FROM nginx:latest
+
+RUN apt-get update && apt-get install -y gettext-base
+
+COPY nginx.conf /etc/nginx/templates/nginx.conf.template
+
+ENV REACT_APP_BACKEND_URL=http://localhost/api
+
+RUN envsubst '${REACT_APP_BACKEND_URL}' < /etc/nginx/templates/nginx.conf.template > /etc/nginx/conf.d/default.conf
+
+COPY --from=builder /app/build /usr/share/nginx/html
+
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+---
+
+## 📦 React - Ajustes Necessários
+
+### 1. **Todos os endpoints devem começar com `/api/`**:
+
+```javascript
+// axiosConfig.js
+const axiosInstance = axios.create({
+    baseURL: '/api',
+    timeout: 250000,
+});
+```
+
+### 2. No código (exemplo):
+
+```javascript
+await axiosInstance.post('/upload-csv/', formData);
+// Torna-se:
+await axiosInstance.post('/api/upload-csv/', formData);
+```
+
+### 3. Não use `REACT_APP_BACKEND_URL` no axios diretamente. As chamadas devem ser relativas (`/api/...`), pois o Nginx faz o roteamento.
+
+---
+
+## ✅ Conclusão
+
+- Toda requisição do React passa pelo Load Balancer do frontend.
+- O Nginx do frontend roteia para o backend, usando `/api/` como prefixo.
+- O Terraform injeta dinamicamente o endereço correto do Load Balancer do backend.
+- O Dockerfile e o Nginx são configurados para aceitar uploads grandes e realizar substituições com `envsubst`.
+
+---
+
+**Autor**: Pedro André  
+**Data**: Junho 2025  

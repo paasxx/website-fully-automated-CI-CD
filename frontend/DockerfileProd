@@ -1,44 +1,41 @@
-# Use a imagem oficial do Node como base
-FROM node:16
+# Etapa 1: Build do React
+FROM node:16 as builder
 
-# Define o diretório de trabalho dentro do contêiner
 WORKDIR /app
 
-# Copia os arquivos do projeto para o contêiner
+# Copia os arquivos do projeto React
 COPY front/ /app
 
-# Instala as dependências do projeto
+# Instala dependências
 RUN npm install --silent
 RUN npm install axios --silent
 RUN npm rebuild node-sass --silent
 
-# Passa a variável de ambiente para o build do React
+# Passa variável para o build do React
 ARG REACT_APP_BACKEND_URL
 ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
 
-# Build do projeto React
+# Build do React (vai embutir o REACT_APP_BACKEND_URL no código)
 RUN npm run build
 
-# Configuração do Nginx para servir o build do React
+
+# Etapa 2: Nginx + substituição da conf
 FROM nginx:latest
 
-# Copia o arquivo de configuração customizado do Nginx
-COPY nginx.conf /etc/nginx/conf.d/
+# Instala envsubst
+RUN apt-get update && apt-get install -y gettext-base
 
-# Verifica o conteúdo do arquivo nginx.conf
-RUN cat /etc/nginx/conf.d/nginx.conf
+# Copia e prepara template do nginx.conf
+COPY nginx.conf /etc/nginx/templates/nginx.conf.template
 
-# Verifica o valor da variável de ambiente
-RUN echo $REACT_APP_BACKEND_URL
+# ENV precisa de valor inicial (evita erro)
+ENV REACT_APP_BACKEND_URL=http://localhost/api
 
-# Copia os arquivos do build do React para o diretório de trabalho do Nginx
-COPY --from=0 /app/build /usr/share/nginx/html
+# Substituição via envsubst
+RUN envsubst '${REACT_APP_BACKEND_URL}' < /etc/nginx/templates/nginx.conf.template > /etc/nginx/conf.d/default.conf
 
-# Substitui as variáveis de ambiente no arquivo de configuração do Nginx
-RUN envsubst '$REACT_APP_BACKEND_URL' < /etc/nginx/conf.d/nginx.conf > /etc/nginx/conf.d/nginx.conf
+# Copia build do React
+COPY --from=builder /app/build /usr/share/nginx/html
 
-# Verifica o conteúdo do arquivo nginx.conf após o envsubst
-RUN cat /etc/nginx/conf.d/nginx.conf
-
-# Define o comando para iniciar o servidor Nginx quando o contêiner for executado
+# Inicia nginx
 CMD ["nginx", "-g", "daemon off;"]
