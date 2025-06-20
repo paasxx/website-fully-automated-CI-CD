@@ -166,6 +166,9 @@ cython_debug/
 # Node modules (gerado após npm install)
 node_modules/
 
+# Arquivos específicos do macOS
+.DS_Store
+
 # Logs
 npm-debug.log*
 yarn-debug.log*

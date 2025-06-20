@@ -437,3 +437,168 @@ await axiosInstance.post('/api/upload-csv/', formData);
 
 **Autor**: Pedro André  
 **Data**: Junho 2025  
+
+
+# Documentação Técnica: Arquitetura Nginx, React, AWS ECS com Load Balancers
+
+## Visão Geral da Arquitetura
+Este projeto utiliza um frontend React e um backend Django (via Gunicorn), ambos servidos em containers Docker na AWS Fargate. A comunicação entre os serviços é feita através de Load Balancers (ALBs) e o tráfego é roteado com Nginx.
+
+Abaixo está o fluxo geral:
+
+```
+Usuário (Navegador)
+   |
+   v
+Load Balancer do Frontend (porta 80 e 443)
+   |
+   v
+Container do Frontend (porta 80 com Nginx)
+   | (via proxy_pass no Nginx frontend para /api)
+   v
+Load Balancer do Backend (porta 80 e 443)
+   |
+   v
+Container do Backend (porta 8000 com Gunicorn e Nginx)
+```
+
+---
+
+## Camadas, Conexões e AWS Detalhada (VPC, SGs, Target Groups)
+
+### Passo a Passo Completo do Fluxo:
+
+1. **Usuário (Navegador)** acessa o site via `http://frontend-alb`
+2. A requisição entra no **Load Balancer do Frontend**, que:
+   - Escuta nas portas **80 e 443** (HTTP e HTTPS preparado)
+   - Está ligado a um **Security Group (frontend_lb_sg)** que:
+     - Permite `Ingress` nas portas 80/443 de qualquer IP (0.0.0.0/0)
+     - Permite `Egress` irrestrito (0.0.0.0/0)
+3. O ALB roteia a requisição para o **Target Group do Frontend**, que:
+   - Está configurado para direcionar para porta **80** dos containers
+   - Está associado ao **ECS Fargate do Frontend**
+4. O container do frontend:
+   - Escuta na porta **80** via Nginx
+   - Serve arquivos estáticos e intercepta `/api/*` com proxy_pass
+   - Usa seu próprio **Security Group (frontend_sg)** que:
+     - Permite `Ingress` na porta 80 vindo **somente** do `frontend_lb_sg`
+     - Permite `Egress` irrestrito
+
+5. Quando o React (com `axios`) chama uma rota `/api/...`, o Nginx faz:
+   - `proxy_pass` para o **Load Balancer do Backend** (backend-alb)
+6. O **Load Balancer do Backend**:
+   - Escuta nas portas **80 e 443** (HTTP e HTTPS preparado)
+   - Usa o **SG backend_lb_sg**, que:
+     - Permite `Ingress` na 80/443 vindo **do frontend_sg** e também público (para testes)
+     - `Egress` irrestrito
+7. O backend-alb envia ao seu **Target Group**, que:
+   - Está configurado para porta **8000** dos containers do backend
+   - Aponta para containers no **ECS Fargate do Backend**
+8. O container backend:
+   - Escuta na porta **8000**, onde o Nginx faz proxy para o Gunicorn
+   - Usa o **SG backend_sg**, que:
+     - Permite `Ingress` na 8000 vindo **apenas do backend_lb_sg**
+     - `Egress` irrestrito
+
+9. Gunicorn (escutando via UNIX socket `/tmp/gunicorn.sock`) recebe a requisição final e responde.
+
+10. A resposta faz o caminho inverso até o navegador do usuário.
+
+---
+
+## VPC e Subnets
+
+Todos os componentes descritos acima estão dentro da mesma **VPC (dev_vpc)**, que:
+- Tem DNS habilitado
+- Possui **duas subnets públicas**, cada uma em uma zona de disponibilidade
+- Os ALBs e containers ECS estão distribuídos nessas subnets para alta disponibilidade
+
+---
+
+## Funcionamento do Nginx (Frontend)
+
+- `location /` → serve o React build (index.html e estáticos)
+- `location /api/` → faz proxy_pass para o backend-alb (respeitando `/api` no caminho)
+- `client_max_body_size` ajustado para permitir uploads grandes
+- Barra no `proxy_pass` deve ser evitada para manter `/api/...` corretamente
+
+---
+
+## Funcionamento do Nginx (Backend)
+
+- Escuta na porta 8000
+- `location /api/` → proxy para Gunicorn (via socket)
+- `location /static/` e `/media/` → servem arquivos diretamente
+- Também ajustado com `client_max_body_size`
+
+---
+
+## axiosConfig.js no React
+
+- Usa `baseURL: '/api'` para todas as chamadas
+- O Nginx do frontend encaminha corretamente com `proxy_pass http://backend-alb/api` (sem barra final!)
+
+```js
+const axiosInstance = axios.create({
+    baseURL: '/api',
+    timeout: 250000,
+});
+```
+
+---
+
+## Considerações Finais
+
+- Todas as permissões entre ALBs, containers e banco são controladas por **Security Groups** de forma clara e segura.
+- O uso correto das portas (80/443, 8000) e `proxy_pass` com/sem barra é fundamental para o roteamento funcionar.
+- A separação por ALB para cada serviço e os respectivos Target Groups garante isolamento e facilita futura escalabilidade.
+- A VPC organiza todos os recursos em uma infraestrutura segura e controlada.
+
+
+## Componentes AWS utilizados e suas funções
+
+### 1. VPC (Virtual Private Cloud)
+Rede privada onde todos os recursos AWS (ECS, ALB, etc.) estão isolados. Define o espaço de IPs (CIDR) e subnets públicas.
+
+### 2. Subnets
+Subdivisões da VPC, associadas a zonas de disponibilidade. Os containers ECS e os ALBs são distribuídos entre elas.
+
+### 3. Security Groups (SG)
+Firewalls virtuais que controlam tráfego de entrada (ingress) e saída (egress) por portas, protocolos e IPs.
+
+### 4. Load Balancer (ALB)
+Distribui o tráfego entre containers ECS:
+- Frontend ALB escuta portas 80 e 443
+- Backend ALB escuta portas 80 e 443
+
+### 5. Listeners
+Componente do ALB que define qual porta ouvir (80, 443) e qual ação tomar (ex: enviar tráfego a um Target Group).
+
+### 6. Target Group
+Define portas de destino (80 no frontend, 8000 no backend) e envia tráfego para os IPs dos containers ECS.
+
+### 7. ECS Cluster
+Agrupamento de serviços ECS Fargate (frontend e backend). Cada serviço gerencia seus containers e escalabilidade.
+
+### 8. ECS Service
+Mantém as tarefas (containers) rodando, associadas ao target group e load balancer.
+
+---
+
+## Diagrama do fluxo completo (resumido com setas)
+
+```
+Usuário (navegador)
+  ↓
+Frontend Load Balancer (portas 80 e 443)
+  ↓ (via Target Group porta 80)
+ECS Frontend (porta 80 com Nginx)
+  ↓ (proxy_pass para backend)
+Backend Load Balancer (portas 80 e 443)
+  ↓ (via Target Group porta 8000)
+ECS Backend (porta 8000 com Nginx)
+  ↓ (proxy_pass para Gunicorn via UNIX socket)
+Gunicorn (executando Django app)
+```
+
+Todos os elementos estão dentro da VPC com regras de segurança definidas por Security Groups.
