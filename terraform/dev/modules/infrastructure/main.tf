@@ -37,7 +37,7 @@ resource "aws_ecs_task_definition" "frontend_task" {
     environment = [
       {
         name  = "REACT_APP_BACKEND_URL"
-        value = "http://${aws_lb.backend_lb.dns_name}/api"
+        value = "http://${aws_lb.backend_lb.dns_name}/api//"
       }
     ]
 

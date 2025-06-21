@@ -602,3 +602,148 @@ Gunicorn (executando Django app)
 ```
 
 Todos os elementos estão dentro da VPC com regras de segurança definidas por Security Groups.
+
+# Deploy e CI/CD - Infraestrutura AWS com Terraform e Docker
+
+Este projeto possui uma pipeline CI/CD organizada, segura e modular para provisionar infraestrutura na AWS, construir e publicar imagens Docker, configurar DNS e certificados HTTPS, e ainda destruir tudo quando necessário para evitar custos.
+
+---
+
+## Visão Geral daa Pipelines
+
+### 1. Deploy da Infraestrutura
+
+- Executado via GitHub Actions, workflow manual (`workflow_dispatch`) com senha para segurança.
+- Utiliza **Terraform** para provisionar:
+  - Bucket S3 (armazenamento remoto do estado Terraform)
+  - Tabela DynamoDB (lock para evitar concorrência no estado Terraform)
+  - Rede (VPC, subnets, security groups)
+  - Load Balancers, Target Groups
+  - Clusters ECS e serviços
+  - Repositórios ECR para Docker images
+
+### 2. Deploy da Hosted Zone (DNS)
+
+- Executado após a infraestrutura principal.
+- Configura zona DNS pública no **Route53**.
+- Cria registros DNS para frontend (`www`) e backend (`api`).
+- Essencial para apontar domínios para os Load Balancers.
+
+### 3. Deploy do ACM (Certificado HTTPS)
+
+- Executado após a Hosted Zone.
+- Provisiona certificado SSL/TLS com **AWS Certificate Manager (ACM)**.
+- Garante HTTPS válido para frontend e backend.
+- Pipeline espera a propagação da zona DNS antes de aplicar o ACM.
+
+### 4. Build e Push das Imagens Docker
+
+- Executado após a infraestrutura estar provisionada.
+- Utiliza Docker Buildx para build multiplataforma (linux/amd64).
+- Faz login no Amazon ECR.
+- Builda e envia as imagens Docker do backend e frontend para os repositórios ECR.
+
+---
+
+## Organização e Segurança
+
+- As pipelines usam variáveis de ambiente com segredos do GitHub (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, etc).
+- A execução manual exige senha para evitar execuções acidentais ou não autorizadas.
+- O estado do Terraform é armazenado remotamente no S3 e DynamoDB, garantindo:
+  - Controle de concorrência e bloqueios
+  - Histórico e rastreabilidade de mudanças
+- Os recursos são separados por módulos e ambientes (`dev`, `staging`, `prod`) usando arquivos `.tfvars`.
+
+---
+
+## Fluxo resumido
+
+1. Usuário dispara o workflow manual no GitHub.
+2. Terraform provisiona a infraestrutura base (VPC, ALBs, ECS, SGs).
+3. Terraform provisiona a zona DNS no Route53 e cria os registros necessários.
+4. Terraform provisiona o ACM para habilitar HTTPS.
+5. Docker images são buildadas e enviadas para ECR.
+6. Serviços ECS são atualizados com as novas imagens.
+7. Tudo está pronto para rodar com HTTPS (após propagação DNS).
+
+---
+
+## Pipeline de Destruição (Destroy)
+
+- Também executado manualmente com senha.
+- Remove recursos AWS em ordem:
+  - Remove repositórios ECR manualmente para evitar conflitos de estado.
+  - Executa `terraform destroy` para infraestrutura principal.
+  - Executa `terraform destroy` para hosted zone e ACM.
+  - Limpa DynamoDB e S3 usados pelo backend remoto do Terraform.
+- Garante que você possa eliminar tudo de forma rápida e segura, sem custos remanescentes.
+
+---
+
+## Benefícios desta abordagem
+
+- **Automação total:** De infra a deploy, tudo via pipeline CI/CD.
+- **Segurança:** Segredos gerenciados e execuções controladas.
+- **Escalabilidade:** Infra modular e pronta para múltiplos ambientes.
+- **Manutenção:** Estado remoto e controle de concorrência facilitam colaboração e histórico.
+- **Flexibilidade:** Pode destruir tudo a qualquer momento com segurança.
+
+---
+
+Se precisar, posso gerar também um diagrama visual do fluxo do deploy para complementar a documentação!
+
+
+# Configuração do Domínio e Considerações sobre Deleções Manuais
+
+## Passo: Configurar os Name Servers no GoDaddy
+
+Após a criação da **Hosted Zone** na AWS Route53 (via Terraform na pipeline), a AWS gera um conjunto de **Name Servers (NS)** exclusivos para sua zona DNS. 
+
+### O que fazer:
+
+1. **Acesse o painel do seu registrador de domínio** (exemplo: GoDaddy).
+2. Localize a configuração de DNS para o domínio em questão.
+3. Substitua os servidores DNS atuais pelos **Name Servers gerados na Hosted Zone da AWS**.
+   - Essa informação é obtida via saída do Terraform (`terraform output`) ou diretamente no console AWS Route53.
+4. Salve as alterações.
+
+### Importante:
+
+- A propagação dessas mudanças pode levar até 48 horas, mas normalmente é bem mais rápida (algumas horas).
+- Durante esse período, o domínio começará a apontar para os Load Balancers provisionados na AWS, e o acesso ao site ficará disponível conforme a infraestrutura criada.
+
+---
+
+## Impacto de Deletar Recursos Manualmente na AWS
+
+### O que acontece se um recurso for removido manualmente (fora do Terraform)?
+
+- **Estado do Terraform fica inconsistente:** o Terraform mantém um arquivo de estado (`terraform.tfstate`) que "conhece" os recursos provisionados.
+- Se você apagar um recurso manualmente, o Terraform ainda "acha" que ele existe no estado.
+- Ao rodar um novo `terraform apply` ou `terraform plan`, podem ocorrer erros porque o recurso esperado não existe mais.
+- Dependendo do recurso e dependências, isso pode causar:
+  - **Falhas na pipeline** porque o Terraform tenta gerenciar algo inexistente.
+  - **Recursos órfãos**, que ficam na AWS sem controle pelo Terraform.
+  - Problemas de segurança, custo e manutenção.
+
+### O Terraform é inteligente?
+
+- O Terraform tem comandos para tentar "recuperar" do estado, como `terraform refresh` para sincronizar estado com a infraestrutura atual.
+- Você pode remover um recurso do estado com `terraform state rm` para que o Terraform pare de gerenciá-lo.
+- Porém, não é recomendado deletar recursos manualmente sem atualizar o estado Terraform, pois isso quebra a **sincronia e previsibilidade** da infraestrutura como código.
+
+### Boas práticas para deletar recursos:
+
+- Sempre tente deletar recursos via **Terraform** (executando `terraform destroy` ou removendo o recurso da configuração e rodando `terraform apply`).
+- Se for necessário deletar manualmente, atualize o estado com `terraform state rm` para evitar inconsistências.
+- Use a pipeline de **destroy** que já está configurada para limpar tudo com segurança e controle.
+
+---
+
+## Resumo
+
+- Configurar os Name Servers no GoDaddy é fundamental para que o domínio funcione apontando para a AWS.
+- Deletar recursos manualmente na AWS pode quebrar seu controle de infraestrutura e causar falhas na pipeline.
+- Use sempre o Terraform para alterações e destruição para manter o ambiente consistente, seguro e fácil de manter.
+
+
