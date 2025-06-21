@@ -11,11 +11,7 @@ RUN npm install --silent
 RUN npm install axios --silent
 RUN npm rebuild node-sass --silent
 
-# Passa variável para o build do React
-ARG REACT_APP_BACKEND_URL
-ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
-
-# Build do React (vai embutir o REACT_APP_BACKEND_URL no código)
+# Build do React
 RUN npm run build
 
 
@@ -28,11 +24,8 @@ RUN apt-get update && apt-get install -y gettext-base
 # Copia e prepara template do nginx.conf
 COPY nginx.conf /etc/nginx/templates/nginx.conf.template
 
-# Substituição via envsubst
-RUN envsubst '${REACT_APP_BACKEND_URL}' < /etc/nginx/templates/nginx.conf.template > /etc/nginx/conf.d/default.conf
-
 # Copia build do React
 COPY --from=builder /app/build /usr/share/nginx/html
 
 # Inicia nginx
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/bin/sh", "-c", "envsubst '${REACT_APP_BACKEND_URL}' < /etc/nginx/templates/nginx.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
