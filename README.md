@@ -1,5 +1,199 @@
 # Terraform AWS Infrastructure - README
 
+Este projeto representa uma aplicação moderna e desacoplada com frontend em React e backend em Django, ambos dockerizados e orquestrados por ECS Fargate na AWS. Toda a infraestrutura é provisionada via **Terraform** com separação de ambientes (`dev`, `prod`) e backend remoto utilizando **S3 e DynamoDB** para controle de estado. O tráfego externo é roteado por **dois Application Load Balancers (ALBs)** independentes com **certificados HTTPS provisionados automaticamente via ACM**, e **DNS gerenciado pelo Route 53**. Todo o processo de deploy, provisionamento e destruição é **automatizado por pipelines GitHub Actions**, permitindo controle total da infraestrutura de qualquer lugar do mundo.
+
+A estrutura foi desenhada com foco em escalabilidade, manutenibilidade e separação de responsabilidades entre infraestrutura, deploy de serviços e configuração de domínio e certificados.
+
+> Observação: Tentativas de deploy duplicadas resultam em erro, pois o Terraform detecta recursos existentes e evita recriação, promovendo robustez e controle de custos. A pipeline de destruição remove absolutamente todos os recursos, incluindo o backend remoto em S3 e DynamoDB, garantindo que **nenhum recurso remanescente gere custo na AWS**. O projeto pode ser destruído completamente em menos de 5 minutos e reerguido em cerca de 15 minutos.
+
+## Visão Geral da Arquitetura
+
+- **Frontend:** React servido por Nginx atrás de um ALB
+- **Backend:** Django com Gunicorn + Nginx, atrás de outro ALB
+- **ALBs:** Dois Application Load Balancers independentes, com listeners HTTPS (porta 443)
+- **DNS:** Gerenciado por Route 53 (`www` e `api`)
+- **SSL:** Certificados provisionados via ACM e validados automaticamente por DNS
+- **Terraform State:** Gerenciado remotamente com S3 e locks por DynamoDB
+
+## Estrutura de Pastas
+
+```
+terraform/
+├── bootstrap-backend/     # Criação do S3 + DynamoDB
+├── dev/                   # Infraestrutura ambiente de desenvolvimento
+├── prod/                  # Infraestrutura ambiente de produção
+└── modules/               # Módulos reutilizáveis (infraestrutura, DNS, ACM, etc)
+```
+
+## Recursos Criados
+
+### Backend Remoto (bootstrap-backend)
+
+- **S3 Bucket:** Armazena o estado Terraform (`terraform.tfstate`)
+- **DynamoDB Table:** Controle de concorrência com locks
+
+### Hosted Zone & ACM (hosted\_zone\_acm)
+
+- **Hosted Zone:** `candlefarm.com.br`
+- **Certificados SSL:**
+  - `www.candlefarm.com.br` (frontend)
+  - `api.candlefarm.com.br` (backend)
+- **Registros DNS:**
+  - Tipo `A` apontando os subdomínios para os respectivos ALBs
+
+### Módulo de Infraestrutura (infrastructure)
+
+- **VPC:** Com subnets públicas (alta disponibilidade)
+- **Security Groups:** Controlam o tráfego entre ALBs, ECS e RDS
+- **ECS Clusters:** Frontend e backend isolados
+- **Target Groups:** Associados aos ALBs (porta 80 frontend, 8000 backend)
+- **RDS PostgreSQL:** Privado e acessível apenas pelo backend
+- **IAM Roles:** Permissões finas para tasks e serviços
+
+## Fluxo de Conexão
+
+```
+Usuário → ALB Frontend (443) → Nginx (porta 80)
+       → proxy /api/ → ALB Backend (443) → Nginx (porta 8000) → Gunicorn (UNIX socket)
+```
+
+## Docker e Nginx (Frontend)
+
+### nginx.conf.template
+
+```nginx
+server {
+    listen 80;
+    server_name _;
+    client_max_body_size 150M;
+
+    location / {
+        root /usr/share/nginx/html;
+        index index.html index.htm;
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass ${REACT_APP_BACKEND_URL};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_connect_timeout 250s;
+        proxy_send_timeout 250s;
+        proxy_read_timeout 250s;
+    }
+}
+```
+
+### Dockerfile (Frontend)
+
+```Dockerfile
+FROM node:16 as builder
+
+WORKDIR /app
+COPY front/ /app
+
+RUN npm install --silent
+RUN npm install axios --silent
+RUN npm rebuild node-sass --silent
+RUN npm run build
+
+FROM nginx:latest
+
+RUN apt-get update && apt-get install -y gettext-base
+
+COPY nginx.conf /etc/nginx/templates/nginx.conf.template
+COPY --from=builder /app/build /usr/share/nginx/html
+
+CMD ["sh", "-c", "envsubst '${REACT_APP_BACKEND_URL}' < /etc/nginx/templates/nginx.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+```
+
+### axiosConfig.js
+
+```js
+const axiosInstance = axios.create({
+    baseURL: '/api',
+    timeout: 250000,
+});
+```
+
+## CI/CD e Automação
+
+O projeto é totalmente automatizado por **quatro pipelines desacopladas** via GitHub Actions:
+
+### 1. Pipeline de Infraestrutura
+
+- Provisiona a VPC, ECS, ALBs, RDS, Security Groups, roles
+- Configura o backend remoto (S3 + DynamoDB)
+- Estrutura base da aplicação
+
+### 2. Pipeline de DNS (Hosted Zone)
+
+- Cria a zona pública no Route 53
+- Aponta os domínios `www` e `api` para os respectivos ALBs
+
+### 3. Pipeline de Certificados ACM (HTTPS)
+
+- Solicita e valida certificados com DNS automático
+- Associa os certificados aos ALBs nos listeners HTTPS
+
+### 4. Pipeline de Destruição Completa
+
+- Remove recursos com segurança e ordem
+- Mantém consistência com o estado remoto
+- Remove inclusive o backend remoto (S3 + DynamoDB), eliminando **todos os recursos da AWS**
+
+> A arquitetura é modular, versionada, replicável, escalável e segura. Pode ser executada remotamente via GitHub App, sem necessidade de CLI ou conexão local.
+
+## Portas Utilizadas
+
+- **443:** HTTPS externo via ALBs
+- **80:** HTTP interno para containers ECS
+- **8000:** Gunicorn (backend)
+- **5432:** PostgreSQL (RDS)
+
+## Considerações Técnicas
+
+- A variável `REACT_APP_BACKEND_URL` é injetada **em tempo de execução** (runtime), e não em build time
+- O template `nginx.conf` utiliza `envsubst` para adaptar dinamicamente o endereço do backend
+- Essa abordagem evita rebuild de imagem e torna o container mais flexível
+
+## Gerenciamento de Domínio (GoDaddy)
+
+- Após provisionar a hosted zone, copie os Name Servers para o painel DNS do registrador (GoDaddy)
+- A propagação pode levar até 48 horas, mas geralmente ocorre em poucas horas
+
+## Cuidados com Gerenciamento Manual
+
+- Recursos gerenciados via Terraform não devem ser removidos manualmente pela AWS Console
+- Se for necessário, use `terraform state rm` para manter a integridade do estado
+- O controle completo do ciclo de vida da infraestrutura é feito pelas pipelines
+
+---
+
+Autor: Pedro André\
+Data: Junho 2025
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Terraform AWS Infrastructure - README
+
 Este documento descreve a infraestrutura automatizada criada com Terraform para provisionar uma aplicação com frontend e backend hospedados na AWS, com alta disponibilidade, escalabilidade, certificados SSL, e DNS configurado via Route 53. A estrutura de pastas está organizada de forma modular e por ambiente (dev e prod), com backend remoto em S3/DynamoDB para versionamento do estado.
 
 ## 🌐 Visão Geral da Arquitetura
@@ -160,7 +354,7 @@ Essa documentação cobre todos os recursos, conexões e arquitetura da infraest
 
 ### Estrutura de pastas
 
-.
+```bash
 ├── README.md
 ├── docker-compose/
 │   ├── docker-compose-tests.yml
@@ -288,7 +482,7 @@ Essa documentação cobre todos os recursos, conexões e arquitetura da infraest
 │       ├── prod.tfvars
 │       ├── variables.tf
 │       └── versions.tf
-
+```
 
 
 # Documentação de Integração Frontend ↔ Backend com Load Balancers (AWS ECS + Nginx)
@@ -747,3 +941,4 @@ Após a criação da **Hosted Zone** na AWS Route53 (via Terraform na pipeline),
 - Use sempre o Terraform para alterações e destruição para manter o ambiente consistente, seguro e fácil de manter.
 
 
+### Estrutura revisada com a descoberta do erro da variavel REACT_APP_BACKEND_URL sendo atribuida durante o build, e que deveria ser atribuida so no runtime, pq o build eh feito no ECR e nao tem acesso ao ECS onde a variavel de mabiente esta, entao o CMD que rida no runtime que deve carregar a variavel.
