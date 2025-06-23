@@ -321,10 +321,8 @@ resource "aws_lb" "backend_lb" {
   security_groups            = [aws_security_group.backend_lb_sg.id]
   subnets                    = aws_subnet.dev_subnet[*].id
   enable_deletion_protection = false
-  
-  idle_timeout = {
-    timeout_seconds = 300  # Aumenta para 5 minutos, por exemplo
-  }
+
+  idle_timeout = 300
 
   enable_cross_zone_load_balancing = true
   #   enable_http2                     = true
