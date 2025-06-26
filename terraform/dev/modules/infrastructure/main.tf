@@ -349,6 +349,9 @@ resource "aws_lb" "frontend_lb" {
   enable_cross_zone_load_balancing = true
   #   enable_http2                     = true
 
+  idle_timeout = 300
+
+
   tags = {
     Name = "frontend-lb"
   }
