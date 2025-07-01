@@ -70,11 +70,11 @@ jobs:
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Terraform Plan
-      run: terraform plan -target=module.infrastructure -var-file=dev.tfvars
+      run: terraform plan -target=module.infrastructure -var-file=${{ github.event.inputs.environment }}.tfvars
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Terraform Destroy
-      run: terraform destroy -target=module.infrastructure -auto-approve -var-file=dev.tfvars
+      run: terraform destroy -target=module.infrastructure -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
   https_dns_destroy:
@@ -104,11 +104,11 @@ jobs:
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Terraform Plan
-      run: terraform plan -target=module.hosted_zone_acm -var-file=dev.tfvars
+      run: terraform plan -target=module.hosted_zone_acm -var-file=${{ github.event.inputs.environment }}.tfvars
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Terraform Destroy
-      run: terraform destroy -target=module.hosted_zone_acm -auto-approve -var-file=dev.tfvars
+      run: terraform destroy -target=module.hosted_zone_acm -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
 

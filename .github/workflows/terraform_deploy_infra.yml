@@ -41,7 +41,7 @@ jobs:
       - name: Terraform Apply (Create S3 Bucket and DynamoDB Table)
         run: |
             terraform init
-            terraform apply -auto-approve -var-file=dev.tfvars
+            terraform apply -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
         working-directory: ./terraform/bootstrap-backend
 
 
@@ -64,17 +64,17 @@ jobs:
           terraform_version: 1.5.5
 
       - name: Terraform Init (Com Backend)
-        run: terraform init -var-file=dev.tfvars
+        run: terraform init -var-file=${{ github.event.inputs.environment }}.tfvars
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
       - name: Terraform Plan
-        run: terraform plan -var-file=dev.tfvars -target=module.infrastructure
+        run: terraform plan -var-file=${{ github.event.inputs.environment }}.tfvars -target=module.infrastructure
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'
-        run: terraform apply -auto-approve -var-file=dev.tfvars -target=module.infrastructure
+        run: terraform apply -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars -target=module.infrastructure
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
 
@@ -95,7 +95,7 @@ jobs:
           terraform_version: 1.5.5
 
       - name: Terraform Init
-        run: terraform init -var-file=dev.tfvars
+        run: terraform init -var-file=${{ github.event.inputs.environment }}.tfvars
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
       - name: Listar todos os outputs do Terraform

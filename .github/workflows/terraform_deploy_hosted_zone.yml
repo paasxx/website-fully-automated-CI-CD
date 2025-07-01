@@ -41,13 +41,13 @@ jobs:
           terraform_version: 1.5.5
 
       - name: Terraform Init (Hosted Zone)
-        run: terraform init -var-file=dev.tfvars
+        run: terraform init -var-file=${{ github.event.inputs.environment }}.tfvars
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
       - name: Terraform Plan (Hosted Zone)
         run: |
           terraform plan \
-            -var-file=dev.tfvars \
+            -var-file=${{ github.event.inputs.environment }}.tfvars \
             -target=module.hosted_zone_acm.aws_route53_zone.my_zone \
             -target=module.hosted_zone_acm.aws_route53_record.frontend_www \
             -target=module.hosted_zone_acm.aws_route53_record.backend_api
@@ -58,7 +58,7 @@ jobs:
         run: |
           terraform apply \
             -auto-approve \
-            -var-file=dev.tfvars \
+            -var-file=${{ github.event.inputs.environment }}.tfvars \
             -target=module.hosted_zone_acm.aws_route53_zone.my_zone \
             -target=module.hosted_zone_acm.aws_route53_record.frontend_www \
             -target=module.hosted_zone_acm.aws_route53_record.backend_api
@@ -81,7 +81,7 @@ jobs:
           terraform_version: 1.5.5
 
       - name: Terraform Init
-        run: terraform init -var-file=dev.tfvars
+        run: terraform init -var-file=${{ github.event.inputs.environment }}.tfvars
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
       - name: Listar todos os outputs do Terraform
