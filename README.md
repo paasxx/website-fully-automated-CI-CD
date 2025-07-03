@@ -164,7 +164,7 @@ O projeto é totalmente automatizado por **quatro pipelines** via **GitHub Actio
 │   └── doc_2.md
 ├── docker-compose/
 │   ├── docker-compose-tests.yml
-│   └── docker-compose.yml
+│   └── docker-compose.dev.yml
 ├── .github/
 │   └── workflows/
 │       ├── run_tests.yml
@@ -174,8 +174,8 @@ O projeto é totalmente automatizado por **quatro pipelines** via **GitHub Actio
 │       ├── terraform_deploy_infra.yml
 │       └── terraform_destroy.yml
 ├── frontend/
-│   ├── Dockerfile
-│   ├── DockerfileProd
+│   ├── Dockerfile.dev
+│   ├── Dockerfile.prod
 │   ├── docker-compose-front.yml
 │   ├── nginx.conf
 │   └── front/
@@ -221,8 +221,8 @@ O projeto é totalmente automatizado por **quatro pipelines** via **GitHub Actio
 │           │       ├── Reset.scss
 │           │       └── Variables.scss
 ├── backend/
-│   ├── Dockerfile
-│   ├── DockerfileProd
+│   ├── Dockerfile.dev
+│   ├── Dockerfile.prod
 │   ├── docker-compose-back.yml
 │   ├── nginx.conf
 │   ├── requirements.txt
