@@ -1,3 +1,7 @@
+## Primeira pipeline do projeto
+
+
+```bash
 name: Deploy Infrastructure with Terraform
 
 on:
@@ -223,13 +227,14 @@ jobs:
 
       - name: Build and push backend Docker image
         run: |
-          docker buildx build --platform linux/amd64 -f ./backend/DockerfileProd \
+          docker buildx build --platform linux/amd64 -f ./backend/Dockerfile.prod \
           -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/backend-repo:latest \
           --push ./backend
 
       - name: Build and push frontend Docker image
         run: |
           docker buildx build --platform linux/amd64 \
-          -f ./frontend/DockerfileProd \
+          -f ./frontend/Dockerfile.dev \
           -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/frontend-repo:latest \
           --push ./frontend
+```

@@ -1,0 +1,31 @@
+# Etapa 1: Build do React
+FROM node:16 as builder
+
+WORKDIR /app
+
+# Copia os arquivos do projeto React
+COPY front/ /app
+
+# Instala dependências
+RUN npm install --silent
+RUN npm install axios --silent
+RUN npm rebuild node-sass --silent
+
+# Build do React
+RUN npm run build
+
+
+# Etapa 2: Nginx + substituição da conf
+FROM nginx:latest
+
+# Instala envsubst
+RUN apt-get update && apt-get install -y gettext-base
+
+# Copia e prepara template do nginx.conf
+COPY nginx.conf /etc/nginx/templates/nginx.conf.template
+
+# Copia build do React
+COPY --from=builder /app/build /usr/share/nginx/html
+
+# Inicia nginx
+CMD ["/bin/sh", "-c", "envsubst '${REACT_APP_BACKEND_URL}' < /etc/nginx/templates/nginx.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]

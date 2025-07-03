@@ -37,7 +37,7 @@ resource "aws_ecs_task_definition" "frontend_task" {
     environment = [
       {
         name  = "REACT_APP_BACKEND_URL"
-        value = "http://${aws_lb.backend_lb.dns_name}/api"
+        value = "http://${aws_lb.backend_lb.dns_name}"  #Comunicação interna segura entre o ALB do backend e o ECS do frontend, dentro da mesma VPC, não precisa de https.
       }
     ]
 
@@ -322,6 +322,8 @@ resource "aws_lb" "backend_lb" {
   subnets                    = aws_subnet.dev_subnet[*].id
   enable_deletion_protection = false
 
+  idle_timeout = 300
+
   enable_cross_zone_load_balancing = true
   #   enable_http2                     = true
 
@@ -346,6 +348,9 @@ resource "aws_lb" "frontend_lb" {
   enable_deletion_protection       = false
   enable_cross_zone_load_balancing = true
   #   enable_http2                     = true
+
+  idle_timeout = 300
+
 
   tags = {
     Name = "frontend-lb"
@@ -430,9 +435,9 @@ resource "aws_lb_target_group" "backend_target_group" {
   health_check {
     path                = "/api/health/"
     interval            = 30
-    timeout             = 5
-    healthy_threshold   = 5
-    unhealthy_threshold = 2
+    timeout             = 10
+    healthy_threshold   = 3
+    unhealthy_threshold = 5
   }
 }
 
@@ -447,9 +452,9 @@ resource "aws_lb_target_group" "frontend_target_group" {
   health_check {
     path                = "/"
     interval            = 30
-    timeout             = 5
-    healthy_threshold   = 5
-    unhealthy_threshold = 2
+    timeout             = 10
+    healthy_threshold   = 3
+    unhealthy_threshold = 5
   }
 }
 
