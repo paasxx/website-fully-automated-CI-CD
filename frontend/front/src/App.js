@@ -1,40 +1,40 @@
 import React from 'react';
-import UploadCSV from './components/UploadCSV';
-import UploadedFilesList from './components/UploadedFilesList';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { UploadedFilesProvider } from './components/UploadedFilesContext';
+import { FileProvider } from './context/FileContext';
+
 import Navbar from './components/Navbar';
+import Dashboard from './components/Dashboard/Dashboard';
+import Login from './pages/Login'
+import Home from './pages/Home';
+import Profile from './pages/Profile';
 
 import './styles/main.scss'; // Importa os estilos CSS
 import './fonts.css'; // Importe o arquivo CSS de fontes
 
 
+
 function App() {
   return (
-    <div>
-      <div>
-        <Navbar />
-      </div>
-      <div className="background">
-        <UploadedFilesProvider>
+    <Router>
+      <UploadedFilesProvider>
+        <FileProvider>
+          <Navbar />
           <div className="background">
-
-            <div className="card">
-              {/* Upload CSV Form Component */}
-              <UploadCSV />
+            <div className='app-wrapper'>
+              <div className='content-scrollable'>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+              </Routes>
             </div>
-
-            <div >
-              <div className="card">
-
-                <UploadedFilesList />
-              </div>
             </div>
-
           </div>
-        </UploadedFilesProvider>
-      </div>
-    </div>
-
+        </FileProvider>
+      </UploadedFilesProvider>
+    </Router>
   );
 }
 

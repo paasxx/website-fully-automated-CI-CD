@@ -25,7 +25,7 @@ export const UploadedFilesProvider = ({ children }) => {
         }
     };
 
-    // Fetch uploaded files when the component mounts
+    // Fetch uploaded files when the component mounts, runs only once at start.
     useEffect(() => {
         updateUploadedFiles();
     }, []);

@@ -1,4 +1,4 @@
-## 🖼️ Diagrama
+##  Diagrama
 
 O diagrama da arquitetura completa pode ser visualizado com base nas conexões descritas acima. Você pode utilizar o [draw.io](https://app.diagrams.net/) e seguir o seguinte guia:
 

@@ -10,10 +10,17 @@
 @import 'components/UploadForm.scss';
 @import 'components/Files.scss';
 @import 'components/Spinner.scss';
+@import 'components/Dashboard/Dashboard.scss';
+@import 'components/Dashboard/FileListCard.scss';
+@import 'components/Dashboard/RecentUploadsCard.scss';
+@import 'components/Dashboard/ThumbnailPreview.scss';
+@import 'components/Dashboard/UploadCard.scss';
+
 // Import other component styles as needed
 
 // Import layout styles
 @import 'layouts/Header.scss';
 @import 'layouts/Footer.scss';
 @import 'layouts/Background.scss';
+@import 'layouts/CardGroups.scss';
 // Import other layout styles as needed

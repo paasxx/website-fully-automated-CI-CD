@@ -153,8 +153,6 @@ WORKDIR /app
 COPY front/ /app
 
 RUN npm install --silent
-RUN npm install axios --silent
-RUN npm rebuild node-sass --silent
 
 # Build do React
 RUN npm run build

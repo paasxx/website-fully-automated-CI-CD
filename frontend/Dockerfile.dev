@@ -9,9 +9,6 @@ COPY front/ /app
 
 # Instala as dependências do projeto
 RUN npm install --silent
-RUN npm install axios --silent
-RUN npm rebuild node-sass --silent
-
 
 # Abre a porta 3000 para acessar o servidor de desenvolvimento do React
 EXPOSE 3000

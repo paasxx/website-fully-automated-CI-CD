@@ -4,10 +4,6 @@ import { useUploadedFiles } from './UploadedFilesContext';
 const UploadedFilesList = () => {
     const { uploadedFiles } = useUploadedFiles();
 
-    // console.log('Uploaded Files:', uploadedFiles); // Log the uploaded files
-    // console.log('Endpoint:', process.env.REACT_APP_BACKEND_URL); // Log the API response
-
-
     return (
         <div className="uploaded-files-container" >
             <h2>Uploaded Files</h2>
