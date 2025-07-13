@@ -1,0 +1,13 @@
+.home-container{
+    display: flex;
+    gap: $space-md;
+    padding: $space-md;
+    margin-top: 10px;
+
+}
+
+.home-card{
+    @include card-base;
+    width: 220px;
+
+}

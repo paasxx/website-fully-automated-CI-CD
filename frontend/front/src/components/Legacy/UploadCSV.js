@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // import axios from 'axios';
-import axiosInstance from './axiosConfig';
+import axiosInstance from '../../api/axiosConfig';
 import { useUploadedFiles } from './UploadedFilesContext';
 import { FaSpinner } from 'react-icons/fa'; // Example with React Icons
 

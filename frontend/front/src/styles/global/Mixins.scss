@@ -22,3 +22,34 @@
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
   }
 }
+
+@mixin custom-scrollbar($color) {
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: $color;
+    border-radius: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    margin-block: 8px; // importante: evita a barra ir até o topo/baixo
+  }
+
+  scrollbar-width: 10px;
+  scrollbar-color: $color transparent;
+}
+
+@mixin button-base {
+        border: none;
+        border-radius: $radius-sm;
+        background-color: $primary-color;
+        color: $text-button-color;
+        cursor: pointer;
+        transition: background-color 0.3s;
+
+      
+    }
+

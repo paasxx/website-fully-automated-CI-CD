@@ -21,6 +21,9 @@ const Navbar = () => {
             <NavLink to="/profile" className="navbar-link">
                 Meu Perfil
             </NavLink>
+            <NavLink to="/dashboard" className="navbar-link">
+                Dashboard
+            </NavLink>
         </div>
         </nav>
     );

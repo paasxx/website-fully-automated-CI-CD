@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { UploadedFilesProvider } from './components/UploadedFilesContext';
+import { UploadedFilesProvider } from './components/Legacy/UploadedFilesContext';
 import { FileProvider } from './context/FileContext';
 
 import Navbar from './components/Navbar';

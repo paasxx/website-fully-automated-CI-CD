@@ -1,0 +1,15 @@
+.login-container{
+    justify-content: center;
+    display: column;
+    padding: $space-md;
+    margin: 100px;
+
+}
+
+.login-card{
+    @include card-base;
+    flex-direction: column;
+    width: 220px;
+    height: 320px
+
+}

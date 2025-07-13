@@ -1,7 +1,7 @@
 // UploadedFilesContext.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
 // import axios from 'axios'; // Import axios to make API requests
-import axiosInstance from './axiosConfig';
+import axiosInstance from '../../api/axiosConfig';
 
 
 const UploadedFilesContext = createContext();
