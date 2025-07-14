@@ -1,7 +1,10 @@
-.background {
+.app-content {
     @include flex-center;
-    height: 100vh;
-    background-color: $dark-background-color;
+    min-height: 100vh;
+    padding: $space-md;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
     border: none;
 
 }
@@ -10,4 +13,37 @@ body,
 html {
     margin: 0;
     padding: 0;
+}
+
+body.light {
+  --bg-color: #e5e3de;
+  --degradee-light: #f7f5f0;
+  --degradee-dark: #cbc9c1;
+  --navbar-color-left: rgba(170, 170, 160, 0.7);
+  --navbar-color-right: rgba(210, 210, 200, 0.7);
+  --card-bg: linear-gradient(to bottom right, var(--degradee-light), var(--degradee-dark));
+  --navbar-bg: linear-gradient(to right, var(--navbar-color-left), var(--navbar-color-right));
+  --text-color: #383830;
+  --border-color: #4caf50;
+  --button-bg: #4caf50cc;
+  --button-bg-hover: #3b8f43;
+  --button-text: #fff;
+}
+
+
+
+
+body.dark {
+  --bg-color:#333;
+  --degradee-light: #2c2c2c;
+  --degradee-dark: #000;
+  --navbar-color-left: rgba(34, 34, 34, 0.98);
+  --navbar-color-right: rgba(36, 45, 34, 0.98);
+  --text-color: #919191;
+  --card-bg: linear-gradient(to bottom right, var(--degradee-light), var(--degradee-dark));
+  --navbar-bg: linear-gradient(to right, var(--navbar-color-left), var(--navbar-color-right));
+  --border-color: #4caf50;
+  --button-bg: #4caf4fb6;
+  --button-bg-hover:#4caf50;
+  --button-text: #ffffffc2;
 }

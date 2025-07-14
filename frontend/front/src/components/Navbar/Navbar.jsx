@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import ThemeToggleButton from './ThemeToggleButton';
 
 
 const Navbar = () => {
@@ -24,6 +25,7 @@ const Navbar = () => {
             <NavLink to="/dashboard" className="navbar-link">
                 Dashboard
             </NavLink>
+            <ThemeToggleButton />
         </div>
         </nav>
     );

@@ -3,21 +3,17 @@
     display: flex;
     gap: $space-md;
     padding: $space-md;
-    overflow-y: auto;
     margin: 10px;
-    flex: 1;
-
 
 }
 
 .profile-card{
     @include card-base;
-    @include custom-scrollbar($primary-color);
+    @include custom-scrollbar(var(--button-bg));
     flex-direction: column;
     width: 220px;
     max-height: 200px;
     height: 100%;
-
 
 
     &__footer{
@@ -33,6 +29,6 @@
     padding: 5px 10px;
 
     &:hover {
-        background-color: $secondary-color;
+        background-color: var(--button-bg-hover);
     }
     }

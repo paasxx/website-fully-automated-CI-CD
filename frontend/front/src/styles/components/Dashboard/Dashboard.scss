@@ -1,5 +1,6 @@
 .dashboard-container {
   display: flex;
+  flex-direction: row;
   gap: $space-md;
   padding: $space-md;
 
@@ -18,7 +19,7 @@
 
 .dashboard-card--large{
     @include card-base;
-    @include custom-scrollbar($primary-color); 
+    @include custom-scrollbar(var(--button-bg)); 
     display: flex;
     flex-direction: column;
     flex-grow: 2;
@@ -53,6 +54,7 @@
         text-align: left;
         padding: $space-md;
         overflow-y: auto;
+        flex: 1;
     }
 
     &__footer {
@@ -64,7 +66,7 @@
 
 .dashboard-card--small {
     @include card-base;
-    @include custom-scrollbar($primary-color); 
+    @include custom-scrollbar(var(--button-bg)); 
     display: flex;
     flex-direction: column;
     width: 220px;
@@ -91,7 +93,7 @@
        align-self: center;
 
         &:hover {
-            background-color: $secondary-color;
+            background-color: var(--button-bg-hover);
         }
     }
 
@@ -103,6 +105,6 @@
 
 
         &:hover {
-            background-color: $secondary-color;
+            background-color:  var(--button-bg-hover);
         }
     }

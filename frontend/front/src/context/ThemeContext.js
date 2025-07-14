@@ -16,6 +16,11 @@ export const ThemeProvider = ({children}) =>{
 
     },[]);
 
+    useEffect(()=>{
+        document.body.className = theme;
+    },[theme]);
+
+
     const toggleTheme = () => {
         const newTheme = theme === "light" ? "dark" : "light";
         setTheme(newTheme);
