@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copia os arquivos do projeto para o contêiner
-COPY kanastra/ /app
+COPY fintrack/ /app
 
 # Abre a porta 8000 para acessar o servidor Django
 EXPOSE 8000

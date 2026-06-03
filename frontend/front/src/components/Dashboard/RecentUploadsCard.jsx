@@ -1,0 +1,52 @@
+import { useState, useEffect } from 'react';
+import axiosInstance from '../../api/axiosConfig';
+
+const BANK_COLORS = {
+    nubank: '#820ad1',
+    inter: '#ff7a00',
+    btg: '#003399',
+};
+
+const RecentUploadsCard = () => {
+    const [statements, setStatements] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        axiosInstance
+            .get('/import/')
+            .then(res => setStatements(res.data))
+            .catch(console.error)
+            .finally(() => setLoading(false));
+    }, []);
+
+    return (
+        <div className="dashboard-card--small">
+            <h2>Recent Uploads</h2>
+
+            {loading ? (
+                <p className="recent-uploads-empty">Loading...</p>
+            ) : statements.length === 0 ? (
+                <p className="recent-uploads-empty">No uploads yet.</p>
+            ) : (
+                <ul className="recent-uploads-list">
+                    {statements.map(s => (
+                        <li key={s.id} className="recent-uploads-row">
+                            <span
+                                className="recent-uploads-bank"
+                                style={{ color: BANK_COLORS[s.bank] ?? 'inherit' }}
+                            >
+                                {s.bank}
+                            </span>
+                            <span className="recent-uploads-filename">{s.filename}</span>
+                            <span className="recent-uploads-meta">
+                                {s.transaction_count} transactions · {s.uploaded_at}
+                            </span>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
+    );
+};
+
+export default RecentUploadsCard;

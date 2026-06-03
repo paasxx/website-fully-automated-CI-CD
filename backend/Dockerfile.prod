@@ -17,7 +17,7 @@ RUN chmod +x /usr/local/bin/wait-for-it.sh
 COPY test_db_connection.py /app
 
 # Copia os arquivos do projeto para o contêiner
-COPY kanastra/ /app
+COPY fintrack/ /app
 
 
 # Instala o Nginx e o netcat-openbsd (para verificar o estado do banco de dados)

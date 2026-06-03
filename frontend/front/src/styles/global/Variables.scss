@@ -1,14 +1,22 @@
 // // Variables.scss
-// $primary-color: #007bff;
-// $secondary-color: #6c757d;
-// $base-font-size: 16px;
-// // Outras variáveis...
 
-// Define variables for colors, sizes, etc.
-$primary-color: #4caf4fb6;
-$secondary-color: #4caf50;
-$dark-background-color: #333;
-$light-background-color: #2c2c2c;
-$card-border-color: #4caf50;
-$text-color: #919191;
-$degradee-background: linear-gradient(to bottom right, $light-background-color, #000);
+// Colors.
+
+
+// Font size.
+$base-font-size: 16px;
+$heading-font-size: 20px;
+$paragraph-font-size: 14px;
+
+// Spacing.
+$space-xs: 4px;
+$space-sm: 8px;
+$space-md: 16px;
+$space-lg: 24px;
+
+// Radius
+$radius-sm: 5px;
+$radius-lg: 20px;
+
+// shadows
+$light-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);

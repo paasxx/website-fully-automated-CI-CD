@@ -4,16 +4,16 @@
 @import 'global/Reset.scss';
 
 // Import component styles
-@import 'components/Button.scss';
 @import 'components/Navbar.scss';
-@import 'components/Cards.scss';
-@import 'components/UploadForm.scss';
-@import 'components/Files.scss';
 @import 'components/Spinner.scss';
+@import 'components/Dashboard/Dashboard.scss';
+@import 'components/Login/Login.scss';
+@import 'components/Profile.scss';
+
+
 // Import other component styles as needed
 
 // Import layout styles
-@import 'layouts/Header.scss';
-@import 'layouts/Footer.scss';
 @import 'layouts/Background.scss';
+
 // Import other layout styles as needed

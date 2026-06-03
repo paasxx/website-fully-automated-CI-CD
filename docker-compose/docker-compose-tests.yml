@@ -1,7 +1,7 @@
 
 services:
   db:
-    image: postgres
+    image: postgres:16-alpine
     container_name: kanastra-db
 
     ##### Retirei o bind mount porque não funcionava no actions
@@ -26,7 +26,7 @@ services:
 
     ##### Retirei o bind mount porque não funcionava no actions
     # volumes:
-    #   - ./backend/kanastra:/app
+    #   - ./backend/fintrack:/app
     ports:
       - "8000:8000"
     depends_on:

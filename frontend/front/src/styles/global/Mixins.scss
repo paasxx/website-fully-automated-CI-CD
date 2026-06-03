@@ -1,0 +1,55 @@
+@mixin card-base {
+    border-radius: $radius-lg;
+    background: var(--card-bg);
+    box-shadow: $light-shadow;
+    padding: $space-md;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+
+}
+
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  }
+}
+
+@mixin custom-scrollbar($color) {
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: $color;
+    border-radius: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    margin-block: 8px; // importante: evita a barra ir até o topo/baixo
+  }
+
+  scrollbar-width: 10px;
+  scrollbar-color: $color transparent;
+}
+
+@mixin button-base {
+        border: none;
+        border-radius: $radius-sm;
+        background-color: var(--button-bg);
+        color: var(--button-text);
+        cursor: pointer;
+        transition: background-color 0.3s;
+
+      
+    }
+
