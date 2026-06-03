@@ -95,12 +95,12 @@ shell-front: ## Entra no container do frontend
 	docker exec -it $(FRONT) sh
 
 shell-db: ## Abre psql no container do banco
-	docker exec -it $(DB) psql -U kanastra_user -d kanastra_db
+	docker exec -it $(DB) psql -U kanastra_user -d fintrack_db
 
 # ── Django ──────────────────────────────────────────────────
 
-migrate: ## makemigrations + migrate
-	docker exec $(BACK) bash -c "cd /app && python manage.py makemigrations && python manage.py migrate"
+migrate: ## makemigrations (todos os apps) + migrate
+	docker exec $(BACK) bash -c "cd /app && python manage.py makemigrations identity statements finances && python manage.py migrate"
 
 makemigrations: ## Só gera os arquivos de migration
 	docker exec $(BACK) bash -c "cd /app && python manage.py makemigrations"

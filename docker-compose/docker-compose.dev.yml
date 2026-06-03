@@ -22,7 +22,7 @@ services:
       context: ../backend
       dockerfile: Dockerfile.dev
     volumes:
-      - ../backend/kanastra:/app
+      - ../backend/fintrack:/app
     ports:
       - "8000:8000"
     depends_on:

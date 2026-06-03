@@ -34,6 +34,20 @@
     /* White text color on hover */
 }
 
+.navbar-logout {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: inherit;
+    padding: 0;
+    transition: color 0.3s;
+
+    &:hover {
+        color: var(--button-bg-hover);
+    }
+}
+
 .theme-toggle-button {
   background-color: var(--button-bg);
   color: var(--button-text);

@@ -1,15 +1,81 @@
-.login-container{
+.login-container {
+    display: flex;
     justify-content: center;
-    display: column;
-    padding: $space-md;
-    margin: 100px;
-
+    align-items: center;
+    min-height: calc(100vh - 60px);
 }
 
-.login-card{
+.login-card {
     @include card-base;
     flex-direction: column;
-    width: 220px;
-    height: 320px
+    width: 360px;
+    padding: $space-lg;
+    gap: $space-md;
+}
 
+.login-title {
+    font-size: $heading-font-size;
+    font-weight: 700;
+    margin-bottom: $space-xs;
+}
+
+.login-subtitle {
+    font-size: $paragraph-font-size;
+    opacity: 0.6;
+    margin-bottom: $space-sm;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+    width: 100%;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+
+    label {
+        font-size: $paragraph-font-size;
+        font-weight: 500;
+    }
+
+    input {
+        padding: $space-sm $space-md;
+        border-radius: $radius-sm;
+        border: 1px solid var(--border-color);
+        background: var(--input-bg);
+        color: var(--text-color);
+        font-size: $paragraph-font-size;
+        outline: none;
+        transition: border-color 0.2s;
+
+        &:focus {
+            border-color: var(--button-bg);
+        }
+
+        &::placeholder {
+            opacity: 0.4;
+        }
+    }
+}
+
+.login-error {
+    color: #e53e3e;
+    font-size: $paragraph-font-size;
+    text-align: center;
+}
+
+.login-button {
+    @include button-base;
+    width: 100%;
+    margin-top: $space-xs;
+    padding: $space-sm;
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
 }

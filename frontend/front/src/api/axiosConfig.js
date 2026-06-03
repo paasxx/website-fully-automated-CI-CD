@@ -20,8 +20,12 @@ function getCSRFToken() {
     return null;
 }
 
-// Interceptor para incluir o token CSRF em cada requisição
+// Interceptor: anexa JWT + CSRF em cada requisição
 axiosInstance.interceptors.request.use((config) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`;
+    }
     const csrfToken = getCSRFToken();
     if (csrfToken) {
         config.headers['X-CSRFToken'] = csrfToken;

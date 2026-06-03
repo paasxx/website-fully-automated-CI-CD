@@ -1,43 +1,48 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { UploadedFilesProvider } from './components/Legacy/UploadedFilesContext';
-import { FileProvider } from './context/FileContext';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider } from './context/ThemeContext';
+import { AuthProvider } from './context/AuthContext';
+import PrivateRoute from './components/PrivateRoute';
 
 import Navbar from './components/Navbar/Navbar';
-import Dashboard from './components/Dashboard/Dashboard';
-import Login from './pages/Login'
-import Home from './pages/Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import Charts from './pages/Charts';
 import Profile from './pages/Profile';
 
-import './styles/main.scss'; // Importa os estilos CSS
-import './fonts.css'; // Importe o arquivo CSS de fontes
-import { ThemeProvider } from './context/ThemeContext';
-
-
+import './styles/main.scss';
+import './fonts.css';
 
 function App() {
-  return (
-    <ThemeProvider>
-      <Router>
-        <UploadedFilesProvider>
-          <FileProvider>
-              <Navbar />
-              <main className="app-content">
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                  </Routes>
-              </main>
-          </FileProvider>
-        </UploadedFilesProvider>
-      </Router>
-    </ThemeProvider>
-  );
+    return (
+        <ThemeProvider>
+            <AuthProvider>
+                <Router>
+                    <Navbar />
+                    <main className="app-content">
+                        <Routes>
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/register" element={<Register />} />
+
+                            <Route path="/dashboard" element={
+                                <PrivateRoute><Dashboard /></PrivateRoute>
+                            } />
+                            <Route path="/charts" element={
+                                <PrivateRoute><Charts /></PrivateRoute>
+                            } />
+                            <Route path="/profile" element={
+                                <PrivateRoute><Profile /></PrivateRoute>
+                            } />
+
+                            <Route path="/" element={
+                                <PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>
+                            } />
+                        </Routes>
+                    </main>
+                </Router>
+            </AuthProvider>
+        </ThemeProvider>
+    );
 }
 
 export default App;
-
-
-

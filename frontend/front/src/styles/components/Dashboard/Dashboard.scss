@@ -98,13 +98,258 @@
     }
 
 .dashboard-button-list {
-       @include button-base;
-       padding: 10px 10px;
-       width: 60%;
-       align-self: center;
+    @include button-base;
+    padding: 10px 10px;
+    width: 60%;
+    align-self: center;
 
-
-        &:hover {
-            background-color:  var(--button-bg-hover);
-        }
+    &:hover {
+        background-color: var(--button-bg-hover);
     }
+}
+
+// ── Upload form ───────────────────────────────────────────
+
+.upload-form-inner {
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm;
+    padding: $space-sm;
+}
+
+.upload-select {
+    padding: $space-xs $space-sm;
+    border-radius: $radius-sm;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-color);
+    font-size: $paragraph-font-size;
+    cursor: pointer;
+}
+
+.upload-file-label {
+    display: block;
+    padding: $space-xs $space-sm;
+    border-radius: $radius-sm;
+    border: 1px dashed var(--border-color);
+    color: var(--text-color);
+    font-size: $paragraph-font-size;
+    text-align: center;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+
+    &:hover {
+        opacity: 1;
+    }
+}
+
+.upload-status {
+    font-size: 11px;
+    text-align: center;
+    opacity: 0.85;
+
+    &--success { color: #4caf50; }
+    &--error   { color: #e53e3e; }
+}
+
+// ── Transaction list ──────────────────────────────────────
+
+.transaction-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+}
+
+.transaction-row {
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+    padding: $space-xs $space-sm;
+    border-radius: $radius-sm;
+    font-size: $paragraph-font-size;
+    border-bottom: 1px solid var(--border-color);
+    opacity: 0.9;
+
+    &:last-child {
+        border-bottom: none;
+    }
+}
+
+.transaction-date {
+    min-width: 90px;
+    opacity: 0.5;
+    font-size: 12px;
+}
+
+.transaction-description {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: $space-xs;
+    min-width: 0; // allows flex child to shrink below content size
+
+    // clip long names with ellipsis
+    > span:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+.transaction-installment {
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: var(--button-bg);
+    color: var(--button-text);
+    opacity: 0.8;
+}
+
+.transaction-amount {
+    min-width: 110px;
+    text-align: right;
+    font-weight: 500;
+
+    &--credit { color: #4caf50; }
+    &--debit  { color: inherit; }
+}
+
+.transaction-empty {
+    opacity: 0.5;
+    font-size: $paragraph-font-size;
+    text-align: center;
+    padding: $space-lg;
+}
+
+// ── Recent uploads ────────────────────────────────────────
+
+.recent-uploads-list {
+    list-style: none;
+    padding: $space-xs;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+    overflow-y: auto;
+}
+
+.recent-uploads-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: $space-xs $space-sm;
+    border-radius: $radius-sm;
+    border-bottom: 1px solid var(--border-color);
+    font-size: $paragraph-font-size;
+
+    &:last-child { border-bottom: none; }
+}
+
+.recent-uploads-bank {
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.recent-uploads-filename {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.85;
+}
+
+.recent-uploads-meta {
+    font-size: 11px;
+    opacity: 0.5;
+}
+
+.recent-uploads-empty {
+    opacity: 0.5;
+    font-size: $paragraph-font-size;
+    text-align: center;
+    padding: $space-md;
+}
+
+// ── Charts page ───────────────────────────────────────────
+
+.charts-page {
+    display: flex;
+    flex-direction: column;
+    gap: $space-lg;
+    padding: $space-lg;
+    width: 100%;
+    max-width: 900px;
+}
+
+.charts-header {
+    display: flex;
+    align-items: baseline;
+    gap: $space-md;
+
+    h1 { font-size: $heading-font-size; }
+}
+
+.charts-total {
+    font-size: $paragraph-font-size;
+    opacity: 0.7;
+}
+
+.charts-card {
+    @include card-base;
+    padding: $space-lg;
+}
+
+.charts-empty {
+    opacity: 0.5;
+    font-size: $paragraph-font-size;
+    text-align: center;
+    padding: $space-lg;
+}
+
+.chart-tooltip {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: $radius-sm;
+    padding: $space-sm $space-md;
+    font-size: $paragraph-font-size;
+    color: var(--text-color);
+    box-shadow: $light-shadow;
+
+    &__label  { opacity: 0.6; margin-bottom: $space-xs; font-size: 12px; }
+    &__row    { margin: 2px 0; font-size: 12px; }
+    &__total  { margin-top: $space-xs; font-weight: 600; border-top: 1px solid var(--border-color); padding-top: $space-xs; }
+}
+
+.charts-header {
+    display: flex;
+    align-items: baseline;
+    gap: $space-md;
+    flex-wrap: wrap;
+}
+
+.chart-type-toggle {
+    display: flex;
+    gap: $space-xs;
+    margin-left: auto;
+}
+
+.chart-type-btn {
+    @include button-base;
+    padding: $space-xs $space-md;
+    font-size: $paragraph-font-size;
+    opacity: 0.6;
+
+    &--active {
+        opacity: 1;
+    }
+
+    &:hover {
+        background-color: var(--button-bg-hover);
+        opacity: 1;
+    }
+}
