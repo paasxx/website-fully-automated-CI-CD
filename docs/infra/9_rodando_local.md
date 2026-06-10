@@ -9,9 +9,11 @@ Este guia mostra como subir, derrubar e interagir com os containers do projeto l
 ## Subindo o ambiente
 
 1. **No diretório (/docker-compose), execute:**
+
    ```bash
    docker-compose -f docker-compose.dev.yml up -d --build
    ```
+
    - Substitua `docker-compose.dev.yml` pelo nome do arquivo que deseja usar.
    - O parâmetro `-d` executa em modo "detached" (em background).
    - O parâmetro `--build` força a reconstrução das imagens.
@@ -23,7 +25,7 @@ Este guia mostra como subir, derrubar e interagir com os containers do projeto l
 
 ## Containers disponíveis
 
-- **kanastra-db**: Banco de dados Postgres
+- **fintrack-db**: Banco de dados Postgres
 - **back**: Backend Python/Django
 - **front**: Frontend React/Node
 
@@ -36,7 +38,9 @@ Como os containers de backend e frontend sobem em modo "stand by", é necessári
 ```bash
 docker exec -it back bash
 ```
+
 - Para sair do container use o comando abaixo.
+
   ```bash
   exit
   ```
@@ -56,6 +60,7 @@ docker exec -it back bash
 ```bash
 docker exec -it front bash
 ```
+
 - Para iniciar o servidor React:
   ```bash
   npm start
@@ -64,30 +69,33 @@ docker exec -it front bash
 ### 3. Entrar no container do banco de dados
 
 ```bash
-docker exec -it kanastra-db bash
+docker exec -it fintrack-db bash
 ```
+
 - Para acessar o psql:
   ```bash
-  psql -U kanastra_user -d kanastra_db
+  psql -U fintrack_user -d fintrack_db
   ```
 
 ## Parando e removendo os containers
 
 Para derrubar todo o ambiente:
+
 ```bash
 docker-compose -f docker-compose.dev.yml down
 ```
+
 - Isso para e remove todos os containers, redes e volumes anônimos criados pelo `up`.
 
 ## Observações
 
 - O volume `postgres_data` garante persistência dos dados do banco mesmo após remover os containers.
-- O bind mount (`./backend/kanastra:/app` e `./frontend/front:/app`) permite que alterações no código local sejam refletidas imediatamente nos containers.
+- O bind mount (`./backend/fintrack:/app` e `./frontend/front:/app`) permite que alterações no código local sejam refletidas imediatamente nos containers.
 
 ## Estrutura dos Dockerfiles
 
 - **Backend**: `backend/Dockerfile.dev`
-- **Frontend**: `frontend/DockerFile.dev` *(Atenção ao nome, deve ser igual ao especificado no `docker-compose.yml`)*
+- **Frontend**: `frontend/DockerFile.dev` _(Atenção ao nome, deve ser igual ao especificado no `docker-compose.yml`)_
 
 ---
 
@@ -96,7 +104,6 @@ docker-compose -f docker-compose.dev.yml down
 ---
 
 **Pronto! Agora você pode desenvolver e testar o projeto localmente usando Docker Compose.**
-
 
 # Bind Mounts e `node_modules`
 
@@ -111,7 +118,7 @@ Um **bind mount** monta uma pasta do seu host (seu computador local) **dentro de
 ```yaml
 frontend:
   volumes:
-    - ../frontend/front:/app  # Monta o código local no container
+    - ../frontend/front:/app # Monta o código local no container
 ```
 
 Neste exemplo, tudo que estiver em `../frontend/front` será montado sobre `/app` dentro do container. Isso permite que:
@@ -144,8 +151,8 @@ A solução é adicionar um **volume anônimo** que preserve o conteúdo de `/ap
 ```yaml
 frontend:
   volumes:
-    - ../frontend/front:/app        # Código-fonte local
-    - /app/node_modules             # Volume anônimo (preserva dependências)
+    - ../frontend/front:/app # Código-fonte local
+    - /app/node_modules # Volume anônimo (preserva dependências)
 ```
 
 Esse volume anônimo instrui o Docker a **manter um volume separado apenas para `node_modules`**, protegendo as dependências instaladas durante o build da imagem.
@@ -167,12 +174,12 @@ Esse volume anônimo instrui o Docker a **manter um volume separado apenas para 
 frontend:
   image: front
   container_name: front
-  build: 
+  build:
     context: ../frontend
     dockerfile: Dockerfile.dev
   volumes:
-    - ../frontend/front:/app         # Bind mount do código local
-    - /app/node_modules              # Protege dependências internas
+    - ../frontend/front:/app # Bind mount do código local
+    - /app/node_modules # Protege dependências internas
   ports:
     - "3000:3000"
 ```

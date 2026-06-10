@@ -2,20 +2,20 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: kanastra-db
+    container_name: fintrack-db
     volumes:
       - postgres_data:/var/lib/postgresql/data/
 
     environment:
-      POSTGRES_DB: kanastra_db
-      POSTGRES_USER: kanastra_user
+      POSTGRES_DB: fintrack_db
+      POSTGRES_USER: fintrack_user
       POSTGRES_PASSWORD: mypassword
       POSTGRES_PORT: 5432
 
     ports:
       - "5432:5432" # Map port 5432 on the host to port 5432 in the container
     healthcheck:                                           # ← adicionado
-      test: ["CMD-SHELL", "pg_isready -U kanastra_user -d kanastra_db"]
+      test: ["CMD-SHELL", "pg_isready -U fintrack_user -d fintrack_db"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -34,8 +34,8 @@ services:
       db:
         condition: service_healthy
     environment:
-      DB_NAME: kanastra_db
-      DB_USER: kanastra_user
+      DB_NAME: fintrack_db
+      DB_USER: fintrack_user
       DB_PASSWORD: mypassword
       DB_HOST: db
       DB_PORT: 5432

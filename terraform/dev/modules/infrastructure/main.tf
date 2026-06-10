@@ -37,7 +37,7 @@ resource "aws_ecs_task_definition" "frontend_task" {
     environment = [
       {
         name  = "REACT_APP_BACKEND_URL"
-        value = "http://${aws_lb.backend_lb.dns_name}"  #Comunicação interna segura entre o ALB do backend e o ECS do frontend, dentro da mesma VPC, não precisa de https.
+        value = "http://${aws_lb.backend_lb.dns_name}" #Comunicação interna segura entre o ALB do backend e o ECS do frontend, dentro da mesma VPC, não precisa de https.
       }
     ]
 
@@ -76,11 +76,11 @@ resource "aws_ecs_task_definition" "backend_task" {
       environment = [
         {
           name  = "DB_NAME"
-          value = "kanastra_db"
+          value = "fintrack_db"
         },
         {
           name  = "DB_USER"
-          value = "kanastra_user"
+          value = "fintrack_user"
         },
         {
           name  = "DB_PASSWORD"

@@ -18,18 +18,7 @@ jobs:
   quality-assurance:
     name: Quality Assurance
     runs-on: ubuntu-latest
-    # container:
-    #   # image: python:3.9
-    #   # options: --user root
-
-    # services:
-    #   db:
-    #     image: postgres:14.2-alpine
-    #     env:
-    #       POSTGRES_DB: kanastra_db
-    #       POSTGRES_USER: kanastra_user
-    #       POSTGRES_PASSWORD: mypassword
-
+    
     container:
       image: docker:latest
       options: --privileged

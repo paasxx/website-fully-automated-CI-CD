@@ -17,15 +17,15 @@ com isso em mente (particionamento, RLS).
 
 ## Stack
 
-| Camada | Tecnologia |
-|---|---|
-| Frontend | React 18 + Vite 5 + SCSS |
-| Backend | Django 4.2 + DRF + Gunicorn |
-| Banco | PostgreSQL 16 (particionado por mês) |
-| Infra | AWS ECS Fargate + ALB + ECR + RDS |
-| IaC | Terraform (estado remoto: S3 + DynamoDB) |
-| CI/CD | GitHub Actions (4 pipelines) |
-| Local | Docker Compose + Makefile |
+| Camada   | Tecnologia                               |
+| -------- | ---------------------------------------- |
+| Frontend | React 18 + Vite 5 + SCSS                 |
+| Backend  | Django 4.2 + DRF + Gunicorn              |
+| Banco    | PostgreSQL 16 (particionado por mês)     |
+| Infra    | AWS ECS Fargate + ALB + ECR + RDS        |
+| IaC      | Terraform (estado remoto: S3 + DynamoDB) |
+| CI/CD    | GitHub Actions (4 pipelines)             |
+| Local    | Docker Compose + Makefile                |
 
 ---
 
@@ -49,7 +49,7 @@ Backend: http://localhost:8000
 ## Estrutura de pastas importante
 
 ```
-backend/kanastra/         # projeto Django (em migração para DDD)
+backend/fintrack/         # projeto Django (em migração para DDD)
   ├── core/               # settings, configurações globais (a criar)
   ├── identity/           # auth: User, JWT (a criar)
   ├── importacao/         # parsing de faturas CSV (a criar)
@@ -84,6 +84,7 @@ terraform/
 ## Estado atual (junho 2026)
 
 ### Funcionando
+
 - [x] Infraestrutura AWS completa (deploy + destroy via pipeline)
 - [x] Ambiente local com Docker Compose
 - [x] Frontend Vite rodando com React Router e dark/light theme
@@ -91,6 +92,7 @@ terraform/
 - [x] Makefile com comandos do dia a dia
 
 ### Em construção
+
 - [ ] Autenticação (JWT) — backend sem auth ainda
 - [ ] Modelos do domínio financeiro (Transacao, Categoria, Fatura)
 - [ ] Parser de faturas Nubank/Inter/BTG
@@ -98,6 +100,7 @@ terraform/
 - [ ] Login page (só placeholder)
 
 ### Débitos técnicos conhecidos
+
 - `SECRET_KEY` hardcoded em settings.py → deve vir de env var
 - `DEBUG = True` em settings.py → deve ser `False` em prod
 - `CORS_ALLOW_ALL_ORIGINS = True` → restringir por origem em prod
@@ -149,11 +152,11 @@ Não cruzar domínios diretamente — usar signals ou services na camada de apli
 
 ## Formatos de fatura conhecidos
 
-| Banco | Formato | Separador | Encoding |
-|---|---|---|---|
-| Nubank | CSV | `,` | UTF-8 |
-| Inter | CSV | `;` | UTF-8 |
-| BTG | CSV | `,` | UTF-8 |
+| Banco  | Formato | Separador | Encoding |
+| ------ | ------- | --------- | -------- |
+| Nubank | CSV     | `,`       | UTF-8    |
+| Inter  | CSV     | `;`       | UTF-8    |
+| BTG    | CSV     | `,`       | UTF-8    |
 
 Sempre validar encoding antes de parsear (faturas com caracteres especiais podem vir em latin-1).
 
@@ -161,13 +164,13 @@ Sempre validar encoding antes de parsear (faturas com caracteres especiais podem
 
 ## Pipelines GitHub Actions
 
-| Pipeline | Quando usar |
-|---|---|
-| `terraform_deploy_infra.yml` | Primeira vez ou mudança de infra |
-| `terraform_deploy_hosted_zone.yml` | Após infra, para criar DNS |
-| `terraform_deploy_acm_https.yml` | Após hosted zone, para HTTPS |
-| `terraform_destroy.yml` | Para destruir TUDO incluindo backend remoto |
-| `run_tests.yml` | PR para main |
+| Pipeline                           | Quando usar                                 |
+| ---------------------------------- | ------------------------------------------- |
+| `terraform_deploy_infra.yml`       | Primeira vez ou mudança de infra            |
+| `terraform_deploy_hosted_zone.yml` | Após infra, para criar DNS                  |
+| `terraform_deploy_acm_https.yml`   | Após hosted zone, para HTTPS                |
+| `terraform_destroy.yml`            | Para destruir TUDO incluindo backend remoto |
+| `run_tests.yml`                    | PR para main                                |
 
 Todas as pipelines de infra exigem senha (secret `WORKFLOW_PASSWORD`).
 Sempre destruir após testes para não gerar custo na AWS.
