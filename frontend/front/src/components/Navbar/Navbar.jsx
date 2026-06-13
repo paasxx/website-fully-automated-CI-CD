@@ -11,6 +11,10 @@ const Navbar = () => {
         navigate('/login');
     };
 
+    const initials = user
+        ? ([user.first_name, user.last_name].filter(Boolean).map(n => n[0].toUpperCase()).join('') || user.email?.[0]?.toUpperCase() || '?')
+        : null;
+
     return (
         <nav className="navbar">
             <NavLink to="/dashboard" className="navbar-brand">FinTrack</NavLink>
@@ -21,6 +25,9 @@ const Navbar = () => {
                         <NavLink to="/dashboard" className="navbar-link">Dashboard</NavLink>
                         <NavLink to="/charts" className="navbar-link">Charts</NavLink>
                         <NavLink to="/profile" className="navbar-link">Profile</NavLink>
+                        <NavLink to="/profile" className="navbar-avatar" title={user?.email}>
+                            {initials}
+                        </NavLink>
                         <button className="navbar-logout" onClick={handleLogout}>Logout</button>
                     </>
                 ) : (
