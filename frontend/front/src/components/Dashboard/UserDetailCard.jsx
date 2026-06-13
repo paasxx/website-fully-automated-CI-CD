@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import axiosInstance from "../../api/axiosConfig";
+import { useAuth } from "../../context/AuthContext";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import TimezoneSelect from 'react-timezone-select';
 
 const UserDetailCard = () => {
+    const { updateUser } = useAuth();
 
     const [dbData, setdbData] = useState(null);
     const [formData, setFormData] = useState({
@@ -65,6 +67,7 @@ const UserDetailCard = () => {
         try {
             const res = await axiosInstance.put('/auth/me/', formData);
             setdbData(res.data);
+            updateUser(res.data);
             setStatus('success');
             setTimeout(() => setStatus('idle'), 3000);
         } catch (err) {
