@@ -7,7 +7,7 @@ COMPOSE_DEV   = docker-compose/docker-compose.dev.yml
 COMPOSE_TESTS = docker-compose/docker-compose-tests.yml
 BACK          = back
 FRONT         = front
-DB            = kanastra-db
+DB            = fintrack-db
 
 AWS_REGION     ?= us-east-1
 AWS_ACCOUNT_ID ?= $(shell aws sts get-caller-identity --query Account --output text 2>/dev/null || echo "ACCOUNT_ID_NOT_SET")
@@ -95,7 +95,7 @@ shell-front: ## Entra no container do frontend
 	docker exec -it $(FRONT) sh
 
 shell-db: ## Abre psql no container do banco
-	docker exec -it $(DB) psql -U kanastra_user -d fintrack_db
+	docker exec -it $(DB) psql -U fintrack_user -d fintrack_db
 
 # ── Django ──────────────────────────────────────────────────
 

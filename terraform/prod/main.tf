@@ -19,7 +19,7 @@ resource "aws_ecs_task_definition" "frontend_task_prod" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = "/ecs/kanastra-prod"
+          awslogs-group         = "/ecs/fintrack-prod"
           awslogs-region        = var.aws_region
           awslogs-stream-prefix = "frontend"
         }
@@ -49,11 +49,11 @@ resource "aws_ecs_task_definition" "backend_task_prod" {
       environment = [
         {
           name  = "DB_NAME"
-          value = "kanastra_db"
+          value = "fintrack_db"
         },
         {
           name  = "DB_USER"
-          value = "kanastra_user"
+          value = "fintrack_user"
         },
         {
           name  = "DB_PASSWORD"
@@ -71,7 +71,7 @@ resource "aws_ecs_task_definition" "backend_task_prod" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = "/ecs/kanastra-prod"
+          awslogs-group         = "/ecs/fintrack-prod"
           awslogs-region        = var.aws_region
           awslogs-stream-prefix = "backend"
         }
@@ -103,11 +103,11 @@ resource "aws_ecs_task_definition" "db_task_prod" {
       environment = [
         {
           name  = "POSTGRES_DB"
-          value = "kanastra_db"
+          value = "fintrack_db"
         },
         {
           name  = "POSTGRES_USER"
-          value = "kanastra_user"
+          value = "fintrack_user"
         },
         {
           name  = "POSTGRES_PASSWORD"
@@ -117,7 +117,7 @@ resource "aws_ecs_task_definition" "db_task_prod" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = "/ecs/kanastra-prod"
+          awslogs-group         = "/ecs/fintrack-prod"
           awslogs-region        = var.aws_region
           awslogs-stream-prefix = "db"
         }

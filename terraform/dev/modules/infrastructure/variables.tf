@@ -19,7 +19,7 @@ variable "db_image" {
 variable "db_user" {
   description = "Nome de usuário do banco de dados"
   type        = string
-  default     = "kanastra_user"
+  default     = "fintrack_user"
 }
 
 variable "db_password" {
@@ -30,7 +30,7 @@ variable "db_password" {
 variable "db_name" {
   description = "Nome do banco de dados"
   type        = string
-  default     = "kanastra_db"
+  default     = "fintrack_db"
 }
 
 variable "db_port" {

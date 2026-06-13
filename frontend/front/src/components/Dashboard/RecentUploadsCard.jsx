@@ -7,7 +7,7 @@ const BANK_COLORS = {
     btg: '#003399',
 };
 
-const RecentUploadsCard = () => {
+const RecentUploadsCard = ({refreshKey}) => {
     const [statements, setStatements] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -17,7 +17,7 @@ const RecentUploadsCard = () => {
             .then(res => setStatements(res.data))
             .catch(console.error)
             .finally(() => setLoading(false));
-    }, []);
+    }, [refreshKey]);
 
     return (
         <div className="dashboard-card--small">

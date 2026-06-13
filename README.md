@@ -1,9 +1,8 @@
 # Descrição geral
 
-Este projeto representa uma aplicação moderna e desacoplada com frontend em **React** e backend em **Django/Python**, ambos dockerizados e orquestrados por pipelines  de deploy/destroy no **GitHub Actions**, permitindo controle total da infraestrutura de qualquer lugar do mundo em poucos minutos. 
+Este projeto representa uma aplicação moderna e desacoplada com frontend em **React** e backend em **Django/Python**, ambos dockerizados e orquestrados por pipelines de deploy/destroy no **GitHub Actions**, permitindo controle total da infraestrutura de qualquer lugar do mundo em poucos minutos.
 
-Toda a infraestrutura é provisionada via  **AWS** e **Terraform** com separação de ambientes (`dev`, `prod`) e backend remoto utilizando **S3 e DynamoDB** para controle de estado. 
-
+Toda a infraestrutura é provisionada via **AWS** e **Terraform** com separação de ambientes (`dev`, `prod`) e backend remoto utilizando **S3 e DynamoDB** para controle de estado.
 
 A estrutura foi desenhada com foco em escalabilidade, manutenabilidade e separação de responsabilidades entre infraestrutura, deploy de serviços e configuração de domínio e certificados.
 
@@ -36,7 +35,6 @@ A estrutura foi desenhada com foco em escalabilidade, manutenabilidade e separa�
 - Também ajustado com `client_max_body_size`
 
 ---
-
 
 ## Recursos Criados
 
@@ -80,7 +78,6 @@ terraform/
     └── versions.tf
 ```
 
-
 ### 1. Backend Remoto (bootstrap-backend)
 
 - **S3 Bucket:** Armazena o estado Terraform (`terraform.tfstate`)
@@ -90,18 +87,17 @@ terraform/
 
 - **VPC:** Com subnets públicas (alta disponibilidade)
 - **Security Groups:** Controlam o tráfego entre ALBs, ECS e RDS
-- **ECS Clusters:** 
+- **ECS Clusters:**
   - `frontend_service`: React + Nginx
   - `backend_service`: Django + Gunicorn + Nginx
-- **Load Balancers:** 
+- **Load Balancers:**
   - Frontend: porta 443 (HTTPS) > porta 80 (ECS)
   - Backend: porta 443 (HTTPS) > porta 8000 (ECS)
 - **Target Groups:** Associados aos ALBs (porta 80 frontend, 8000 backend) e porta 443 para HTTPS para cada ALB.
 - **RDS PostgreSQL:** Privado e acessível apenas pelo backend
 - **IAM Roles:** Permissões finas para tasks e serviços
 
-
-### 3. Hosted Zone & ACM (hosted\_zone\_acm)
+### 3. Hosted Zone & ACM (hosted_zone_acm)
 
 - **Hosted Zone:** `candlefarm.com.br`
 - **Certificados SSL:**
@@ -111,12 +107,10 @@ terraform/
   - `A` - `www.candlefarm.com.br` apontando para ALB do frontend
   - `A` - `api.candlefarm.com.br` apontando para ALB do backend
 
-
 ### 4. Cuidados com Gerenciamento Manual
 
 - Recursos gerenciados via Terraform **NÃO** devem ser removidos manualmente pela AWS Console
 - O controle completo do ciclo de vida da infraestrutura é feito pelas pipelines
-
 
 ## CI/CD e Automação
 
@@ -144,16 +138,12 @@ O projeto é totalmente automatizado por **quatro pipelines** via **GitHub Actio
 - Mantém consistência com o estado remoto
 - Remove inclusive o backend remoto (S3 + DynamoDB), eliminando **todos os recursos da AWS**
 
-
-
 ## Portas Utilizadas
 
 - **443:** HTTPS externo via ALBs
 - **80:** HTTP interno (frontend)
 - **8000:** Gunicorn (backend)
 - **5432:** PostgreSQL (RDS)
-
-
 
 ### Estrutura completa do projeto
 
@@ -229,7 +219,7 @@ O projeto é totalmente automatizado por **quatro pipelines** via **GitHub Actio
 │   ├── test_db_connection.py
 │   ├── wait-for-it.sh
 │   ├── entrypoint.sh
-│   └── kanastra/
+│   └── fintrack/
 │       ├── manage.py
 │       ├── run.sh
 │       ├── tests.sh
@@ -247,7 +237,7 @@ O projeto é totalmente automatizado por **quatro pipelines** via **GitHub Actio
 │       │       ├── __init__.py
 │       │       ├── input.csv
 │       │       └── test_views.py
-│       └── kanastra/
+│       └── fintrack/
 │           ├── __init__.py
 │           ├── asgi.py
 │           ├── settings.py
@@ -289,4 +279,5 @@ O projeto é totalmente automatizado por **quatro pipelines** via **GitHub Actio
 │       ├── variables.tf
 │       └── versions.tf
 ```
+
 #### Obs: para mais detalhes consultar a documentação completa do projeto no diretório /docs.

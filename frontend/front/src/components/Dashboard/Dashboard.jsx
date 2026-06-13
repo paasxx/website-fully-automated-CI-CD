@@ -11,7 +11,7 @@ const Dashboard = () => {
         <div className="dashboard-container">
             <div className="dashboard-container__left-column">
                 <UploadCard onUploadSuccess={() => setRefreshKey(k => k + 1)} />
-                <RecentUploadsCard />
+                <RecentUploadsCard refreshKey={refreshKey} />
             </div>
             <div className="dashboard-container__right-column">
                 <TransactionList refreshKey={refreshKey} />
