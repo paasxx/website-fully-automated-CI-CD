@@ -76,6 +76,36 @@ This means you never need to manually pass the token in component code. Just use
 
 ---
 
+## Profile update flow
+
+`UserDetailCard` handles the full profile edit cycle:
+
+```
+Component mounts
+    └── GET /api/auth/me/ → setDbData(data) + setFormData(data)
+                                (formData pre-filled from server values)
+
+User edits fields → formData changes (dbData is read-only reference)
+
+User clicks Save:
+    1. validate() — required fields, email regex, phone min-length
+       └── errors? → set errors state, abort
+    2. hasChanges() — deep-compare formData vs dbData
+       └── no changes? → status='no-changes', auto-dismiss 3s, abort
+    3. status='saving' → 500ms UX delay
+    4. PUT /api/auth/me/ with full formData payload
+       ├── success → setDbData(response), status='success', auto-dismiss 3s
+       └── error   → status='idle', console.error
+```
+
+**Key patterns:**
+- `dbData` is never mutated — it's the source of truth for "what's saved"
+- `formData` is the working copy; `hasChanges()` diffs it against `dbData`
+- `validate()` runs before `hasChanges()` — empty required fields must be caught even when nothing else changed
+- Status auto-resets to `'idle'` after 3s so feedback doesn't linger
+
+---
+
 ## What's not implemented yet
 
 - **Token refresh:** When the access token expires (after 1h), requests will return 401. Currently the user needs to log in again. To fix: add a 401 response interceptor that calls `/api/auth/token/refresh/` automatically.
@@ -104,8 +134,6 @@ axiosInstance.interceptors.response.use(
 - **Persistent login:** Access token expires in 1h. Refresh token in 7 days. After 1h, users need to re-login unless the refresh interceptor above is implemented.
 
 - **Password reset:** No forgot-password flow yet.
-
-- **UserProfile form:** `GET/PATCH /api/auth/profile/` endpoint exists on the backend but the Profile page has no form yet.
 
 ---
 

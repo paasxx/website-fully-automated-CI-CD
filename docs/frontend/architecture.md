@@ -10,6 +10,8 @@
 | Axios | 1.6 | HTTP client with interceptors |
 | Recharts | 3 | React-native charting library |
 | SCSS | via `sass` | variables, mixins, nesting |
+| react-phone-input-2 | 2.15 | phone input with country flag and DDI selector |
+| react-timezone-select | 3.3 | searchable timezone selector (portaled to body) |
 
 ---
 
@@ -21,38 +23,41 @@ src/
 │   └── axiosConfig.js       # axios instance: base URL + JWT interceptor
 ├── components/
 │   ├── Dashboard/
-│   │   ├── Dashboard.jsx    # layout: left column + right column
-│   │   ├── UploadCard.jsx   # file upload form
-│   │   ├── TransactionList.jsx  # fetches + renders transactions
-│   │   └── RecentUploadsCard.jsx
+│   │   ├── Dashboard.jsx       # layout: left column + right column
+│   │   ├── UploadCard.jsx      # file upload form
+│   │   ├── TransactionList.jsx # fetches + renders transactions
+│   │   ├── RecentUploadsCard.jsx
+│   │   └── UserDetailCard.jsx  # profile edit form (Account Settings page)
 │   ├── Navbar/
-│   │   ├── Navbar.jsx       # auth-aware nav links + logout
+│   │   ├── Navbar.jsx          # auth-aware nav links + avatar + logout
 │   │   └── ThemeToggleButton.jsx
-│   └── PrivateRoute.jsx     # redirects to /login if not authenticated
+│   └── PrivateRoute.jsx        # redirects to /login if not authenticated
 ├── context/
-│   ├── AuthContext.jsx      # user state, login(), logout(), loading
-│   └── ThemeContext.jsx     # dark/light mode, localStorage persistence
+│   ├── AuthContext.jsx         # user state, login(), logout(), loading
+│   └── ThemeContext.jsx        # dark/light mode, localStorage persistence
 ├── pages/
 │   ├── Login.jsx
 │   ├── Register.jsx
-│   ├── Dashboard.jsx        # thin wrapper around Dashboard component
-│   ├── Charts.jsx           # spending over time (bar + line)
-│   └── Profile.jsx
+│   ├── Dashboard.jsx           # thin wrapper around Dashboard component
+│   ├── Charts.jsx              # spending over time (bar + line)
+│   └── Profile.jsx             # Account Settings — renders UserDetailCard
 ├── styles/
-│   ├── main.scss            # imports everything in order
+│   ├── main.scss               # imports everything in order
 │   ├── global/
-│   │   ├── Variables.scss   # spacing, font sizes, radii, shadows
-│   │   ├── Mixins.scss      # card-base, button-base, flex-center, etc.
-│   │   └── Reset.scss
+│   │   ├── Variables.scss      # spacing, font sizes, radii, shadows
+│   │   ├── Mixins.scss         # card-base, button-base, flex-center, etc.
+│   │   └── Reset.scss          # CSS reset (box-sizing, margin/padding zero)
 │   ├── components/
 │   │   ├── Dashboard/
 │   │   │   └── Dashboard.scss
 │   │   ├── Login/
 │   │   │   └── Login.scss
+│   │   ├── Profile/
+│   │   │   └── Profile.scss    # profile card, form grid, phone/tz overrides
 │   │   ├── Navbar.scss
-│   │   └── ...
+│   │   └── Spinner.scss
 │   └── layouts/
-│       └── Background.scss  # CSS custom properties for dark/light theme
+│       └── Background.scss     # CSS custom properties for dark/light theme
 ├── App.jsx                  # route definitions + provider tree
 └── index.jsx                # React root mount
 ```
@@ -151,6 +156,7 @@ No Redux or Zustand — state lives close to where it's used:
 | `transactions` | TransactionList.jsx (local) | only needed inside that component |
 | `statements` | RecentUploadsCard.jsx (local) | same |
 | `data` | Charts.jsx (local) | same |
+| `dbData`, `formData`, `status` | UserDetailCard.jsx (local) | profile edit state; `status`: idle \| saving \| success \| no-changes |
 
 **Pattern:** if state is needed by more than 2 components at different levels → Context. If it's local to a subtree → `useState` + prop passing.
 

@@ -18,6 +18,7 @@ const UserDetailCard = () => {
         }
     });
     const [loading, setLoading] = useState(true);
+    const [phoneCountry, setPhoneCountry] = useState('br');
     const [status, setStatus] = useState('idle');
     const [errors, setErrors] = useState({});
 
@@ -46,17 +47,17 @@ const UserDetailCard = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!hasChanges()) {
-            setStatus('no-changes');
-            setTimeout(() => setStatus('idle'), 3000);
-            return;
-        }
         const errs = validate();
         if (Object.keys(errs).length > 0) {
             setErrors(errs);
             return;
         }
         setErrors({});
+        if (!hasChanges()) {
+            setStatus('no-changes');
+            setTimeout(() => setStatus('idle'), 3000);
+            return;
+        }
         setStatus('saving');
         await new Promise(r => setTimeout(r, 500));
         try {
@@ -150,10 +151,18 @@ const UserDetailCard = () => {
                         <PhoneInput
                             country="br"
                             value={formData.profile.phone}
-                            onChange={(phone) => setFormData({...formData, profile: {...formData.profile, phone}})}
+                            onChange={(phone, countryData) => {
+                                if (countryData.countryCode !== phoneCountry) {
+                                    setPhoneCountry(countryData.countryCode);
+                                    setFormData({...formData, profile: {...formData.profile, phone: ''}});
+                                } else {
+                                    setFormData({...formData, profile: {...formData.profile, phone}});
+                                }
+                            }}
                             inputClass="phone-input"
                             buttonClass="phone-button"
                             dropdownClass="phone-dropdown"
+                            countryCodeEditable={false}
                         />
                         {errors.phone && <span className="form-error">{errors.phone}</span>}
                     </div>

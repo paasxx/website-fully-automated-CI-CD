@@ -112,20 +112,21 @@
 .phone-button {
     background: var(--input-bg) !important;
     border: 1px solid var(--border-color) !important;
-    border-right: 1px solid var(--border-color) !important;
+    border-right: none !important;
     border-radius: $radius-sm 0 0 $radius-sm !important;
 
     &:hover, &.open {
         background: var(--input-bg) !important;
     }
+}
 
-    .selected-flag {
-        border-right: 2px solid var(--button-bg) !important;
-        padding-right: $space-sm !important;
-    }
+.react-tel-input .phone-button .selected-flag {
+    border-right: 2px solid var(--button-bg) !important;
+    background: transparent !important;
 }
 
 .phone-dropdown {
+    @include custom-scrollbar(var(--button-bg));
     background: var(--input-bg) !important;
     color: var(--text-color) !important;
     border: 1px solid var(--border-color) !important;
