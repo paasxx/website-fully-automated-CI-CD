@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axiosInstance from "../../api/axiosConfig";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
@@ -19,8 +19,10 @@ const UserDetailCard = () => {
     });
     const [loading, setLoading] = useState(true);
     const [phoneCountry, setPhoneCountry] = useState('br');
+    const [phoneKey, setPhoneKey] = useState(0);
     const [status, setStatus] = useState('idle');
     const [errors, setErrors] = useState({});
+    const phoneInputRef = useRef(null);
 
     const validate = () => {
         const errs = {};
@@ -149,20 +151,25 @@ const UserDetailCard = () => {
                     <div className="form-group">
                         <label>Phone</label>
                         <PhoneInput
-                            country="br"
+                            key={phoneKey}
+                            country={phoneCountry}
                             value={formData.profile.phone}
                             onChange={(phone, countryData) => {
                                 if (countryData.countryCode !== phoneCountry) {
                                     setPhoneCountry(countryData.countryCode);
-                                    setFormData({...formData, profile: {...formData.profile, phone: ''}});
+                                    setPhoneKey(prev => prev + 1);
+                                    setFormData(prev => ({...prev, profile: {...prev.profile, phone: ''}}));
+                                    setTimeout(() => phoneInputRef.current?.focus(), 0);
                                 } else {
-                                    setFormData({...formData, profile: {...formData.profile, phone}});
+                                    setFormData(prev => ({...prev, profile: {...prev.profile, phone}}));
                                 }
                             }}
+                            inputProps={{ ref: phoneInputRef }}
                             inputClass="phone-input"
                             buttonClass="phone-button"
                             dropdownClass="phone-dropdown"
                             countryCodeEditable={false}
+                            masks={{ br: '(..) .....-....' }}
                         />
                         {errors.phone && <span className="form-error">{errors.phone}</span>}
                     </div>
