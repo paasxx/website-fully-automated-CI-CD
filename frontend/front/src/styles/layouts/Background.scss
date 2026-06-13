@@ -1,12 +1,12 @@
 .app-content {
-    @include flex-center;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
     min-height: 100vh;
     padding: $space-md;
     background-color: var(--bg-color);
     color: var(--text-color);
     transition: background-color 0.3s ease, color 0.3s ease;
-    border: none;
-
 }
 
 body,

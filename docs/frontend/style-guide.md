@@ -8,14 +8,15 @@ styles/
 ├── global/
 │   ├── Variables.scss  ← Sass variables ($spacing, $font-sizes, $radii)
 │   ├── Mixins.scss     ← reusable patterns (card-base, button-base, etc.)
-│   └── Reset.scss      ← browser reset (currently empty)
-├── components/       ← one file per component
+│   └── Reset.scss      ← CSS reset: * { margin: 0; padding: 0; box-sizing: border-box }
+├── components/       ← subfolder per component group
 │   ├── Dashboard/
 │   │   └── Dashboard.scss
 │   ├── Login/
 │   │   └── Login.scss
+│   ├── Profile/
+│   │   └── Profile.scss  ← profile card, form grid, phone/tz library overrides
 │   ├── Navbar.scss
-│   ├── Profile.scss
 │   └── Spinner.scss
 └── layouts/
     └── Background.scss ← CSS custom properties for theming
@@ -205,5 +206,4 @@ input {
 ## Known issues / TODOs
 
 - `@import` in Sass is deprecated (replaced by `@use`/`@forward` in Dart Sass 3). Migration to `@use` would make each file explicitly declare its dependencies. Currently works because `main.scss` loads everything in order.
-- `Reset.scss` is empty — no CSS reset applied. Browser default margins/paddings may cause inconsistencies. Consider adding `box-sizing: border-box` globally.
 - Variable naming is inconsistent: `$heading-font-size` vs `$base-font-size`. Consider standardizing to `$font-sm`, `$font-md`, `$font-lg`.

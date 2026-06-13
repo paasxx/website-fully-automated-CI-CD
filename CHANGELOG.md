@@ -5,6 +5,39 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ---
 
+## [0.3.0] - 2026-06-12
+
+### Added
+- `UserProfile` model with `display_name`, `phone`, `timezone`, `notification_email` (OneToOne with User)
+- `UserProfileSerializer` with nested update support in `UserSerializer`
+- `UserDetailView` replacing `MeView`: GET + PATCH via `RetrieveUpdateAPIView` pattern
+- `UserProfile` auto-created on registration via `RegisterSerializer.create()`
+- `UserDetailCard` component: full profile edit form with controlled inputs
+- Account Settings page with avatar (initials), email and member-since header
+- Phone input with country flag and DDI selector (`react-phone-input-2`)
+- Timezone selector with search across all world timezones (`react-timezone-select`)
+- Inline form validation: required fields, email format, phone minimum length
+- Submit guard: blocks request when no fields have changed, shows feedback message
+- Save status feedback: `saving` / `success` / `no-changes` states with auto-dismiss
+- Avatar in Navbar: circular badge with user initials linking to Profile page
+- Active route highlight in Navbar (React Router `NavLink` `.active` class)
+
+### Changed
+- CSS reset uncommented — eliminates browser default margin/padding inconsistencies
+- `app-content`: `align-items: center` → `align-items: flex-start` (fixes dashboard layout jump on load)
+- Navbar: magic numbers replaced with SCSS variables; stale comments removed
+- `navbar-brand` font-size uses `$heading-font-size` variable instead of hardcoded `1.5rem`
+- Profile styles moved to `styles/components/Profile/` folder (matches `Login/` pattern)
+- `dashboard-card--large` replaced with `profile-card` on Profile page (proper separation)
+
+### Fixed
+- Dashboard resize/jump when data loads (caused by vertical flex centering)
+- Phone input left padding to correctly accommodate flag button
+- Timezone dropdown no longer resizes card (portaled to `document.body`)
+- `UserSerializer.update()` uses `get_or_create` for `UserProfile` (prevents crash on first edit)
+
+---
+
 ## [Unreleased]
 
 ### Planned

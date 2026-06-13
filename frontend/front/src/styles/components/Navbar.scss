@@ -1,18 +1,14 @@
-// Navbar.scss
-
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 20px;
-    
+    padding: $space-sm $space-lg;
     background: var(--navbar-bg);
     color: var(--text-color);
-    /* White text color */
 }
 
 .navbar-brand {
-    font-size: 1.5rem;
+    font-size: $heading-font-size;
     font-weight: bold;
     text-decoration: none;
     color: inherit;
@@ -20,18 +16,24 @@
 
 .navbar-links {
     display: flex;
-    gap: 20px;
+    align-items: center;
+    gap: $space-md;
 }
 
 .navbar-link {
     text-decoration: none;
     color: inherit;
     transition: color 0.3s;
-}
+    font-size: $paragraph-font-size;
 
-.navbar-link:hover {
-    color: var(--button-bg-hover);
-    /* White text color on hover */
+    &:hover {
+        color: var(--button-bg-hover);
+    }
+
+    &.active {
+        color: var(--button-bg);
+        font-weight: 600;
+    }
 }
 
 .navbar-logout {
@@ -39,12 +41,30 @@
     border: none;
     color: inherit;
     cursor: pointer;
-    font-size: inherit;
+    font-size: $paragraph-font-size;
     padding: 0;
     transition: color 0.3s;
 
     &:hover {
         color: var(--button-bg-hover);
+    }
+}
+
+.navbar-avatar {
+    @include flex-center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--button-bg);
+    color: var(--button-text);
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+
+    &:hover, &.active {
+        background: var(--button-bg-hover);
     }
 }
 

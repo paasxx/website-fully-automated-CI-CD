@@ -1,10 +1,10 @@
 import React from 'react';
-import FileListCard from '../components/Dashboard/FileListCard';
+import UserDetailCard from '../components/Dashboard/UserDetailCard';
 
 const Profile = () => {
   return (
     <div className="profile-container">
-        <FileListCard />
+        <UserDetailCard />
 
     </div>
   );

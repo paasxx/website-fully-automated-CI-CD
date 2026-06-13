@@ -1,0 +1,213 @@
+.profile-container {
+    display: flex;
+    gap: $space-md;
+    padding: $space-md;
+    margin: $space-sm;
+}
+
+.profile-card {
+    @include card-base;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 2;
+    min-width: 500px;
+    max-width: 700px;
+
+    h2 {
+        font-size: $heading-font-size;
+        text-align: center;
+        padding: $space-md;
+    }
+
+    &__header {
+        display: flex;
+        align-items: center;
+        gap: $space-md;
+        padding: $space-md $space-lg;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    &__header-info {
+        display: flex;
+        flex-direction: column;
+        gap: $space-xs;
+    }
+
+    &__body {
+        padding: $space-md;
+        flex: 1;
+    }
+}
+
+.profile-avatar {
+    @include flex-center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--button-bg);
+    color: var(--button-text);
+    font-size: $heading-font-size;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.profile-email {
+    font-size: $base-font-size;
+    font-weight: 600;
+}
+
+.profile-member-since {
+    font-size: $paragraph-font-size;
+    opacity: 0.5;
+}
+
+.user-detail-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $space-md;
+}
+
+.profile-button {
+    @include button-base;
+    grid-column: 1 / -1;
+    width: 60%;
+    justify-self: center;
+    padding: $space-sm $space-lg;
+
+    &:hover {
+        background-color: var(--button-bg-hover);
+    }
+
+    &--unchanged {
+        opacity: 0.5;
+        cursor: default;
+
+        &:hover {
+            background-color: var(--button-bg);
+        }
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+
+.phone-input.form-control {
+    width: 100% !important;
+    padding-left: 48px !important;
+    background: var(--input-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-color) !important;
+    font-size: $paragraph-font-size !important;
+    border-radius: $radius-sm !important;
+
+    &:focus {
+        border-color: var(--button-bg) !important;
+        box-shadow: none !important;
+    }
+}
+
+.phone-button {
+    background: var(--input-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    border-right: none !important;
+    border-radius: $radius-sm 0 0 $radius-sm !important;
+
+    &:hover, &.open {
+        background: var(--input-bg) !important;
+    }
+}
+
+.react-tel-input .phone-button .selected-flag {
+    border-right: 2px solid var(--button-bg) !important;
+    background: transparent !important;
+}
+
+.phone-dropdown {
+    @include custom-scrollbar(var(--button-bg));
+    background: var(--input-bg) !important;
+    color: var(--text-color) !important;
+    border: 1px solid var(--border-color) !important;
+
+    .country:hover, .country.highlight {
+        background: var(--button-bg) !important;
+        color: var(--button-text) !important;
+    }
+}
+
+.tz-select__menu-list {
+    @include custom-scrollbar(var(--button-bg));
+}
+
+.profile-select {
+    padding: $space-sm $space-md;
+    border-radius: $radius-sm;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-color);
+    font-size: $paragraph-font-size;
+    cursor: pointer;
+    width: 100%;
+
+    &:focus {
+        outline: none;
+        border-color: var(--button-bg);
+    }
+}
+
+.profile-success {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: #4caf50;
+    font-size: $paragraph-font-size;
+}
+
+.profile-no-changes {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--text-color);
+    font-size: $paragraph-font-size;
+    opacity: 0.5;
+}
+
+.form-error {
+    font-size: 12px;
+    color: #e53e3e;
+    margin-top: 2px;
+}
+
+.form-group--full {
+    grid-column: 1 / -1;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+
+    label {
+        font-size: $paragraph-font-size;
+        font-weight: 500;
+    }
+
+    input {
+        padding: $space-sm $space-md;
+        border-radius: $radius-sm;
+        border: 1px solid var(--border-color);
+        background: var(--input-bg);
+        color: var(--text-color);
+        font-size: $paragraph-font-size;
+        outline: none;
+        transition: border-color 0.2s;
+
+        &:focus {
+            border-color: var(--button-bg);
+        }
+
+        &::placeholder {
+            opacity: 0.4;
+        }
+    }
+}

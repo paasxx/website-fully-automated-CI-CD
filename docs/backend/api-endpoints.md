@@ -58,17 +58,53 @@ Note: refresh token is rotated on each use (old token invalidated).
 ---
 
 ### `GET /api/auth/me/`
-Get current user data.
+Get current user data including profile.
 
 **Response 200:**
 ```json
 {
   "id": 1,
   "email": "user@email.com",
-  "first_name": "",
-  "last_name": ""
+  "first_name": "Pedro",
+  "last_name": "Silveira",
+  "is_staff": false,
+  "is_active": true,
+  "date_joined": "2026-06-01T12:00:00Z",
+  "last_login": "2026-06-12T09:30:00Z",
+  "profile": {
+    "display_name": "pedro.dev",
+    "notification_email": "alerts@email.com",
+    "phone": "5511987654321",
+    "timezone": "America/Sao_Paulo"
+  }
 }
 ```
+
+---
+
+### `PUT /api/auth/me/`
+Update user data and/or profile. Supports partial updates — omit any field to leave it unchanged.
+
+**Request:**
+```json
+{
+  "first_name": "Pedro",
+  "last_name": "Silveira",
+  "profile": {
+    "display_name": "pedro.dev",
+    "notification_email": "alerts@email.com",
+    "phone": "5511987654321",
+    "timezone": "America/Sao_Paulo"
+  }
+}
+```
+
+**Response 200:** same shape as `GET /api/auth/me/` with updated values.
+
+**Notes:**
+- `email`, `id`, `date_joined`, `last_login`, `is_staff`, `is_active` are read-only — included in response but ignored in request body.
+- `profile.user` is read-only and excluded from the writable fields.
+- `UserProfile` is auto-created on first edit via `get_or_create` if it doesn't exist yet.
 
 ---
 

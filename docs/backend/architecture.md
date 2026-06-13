@@ -38,7 +38,7 @@ Owns everything related to who the user is.
 |------|---------------|
 | `models.py` | `User` (custom, email-based), `UserProfile` |
 | `serializers.py` | `RegisterSerializer`, `UserSerializer`, `UserProfileSerializer` |
-| `views.py` | `RegisterView`, `MeView` |
+| `views.py` | `RegisterView`, `UserDetailView` |
 | `urls.py` | `/api/auth/register/`, `/api/auth/token/`, `/api/auth/token/refresh/`, `/api/auth/me/` |
 
 **Why a custom User model?**
