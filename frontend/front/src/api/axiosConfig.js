@@ -35,4 +35,34 @@ axiosInstance.interceptors.request.use((config) => {
     return Promise.reject(error);
 });
 
+axiosInstance.interceptors.response.use(
+    res => res,
+    async err => {
+        const original = err.config;
+        if (err.response?.status !== 401) return Promise.reject(err);
+        if (original.url?.includes('token/refresh')) {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            window.dispatchEvent(new CustomEvent('auth:expired'));
+            return Promise.reject(err);
+        }
+        if (original._retry) return Promise.reject(err);
+        original._retry = true;
+        const refresh = localStorage.getItem('refresh_token');
+        if (!refresh) {
+            window.dispatchEvent(new CustomEvent('auth:expired'));
+            return Promise.reject(err);
+        }
+        try {
+            const { data } = await axiosInstance.post('/auth/token/refresh/', { refresh });
+            localStorage.setItem('access_token', data.access);
+            localStorage.setItem('refresh_token', data.refresh);
+            return axiosInstance(original);
+        } catch {
+            window.dispatchEvent(new CustomEvent('auth:expired'));
+            return Promise.reject(err);
+        }
+    }
+);
+
 export default axiosInstance;

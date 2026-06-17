@@ -106,9 +106,26 @@ User clicks Save:
 
 ---
 
+## Token refresh and session expiry
+
+When a request returns 401, the response interceptor in `axiosConfig.js` handles it automatically:
+
+```
+401 received
+  ├── is it the refresh endpoint itself? → clear tokens → dispatch auth:expired → done
+  ├── already retried (_retry flag)? → bail
+  └── try POST /auth/token/refresh/
+        ├── success → update tokens in localStorage → retry original request
+        └── fail    → dispatch auth:expired event
+```
+
+`AuthContext` listens for `auth:expired` via `window.addEventListener` in a `useEffect`. When it fires: calls `logout()` + sets `sessionExpired=true`. `PrivateRoute` redirects to `/login`, where a banner shows "Sua sessão expirou. Faça login novamente." The banner clears when the user logs in again.
+
+---
+
 ## What's not implemented yet
 
-- **Token refresh:** When the access token expires (after 1h), requests will return 401. Currently the user needs to log in again. To fix: add a 401 response interceptor that calls `/api/auth/token/refresh/` automatically.
+- **Token refresh:** ✅ Implemented — see above.
 
 ```js
 // TODO: add to axiosConfig.js

@@ -62,6 +62,16 @@
     }
 }
 
+.login-session-expired {
+    background: rgba(251, 191, 36, 0.15);
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    color: #b45309;
+    border-radius: $radius-sm;
+    padding: $space-sm $space-md;
+    font-size: $paragraph-font-size;
+    text-align: center;
+}
+
 .login-error {
     color: #e53e3e;
     font-size: $paragraph-font-size;

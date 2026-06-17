@@ -8,7 +8,7 @@ const Login = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const { login, user } = useAuth();
+    const { login, user, sessionExpired } = useAuth();
     const navigate = useNavigate();
 
     // Se já está logado, vai direto pro dashboard
@@ -33,6 +33,12 @@ const Login = () => {
             <div className="login-card">
                 <h2 className="login-title">FinTrack</h2>
                 <p className="login-subtitle">Sign in to your account</p>
+
+                {sessionExpired && (
+                    <div className="login-session-expired">
+                        Sua sessão expirou. Faça login novamente.
+                    </div>
+                )}
 
                 <form className="login-form" onSubmit={handleSubmit}>
                     <div className="form-group">
