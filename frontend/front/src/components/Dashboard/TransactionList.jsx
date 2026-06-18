@@ -143,44 +143,56 @@ const TransactionList = ({ refreshKey }) => {
             </div>
 
             <div className="dashboard-card--large__body">
-                {loading ? (
+                {/* First load: blank spinner (no previous content to show) */}
+                {loading && transactions.length === 0 ? (
                     <div className="spinner" />
-                ) : transactions.length === 0 ? (
-                    <p className="transaction-empty">
-                        {hasFilters ? 'No transactions match the filters.' : 'No transactions yet. Upload a statement to get started.'}
-                    </p>
                 ) : (
-                    <ul className="transaction-list dashboard-card--large__scrollable">
-                        {transactions.map(t => (
-                            <li key={t.id} className="transaction-row">
-                                <span className="transaction-date">{formatDate(t.date)}</span>
+                    <>
+                        {/* Subsequent loads: overlay on top of existing list */}
+                        {loading && (
+                            <div className="tx-loading-overlay">
+                                <div className="spinner" />
+                            </div>
+                        )}
 
-                                <span
-                                    className="transaction-bank"
-                                    style={{
-                                        color: BANK_COLORS[t.bank] ?? 'inherit',
-                                        background: (BANK_COLORS[t.bank] ?? '#888') + '1a',
-                                        border: `1px solid ${BANK_COLORS[t.bank] ?? '#888'}80`,
-                                    }}
-                                >
-                                    {BANK_LABELS[t.bank] ?? t.bank}
-                                </span>
+                        {transactions.length === 0 ? (
+                            <p className="transaction-empty">
+                                {hasFilters ? 'No transactions match the filters.' : 'No transactions yet. Upload a statement to get started.'}
+                            </p>
+                        ) : (
+                            <ul className="transaction-list dashboard-card--large__scrollable">
+                                {transactions.map(t => (
+                                    <li key={t.id} className="transaction-row">
+                                        <span className="transaction-date">{formatDate(t.date)}</span>
 
-                                <span className="transaction-description">
-                                    <span>{t.description}</span>
-                                    {t.is_installment && (
-                                        <span className="transaction-installment">
-                                            {t.installment_number}/{t.installment_total}
+                                        <span
+                                            className="transaction-bank"
+                                            style={{
+                                                color: BANK_COLORS[t.bank] ?? 'inherit',
+                                                background: (BANK_COLORS[t.bank] ?? '#888') + '1a',
+                                                border: `1px solid ${BANK_COLORS[t.bank] ?? '#888'}80`,
+                                            }}
+                                        >
+                                            {BANK_LABELS[t.bank] ?? t.bank}
                                         </span>
-                                    )}
-                                </span>
 
-                                <span className={`transaction-amount ${t.is_credit ? 'transaction-amount--credit' : 'transaction-amount--debit'}`}>
-                                    {t.is_credit ? '+' : '-'}{formatCurrency(t.amount)}
-                                </span>
-                            </li>
-                        ))}
-                    </ul>
+                                        <span className="transaction-description">
+                                            <span>{t.description}</span>
+                                            {t.is_installment && (
+                                                <span className="transaction-installment">
+                                                    {t.installment_number}/{t.installment_total}
+                                                </span>
+                                            )}
+                                        </span>
+
+                                        <span className={`transaction-amount ${t.is_credit ? 'transaction-amount--credit' : 'transaction-amount--debit'}`}>
+                                            {t.is_credit ? '+' : '-'}{formatCurrency(t.amount)}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </>
                 )}
             </div>
 

@@ -1,32 +1,44 @@
 import io
 import re
-from datetime import datetime
+from datetime import date as date_
 from decimal import Decimal, InvalidOperation
 from typing import Optional
 
 import pdfplumber
+from dateutil.relativedelta import relativedelta
 
 from .base import StatementParser, TransactionDTO
 
-# Matches installment patterns in Inter descriptions, e.g. "Parcela 2/6"
-INSTALLMENT_RE = re.compile(r"Parcela\s+(\d+)\s*/\s*(\d+)", re.IGNORECASE)
+# Portuguese month abbreviations → month number
+_MONTH = {
+    'jan': 1, 'fev': 2, 'mar': 3, 'abr': 4,
+    'mai': 5, 'jun': 6, 'jul': 7, 'ago': 8,
+    'set': 9, 'out': 10, 'nov': 11, 'dez': 12,
+}
+
+# Matches: "DD de MMM. YYYY  DESCRIPTION - [+] R$ AMOUNT"
+# The " - " is Inter's visual separator between description and amount.
+# An optional "+" before "R$" marks a credit (payment/refund).
+_TX_RE = re.compile(
+    r'^(\d{2})\s+de\s+(\w{3})\.?\s+(\d{4})\s+'  # date parts
+    r'(.+?)'                                       # description (lazy)
+    r'\s+-\s+'                                     # separator
+    r'(\+?)\s*R\$\s*([\d.,]+)',                    # optional +, amount
+    re.DOTALL,
+)
+
+# Matches installment annotations e.g. "(Parcela 04 de 10)"
+_INST_RE = re.compile(r'\(Parcela\s+(\d+)\s+de\s+(\d+)\)', re.IGNORECASE)
 
 
 def _parse_br_decimal(value_str: str) -> Optional[Decimal]:
-    """Convert Brazilian decimal format to Decimal.
-
-    Inter uses "1.234,56" (dot=thousands, comma=decimal).
-    Strips R$, spaces, and sign — caller decides is_credit from context.
-    Returns None if the string is not a valid number.
-    """
-    if not value_str:
-        return None
+    """Convert Brazilian decimal format ("1.234,56") to Decimal."""
     cleaned = (
         value_str
         .replace("R$", "")
-        .replace("\xa0", "")   # non-breaking space
-        .replace(".", "")      # remove thousands separator
-        .replace(",", ".")     # decimal comma → dot
+        .replace("\xa0", "")
+        .replace(".", "")
+        .replace(",", ".")
         .strip()
     )
     try:
@@ -40,15 +52,12 @@ class InterParser(StatementParser):
 
     @classmethod
     def detect(cls, headers: set) -> bool:
-        # Inter statements are PDFs — never detected by CSV headers.
-        # Identified purely by the bank field sent in the upload request.
-        return False
+        return False  # Inter statements are PDFs — bank must be selected manually
 
     def parse(self, file, password=None) -> list[TransactionDTO]:
         raw = file.read()
         transactions = []
 
-        # pdfplumber accepts password as a string; empty string = no password attempt.
         with pdfplumber.open(io.BytesIO(raw), password=password or "") as pdf:
             for page in pdf.pages:
                 for table in page.extract_tables():
@@ -57,73 +66,69 @@ class InterParser(StatementParser):
         return transactions
 
     def _parse_table(self, table: list[list]) -> list[TransactionDTO]:
-        """Parse one table extracted by pdfplumber.
+        """Parse one pdfplumber table.
 
-        IMPORTANT — column mapping must be verified against a real Inter PDF.
-        Run the debug helper below and adjust COL_* constants accordingly.
+        Inter statements use a single-column layout where each transaction row
+        is one concatenated string:
 
-        Assumed layout (adjust after inspection):
-          COL_DATE  = 0   → "DD/MM/YYYY"
-          COL_DESC  = 1   → description / merchant
-          COL_VALUE = 2   → value (negative = debit, positive = credit in Inter)
-          COL_BAL   = 3   → balance after transaction (optional)
+            "08 de fev. 2026 CP PARC SHOPPING INTER (Parcela 04 de 10) - R$ 134,58"
+            "05 de mai. 2026 PAGAMENTO ON LINE - + R$ 134,58"
 
-        To debug: in the Django shell inside the container:
-            from statements.parsers.inter import InterParser
-            import pdfplumber, io
-            with open("your_inter.pdf", "rb") as f:
-                raw = f.read()
-            with pdfplumber.open(io.BytesIO(raw), password="123456") as pdf:
-                for i, page in enumerate(pdf.pages):
-                    for j, table in enumerate(page.extract_tables()):
-                        print(f"Page {i} Table {j}:", table[:5])
+        The " - " is a visual separator. A "+" immediately after marks a credit
+        (payment or refund); absence of "+" means debit (expense).
+
+        Non-transaction tables (rates, payment slip, summaries) produce no
+        _TX_RE matches and are silently skipped.
         """
-        COL_DATE  = 0
-        COL_DESC  = 1
-        COL_VALUE = 2
-        COL_BAL   = 3
-
         dtos = []
         for row in table:
-            if not row or len(row) <= COL_VALUE:
+            if not row or not row[0]:
                 continue
 
-            date_str  = (row[COL_DATE]  or "").strip()
-            desc      = (row[COL_DESC]  or "").strip()
-            value_str = (row[COL_VALUE] or "").strip()
-            bal_str   = (row[COL_BAL]   or "").strip() if len(row) > COL_BAL else ""
+            cell = str(row[0]).replace('\n', ' ').strip()
+            m = _TX_RE.match(cell)
+            if not m:
+                continue
 
-            # Skip header rows (contain column names, not data)
-            if not date_str or date_str.lower() in ("data", "date", ""):
+            day_s, month_s, year_s, desc, credit_sign, amount_s = m.groups()
+
+            month_n = _MONTH.get(month_s.lower())
+            if not month_n:
                 continue
 
             try:
-                date = datetime.strptime(date_str, "%d/%m/%Y").date()
+                tx_date = date_(int(year_s), month_n, int(day_s))
             except ValueError:
-                continue  # not a valid date row — skip
+                continue
 
-            amount = _parse_br_decimal(value_str)
+            amount = _parse_br_decimal(amount_s)
             if amount is None:
                 continue
 
-            match = INSTALLMENT_RE.search(desc)
-            clean_desc = INSTALLMENT_RE.sub("", desc).strip()
+            inst = _INST_RE.search(desc)
+            clean_desc = _INST_RE.sub('', desc).strip()
 
-            balance_after = _parse_br_decimal(bal_str)
+            inst_num = int(inst.group(1)) if inst else None
+            inst_tot = int(inst.group(2)) if inst else None
+
+            # Inter records the purchase date for every installment row.
+            # Shift to the actual billing month: purchase + (installment_number - 1) months.
+            # Non-installment transactions are already dated to their billing month.
+            if inst_num is not None:
+                billing_date = tx_date + relativedelta(months=inst_num - 1)
+            else:
+                billing_date = tx_date
 
             dtos.append(TransactionDTO(
-                date=date,
+                date=billing_date,
                 description=clean_desc,
                 amount=amount,
                 bank=self.BANK,
-                # Inter convention: negative value = expense (debit card/pix out),
-                # positive value = credit (deposit, pix in, refund).
-                # VERIFY against a real statement — adjust if inverted.
-                is_credit=amount > 0,
-                is_installment=bool(match),
-                installment_number=int(match.group(1)) if match else None,
-                installment_total=int(match.group(2)) if match else None,
-                balance_after=balance_after,
+                is_credit=bool(credit_sign),  # "+" = payment/refund; absence = expense
+                is_installment=bool(inst),
+                installment_number=inst_num,
+                installment_total=inst_tot,
+                balance_after=None,
             ))
 
         return dtos

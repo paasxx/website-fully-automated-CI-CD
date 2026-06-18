@@ -50,7 +50,7 @@ class BTGParser(StatementParser):
             date_val         = row[1]
             description      = row[2]
             amount_val       = row[4]
-            transaction_type = row[5]
+            transaction_type = row[5] if len(row) > 5 else None
 
             if not isinstance(date_val, datetime) or not isinstance(amount_val, (int, float)):
                 continue

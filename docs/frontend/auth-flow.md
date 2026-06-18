@@ -12,11 +12,8 @@ JWT-based authentication. Tokens are stored in `localStorage`. The `AuthContext`
 Login
   └── POST /api/auth/token/
         └── { access: "eyJ...", refresh: "eyJ..." }
-              ├── access  → localStorage["access_token"]
-              └── refresh → localStorage["refresh_token"]
-
-Access token: 1 hour TTL
-Refresh token: 7 days TTL, rotated on each use
+              ├── access  → localStorage["access_token"]   (1 hour TTL)
+              └── refresh → localStorage["refresh_token"]  (7 days TTL, rotated on use)
 ```
 
 ---
@@ -58,21 +55,38 @@ Three states:
 
 ---
 
-## Axios interceptor
+## Axios interceptors
+
+### Request interceptor
 
 Every request made through `axiosInstance` automatically includes the JWT token:
 
 ```js
 axiosInstance.interceptors.request.use((config) => {
     const token = localStorage.getItem('access_token');
-    if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`;
-    }
+    if (token) config.headers['Authorization'] = `Bearer ${token}`;
+    const csrf = getCookie('csrftoken');
+    if (csrf) config.headers['X-CSRFToken'] = csrf;
     return config;
 });
 ```
 
-This means you never need to manually pass the token in component code. Just use `axiosInstance.get(...)` and it's handled.
+### Response interceptor — auto token refresh
+
+When a request returns 401:
+
+```
+401 received
+  ├── is it the refresh endpoint itself? → clear tokens → dispatch auth:expired → done
+  ├── already retried (_retry flag)? → bail
+  └── try POST /auth/token/refresh/
+        ├── success → update access + refresh in localStorage → retry original request
+        └── fail    → dispatch "auth:expired" CustomEvent
+```
+
+`AuthContext` listens for `auth:expired` via `window.addEventListener`. When fired: calls `logout()` + sets `sessionExpired=true`. `PrivateRoute` redirects to `/login`, where a banner reads "Sua sessão expirou. Faça login novamente." The banner clears when the user logs in again.
+
+This means users stay logged in for up to 7 days (refresh token lifetime) without any action needed.
 
 ---
 
@@ -106,56 +120,15 @@ User clicks Save:
 
 ---
 
-## Token refresh and session expiry
-
-When a request returns 401, the response interceptor in `axiosConfig.js` handles it automatically:
-
-```
-401 received
-  ├── is it the refresh endpoint itself? → clear tokens → dispatch auth:expired → done
-  ├── already retried (_retry flag)? → bail
-  └── try POST /auth/token/refresh/
-        ├── success → update tokens in localStorage → retry original request
-        └── fail    → dispatch auth:expired event
-```
-
-`AuthContext` listens for `auth:expired` via `window.addEventListener` in a `useEffect`. When it fires: calls `logout()` + sets `sessionExpired=true`. `PrivateRoute` redirects to `/login`, where a banner shows "Sua sessão expirou. Faça login novamente." The banner clears when the user logs in again.
-
----
-
-## What's not implemented yet
-
-- **Token refresh:** ✅ Implemented — see above.
-
-```js
-// TODO: add to axiosConfig.js
-axiosInstance.interceptors.response.use(
-    res => res,
-    async err => {
-        if (err.response?.status === 401) {
-            const refresh = localStorage.getItem('refresh_token');
-            if (refresh) {
-                const { data } = await axios.post('/api/auth/token/refresh/', { refresh });
-                localStorage.setItem('access_token', data.access);
-                localStorage.setItem('refresh_token', data.refresh);
-                // retry the original request
-                err.config.headers['Authorization'] = `Bearer ${data.access}`;
-                return axiosInstance(err.config);
-            }
-        }
-        return Promise.reject(err);
-    }
-);
-```
-
-- **Persistent login:** Access token expires in 1h. Refresh token in 7 days. After 1h, users need to re-login unless the refresh interceptor above is implemented.
-
-- **Password reset:** No forgot-password flow yet.
-
----
-
 ## Security notes
 
 - Tokens in `localStorage` are accessible by JavaScript — vulnerable to XSS. For higher security, use `httpOnly` cookies. For a portfolio project, `localStorage` is acceptable.
 - The backend sets `DEFAULT_PERMISSION_CLASSES = [IsAuthenticated]` — every endpoint requires auth by default. Only `register` and `token` are explicitly `AllowAny`.
 - User ID is never accepted from the request body. It always comes from the JWT (`request.user`).
+
+---
+
+## What's not implemented
+
+- **Password reset:** No forgot-password flow yet.
+- **Email verification:** Users can register with any email — no confirmation step.
