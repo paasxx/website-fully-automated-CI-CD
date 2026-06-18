@@ -148,3 +148,16 @@ jobs:
           -f ./frontend/Dockerfile.prod \
           -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/frontend-repo:latest \
           --push ./frontend
+
+      - name: Force ECS to redeploy with new images
+        run: |
+          aws ecs update-service \
+            --cluster dev-cluster \
+            --service backend-service \
+            --force-new-deployment \
+            --region ${{ secrets.AWS_REGION }} > /dev/null
+          aws ecs update-service \
+            --cluster dev-cluster \
+            --service frontend-service \
+            --force-new-deployment \
+            --region ${{ secrets.AWS_REGION }} > /dev/null
