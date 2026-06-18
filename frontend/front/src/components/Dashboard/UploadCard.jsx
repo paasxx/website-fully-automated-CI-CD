@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import axiosInstance from '../../api/axiosConfig';
 
 const BANKS = [
@@ -6,6 +7,40 @@ const BANKS = [
     { value: 'inter', label: 'Inter' },
     { value: 'btg', label: 'BTG' },
 ];
+
+// Rendered into document.body via portal so card overflow never clips it.
+const BtgTooltip = ({ anchorRef }) => {
+    const [visible, setVisible] = useState(false);
+    const [pos, setPos] = useState({ top: 0, left: 0 });
+
+    const show = () => {
+        if (anchorRef.current) {
+            const r = anchorRef.current.getBoundingClientRect();
+            setPos({ top: r.bottom + 8, left: r.right - 210 });
+        }
+        setVisible(true);
+    };
+
+    return (
+        <>
+            <span
+                ref={anchorRef}
+                className="upload-btg-info"
+                aria-label="info"
+                onMouseEnter={show}
+                onMouseLeave={() => setVisible(false)}
+            >
+                i
+            </span>
+            {visible && createPortal(
+                <div className="upload-btg-tooltip" style={{ top: pos.top, left: pos.left }}>
+                    Faturas BTG são protegidas por senha. A senha padrão é seu CPF sem pontuação.
+                </div>,
+                document.body
+            )}
+        </>
+    );
+};
 
 const UploadCard = ({ onUploadSuccess }) => {
     const [bank, setBank] = useState('nubank');
@@ -15,6 +50,7 @@ const UploadCard = ({ onUploadSuccess }) => {
     const [showBtgModal, setShowBtgModal] = useState(false);
     const [btgPassword, setBtgPassword] = useState('');
     const formRef = useRef(null);
+    const btgInfoRef = useRef(null);
 
     const doUpload = async (password = null) => {
         setStatus('uploading');
@@ -69,14 +105,7 @@ const UploadCard = ({ onUploadSuccess }) => {
                             <option key={b.value} value={b.value}>{b.label}</option>
                         ))}
                     </select>
-                    {bank === 'btg' && (
-                        <span className="upload-btg-info" role="img" aria-label="info">
-                            i
-                            <span className="upload-btg-tooltip">
-                                Faturas BTG são protegidas por senha. A senha padrão é seu CPF sem pontuação.
-                            </span>
-                        </span>
-                    )}
+                    {bank === 'btg' && <BtgTooltip anchorRef={btgInfoRef} />}
                 </div>
 
                 <label className="upload-file-label">
