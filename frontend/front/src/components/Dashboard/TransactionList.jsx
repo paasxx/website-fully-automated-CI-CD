@@ -50,7 +50,8 @@ const TransactionList = ({ refreshKey }) => {
                                     className="transaction-bank"
                                     style={{
                                         color: BANK_COLORS[t.bank] ?? 'inherit',
-                                        background: (BANK_COLORS[t.bank] ?? '#888') + '26',
+                                        background: (BANK_COLORS[t.bank] ?? '#888') + '1a',
+                                        border: `1px solid ${BANK_COLORS[t.bank] ?? '#888'}80`,
                                     }}
                                 >
                                     {BANK_LABELS[t.bank] ?? t.bank}

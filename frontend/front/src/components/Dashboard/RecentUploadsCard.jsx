@@ -41,7 +41,8 @@ const RecentUploadsCard = ({refreshKey}) => {
                                 className="recent-uploads-bank"
                                 style={{
                                     color: BANK_COLORS[s.bank] ?? 'inherit',
-                                    background: (BANK_COLORS[s.bank] ?? '#888') + '26',
+                                    background: (BANK_COLORS[s.bank] ?? '#888') + '1a',
+                                    border: `1px solid ${BANK_COLORS[s.bank] ?? '#888'}80`,
                                 }}
                             >
                                 {BANK_LABELS[s.bank] ?? s.bank}

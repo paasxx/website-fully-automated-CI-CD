@@ -69,8 +69,8 @@ const UploadCard = ({ onUploadSuccess }) => {
                         ))}
                     </select>
                     {bank === 'btg' && (
-                        <span className="upload-btg-info">
-                            ℹ
+                        <span className="upload-btg-info" role="img" aria-label="info">
+                            i
                             <span className="upload-btg-tooltip">
                                 Faturas BTG são protegidas por senha. A senha padrão é seu CPF sem pontuação.
                             </span>
