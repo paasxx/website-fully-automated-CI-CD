@@ -3,8 +3,14 @@ import axiosInstance from '../../api/axiosConfig';
 
 const BANK_COLORS = {
     nubank: '#820ad1',
-    inter: '#ff7a00',
-    btg: '#003399',
+    inter:  '#ff7a00',
+    btg:    '#4169e1',
+};
+
+const BANK_LABELS = {
+    nubank: 'Nubank',
+    inter:  'Inter',
+    btg:    'BTG',
 };
 
 const RecentUploadsCard = ({refreshKey}) => {
@@ -33,9 +39,12 @@ const RecentUploadsCard = ({refreshKey}) => {
                         <li key={s.id} className="recent-uploads-row">
                             <span
                                 className="recent-uploads-bank"
-                                style={{ color: BANK_COLORS[s.bank] ?? 'inherit' }}
+                                style={{
+                                    color: BANK_COLORS[s.bank] ?? 'inherit',
+                                    background: (BANK_COLORS[s.bank] ?? '#888') + '26',
+                                }}
                             >
-                                {s.bank}
+                                {BANK_LABELS[s.bank] ?? s.bank}
                             </span>
                             <span className="recent-uploads-filename">{s.filename}</span>
                             <span className="recent-uploads-meta">

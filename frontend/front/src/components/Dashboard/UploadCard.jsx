@@ -69,11 +69,11 @@ const UploadCard = ({ onUploadSuccess }) => {
                         ))}
                     </select>
                     {bank === 'btg' && (
-                        <span
-                            className="upload-btg-info"
-                            title="Faturas BTG são protegidas por senha. Você precisará informar a senha ao fazer upload (geralmente seu CPF sem pontuação)."
-                        >
+                        <span className="upload-btg-info">
                             ℹ
+                            <span className="upload-btg-tooltip">
+                                Faturas BTG são protegidas por senha. A senha padrão é seu CPF sem pontuação.
+                            </span>
                         </span>
                     )}
                 </div>

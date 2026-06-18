@@ -187,6 +187,17 @@
     font-size: 12px;
 }
 
+.transaction-bank {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 2px 7px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
 .transaction-description {
     flex: 1;
     display: flex;
@@ -252,10 +263,13 @@
 }
 
 .recent-uploads-bank {
+    display: inline-block;
     font-weight: 600;
-    font-size: 11px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 20px;
 }
 
 .recent-uploads-filename {
@@ -336,14 +350,47 @@
     display: flex;
     align-items: center;
     gap: $space-xs;
+
+    .upload-select {
+        flex: 1;
+        min-width: 0;
+    }
 }
 
 .upload-btg-info {
+    position: relative;
     cursor: help;
     opacity: 0.6;
     font-size: $base-font-size;
     flex-shrink: 0;
-    &:hover { opacity: 1; }
+    line-height: 1;
+
+    &:hover {
+        opacity: 1;
+
+        .upload-btg-tooltip {
+            display: block;
+        }
+    }
+}
+
+.upload-btg-tooltip {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: $radius-sm;
+    padding: $space-xs $space-sm;
+    font-size: 11px;
+    line-height: 1.5;
+    width: 210px;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+    color: var(--text-color);
+    font-weight: normal;
+    pointer-events: none;
 }
 
 // ── Charts page ───────────────────────────────────────────
@@ -437,4 +484,33 @@
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+// ── Chart legend medallions ───────────────────────────────
+
+.chart-legend {
+    display: flex;
+    justify-content: center;
+    gap: $space-md;
+    padding-top: $space-sm;
+    flex-wrap: wrap;
+}
+
+.chart-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 3px 10px 3px 8px;
+    font-size: 12px;
+    color: var(--text-color);
+}
+
+.chart-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
 }

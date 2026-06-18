@@ -1,6 +1,18 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '../../api/axiosConfig';
 
+const BANK_COLORS = {
+    nubank: '#820ad1',
+    inter:  '#ff7a00',
+    btg:    '#4169e1',
+};
+
+const BANK_LABELS = {
+    nubank: 'Nubank',
+    inter:  'Inter',
+    btg:    'BTG',
+};
+
 const formatCurrency = (amount) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Math.abs(amount));
 
@@ -34,8 +46,18 @@ const TransactionList = ({ refreshKey }) => {
                             <li key={t.id} className="transaction-row">
                                 <span className="transaction-date">{t.date}</span>
 
+                                <span
+                                    className="transaction-bank"
+                                    style={{
+                                        color: BANK_COLORS[t.bank] ?? 'inherit',
+                                        background: (BANK_COLORS[t.bank] ?? '#888') + '26',
+                                    }}
+                                >
+                                    {BANK_LABELS[t.bank] ?? t.bank}
+                                </span>
+
                                 <span className="transaction-description">
-                                    {t.description}
+                                    <span>{t.description}</span>
                                     {t.is_installment && (
                                         <span className="transaction-installment">
                                             {t.installment_number}/{t.installment_total}

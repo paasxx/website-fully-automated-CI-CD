@@ -7,14 +7,26 @@ import {
 } from 'recharts';
 import axiosInstance from '../api/axiosConfig';
 
-// Brand colors per bank
 const BANK_COLORS = {
     nubank: '#820ad1',
     inter:  '#ff7a00',
     btg:    '#4169e1',
 };
 
+const BANK_LABELS = {
+    nubank: 'Nubank',
+    inter:  'Inter',
+    btg:    'BTG',
+};
+
 const DEFAULT_COLOR = '#4caf50';
+
+const PT_MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+const formatMonth = (monthStr) => {
+    const [year, month] = monthStr.split('-');
+    return `${PT_MONTHS[parseInt(month, 10) - 1]}/${year.slice(2)}`;
+};
 
 const formatCurrency = (value) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -24,10 +36,10 @@ const CustomTooltip = ({ active, payload, label }) => {
     const total = payload.reduce((s, p) => s + (p.value ?? 0), 0);
     return (
         <div className="chart-tooltip">
-            <p className="chart-tooltip__label">{label}</p>
+            <p className="chart-tooltip__label">{formatMonth(label)}</p>
             {payload.map(p => (
                 <p key={p.dataKey} className="chart-tooltip__row" style={{ color: p.color }}>
-                    {p.dataKey}: {formatCurrency(p.value)}
+                    {BANK_LABELS[p.dataKey] ?? p.dataKey}: {formatCurrency(p.value)}
                 </p>
             ))}
             {payload.length > 1 && (
@@ -36,6 +48,17 @@ const CustomTooltip = ({ active, payload, label }) => {
         </div>
     );
 };
+
+const CustomLegend = ({ payload }) => (
+    <div className="chart-legend">
+        {(payload ?? []).map(entry => (
+            <span key={entry.value} className="chart-legend-item">
+                <span className="chart-legend-dot" style={{ background: BANK_COLORS[entry.value] ?? entry.color }} />
+                {BANK_LABELS[entry.value] ?? entry.value}
+            </span>
+        ))}
+    </div>
+);
 
 const CHART_TYPES = ['bar', 'line'];
 
@@ -117,19 +140,19 @@ const Charts = () => {
                         {chartType === 'bar' ? (
                             <BarChart data={data} margin={{ top: 16, right: 24, left: 16, bottom: 8 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.3} />
-                                <XAxis dataKey="month" {...sharedAxisProps} />
+                                <XAxis dataKey="month" tickFormatter={formatMonth} {...sharedAxisProps} />
                                 <YAxis tickFormatter={v => `R$${(v / 1000).toFixed(0)}k`} {...sharedAxisProps} />
                                 <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--border-color)', opacity: 0.15 }} />
-                                <Legend wrapperStyle={{ fontSize: 12, color: 'var(--text-color)' }} />
+                                <Legend content={<CustomLegend />} />
                                 {renderBars()}
                             </BarChart>
                         ) : (
                             <LineChart data={data} margin={{ top: 16, right: 24, left: 16, bottom: 8 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.3} />
-                                <XAxis dataKey="month" {...sharedAxisProps} />
+                                <XAxis dataKey="month" tickFormatter={formatMonth} {...sharedAxisProps} />
                                 <YAxis tickFormatter={v => `R$${(v / 1000).toFixed(0)}k`} {...sharedAxisProps} />
                                 <Tooltip content={<CustomTooltip />} />
-                                <Legend wrapperStyle={{ fontSize: 12, color: 'var(--text-color)' }} />
+                                <Legend content={<CustomLegend />} />
                                 {renderLines()}
                             </LineChart>
                         )}
