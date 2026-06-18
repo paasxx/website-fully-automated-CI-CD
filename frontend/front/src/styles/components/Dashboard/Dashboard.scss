@@ -153,7 +153,10 @@
     font-size: 11px;
     text-align: center;
     opacity: 0.85;
+    padding: $space-xs $space-sm;
     word-break: break-word;
+    overflow-wrap: break-word;
+    overflow: hidden;
 
     &--success { color: #4caf50; }
     &--error   { color: #e53e3e; }

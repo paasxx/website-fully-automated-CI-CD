@@ -17,7 +17,7 @@ const PT_MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set'
 
 const formatDate = (dateStr) => {
     const [year, month, day] = dateStr.split('-');
-    return `${parseInt(day, 10)} ${PT_MONTHS[parseInt(month, 10) - 1]} ${year.slice(2)}`;
+    return `${day}/${month}/${year.slice(2)}`;
 };
 
 const formatCurrency = (amount) =>
