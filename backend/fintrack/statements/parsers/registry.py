@@ -1,10 +1,12 @@
 from .nubank import NubankParser
 from .btg import BTGParser
+from .inter import InterParser
 
 # Add new parsers here as new banks are supported
 _PARSERS = {
     "nubank": NubankParser(),
-    "btg": BTGParser(),
+    "inter":  InterParser(),
+    "btg":    BTGParser(),
 }
 
 

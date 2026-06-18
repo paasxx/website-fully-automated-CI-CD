@@ -17,7 +17,7 @@ def process_statement(user, file, filename: str, bank: str, password: str = None
 
     try:
         parser = get_parser(bank)
-        dtos = parser.parse(file, password=password) if bank == "btg" else parser.parse(file)
+        dtos = parser.parse(file, password=password)
 
         rows = [
             Transaction(
