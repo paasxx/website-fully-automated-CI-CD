@@ -38,7 +38,19 @@ jobs:
         with:
           terraform_version: 1.5.5
 
+      - name: Check if bootstrap already exists
+        id: check_bootstrap
+        run: |
+          if aws s3api head-bucket --bucket meu-bucket-terraform-pedro-silveira 2>/dev/null && \
+             aws dynamodb describe-table --table-name terraform-locks --region us-east-1 2>/dev/null; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Bootstrap already exists — skipping apply"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Terraform Apply (Create S3 Bucket and DynamoDB Table)
+        if: steps.check_bootstrap.outputs.exists == 'false'
         run: |
             terraform init
             terraform apply -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
@@ -73,7 +85,7 @@ jobs:
 
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'
+        if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars -target=module.infrastructure
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
