@@ -1,5 +1,6 @@
 from django.db import transaction as db_transaction
-from finances.models import Transaction
+from finances.models import Transaction, Category
+from finances.categorizer import categorize
 from .models import Statement
 from .parsers.registry import get_parser
 
@@ -19,6 +20,8 @@ def process_statement(user, file, filename: str, bank: str, password: str = None
         parser = get_parser(bank)
         dtos = parser.parse(file, password=password)
 
+        categories = {c.name: c for c in Category.objects.filter(user=None)}
+
         rows = [
             Transaction(
                 user=user,
@@ -34,6 +37,7 @@ def process_statement(user, file, filename: str, bank: str, password: str = None
                 balance_after=dto.balance_after,
                 bank_category=dto.bank_category,
                 transaction_type=dto.transaction_type,
+                category=categorize(dto.description, categories),
             )
             for dto in dtos
         ]

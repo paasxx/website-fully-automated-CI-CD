@@ -340,6 +340,17 @@
     flex-shrink: 0;
 }
 
+.transaction-category {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 80px;
+    text-align: center;
+}
+
 .transaction-description {
     flex: 1;
     display: flex;

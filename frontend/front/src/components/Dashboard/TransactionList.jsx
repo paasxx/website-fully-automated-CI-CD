@@ -185,6 +185,19 @@ const TransactionList = ({ refreshKey }) => {
                                             )}
                                         </span>
 
+                                        {t.category && (
+                                            <span
+                                                className="transaction-category"
+                                                style={{
+                                                    color: t.category.color,
+                                                    background: t.category.color + '1a',
+                                                    border: `1px solid ${t.category.color}80`,
+                                                }}
+                                            >
+                                                {t.category.name}
+                                            </span>
+                                        )}
+
                                         <span className={`transaction-amount ${t.is_credit ? 'transaction-amount--credit' : 'transaction-amount--debit'}`}>
                                             {t.is_credit ? '+' : '-'}{formatCurrency(t.amount)}
                                         </span>
