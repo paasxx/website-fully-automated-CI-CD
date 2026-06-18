@@ -164,7 +164,7 @@ O projeto é totalmente automatizado por **quatro pipelines** via **GitHub Actio
 │       ├── terraform_deploy_infra.yml
 │       └── terraform_destroy.yml
 ├── frontend/
-│   ├── Dockerfile.dev
+│   ├── Dockerfile.local
 │   ├── Dockerfile.prod
 │   ├── docker-compose-front.yml
 │   ├── nginx.conf
@@ -211,7 +211,7 @@ O projeto é totalmente automatizado por **quatro pipelines** via **GitHub Actio
 │           │       ├── Reset.scss
 │           │       └── Variables.scss
 ├── backend/
-│   ├── Dockerfile.dev
+│   ├── Dockerfile.local
 │   ├── Dockerfile.prod
 │   ├── docker-compose-back.yml
 │   ├── nginx.conf

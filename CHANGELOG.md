@@ -71,7 +71,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - `axiosConfig.js`: `process.env` → `import.meta.env` (Vite env API)
 - `postgres:16-alpine` pinned in docker-compose (avoids Postgres 18 mount incompatibility)
 - `Dockerfile.prod` frontend: build output path `build/` → `dist/`
-- `Dockerfile.dev` frontend: `node:16` → `node:20-alpine`
+- `Dockerfile.local` frontend: `node:16` → `node:20-alpine`
 
 ### Fixed
 - Docker volume conflict with Postgres 18 breaking local DB startup

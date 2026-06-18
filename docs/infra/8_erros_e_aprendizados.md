@@ -185,3 +185,125 @@ Substituir uploads gigantes por S3 com presigned URL caso necessário.
 ---
 
 Esse documento deve ser mantido e expandido conforme novos erros e soluções forem surgindo.
+
+---
+
+## 11. Pipeline falha no `build_and_push` — não precisa destruir tudo
+
+### Problema
+
+A pipeline `Deploy Infrastructure` tem 4 jobs em sequência:
+1. `create_s3_and_dynamodb` → bootstrap do estado Terraform
+2. `terraform` → provisiona VPC, ECS, ALB, ECR, etc.
+3. `print_terraform_outputs_and_state` → loga outputs
+4. `build_and_push` → builda imagens Docker e envia ao ECR
+
+Se o job `build_and_push` falhar (ex: dependência faltando no `package.json`), os recursos AWS **já foram criados** pelos jobs anteriores. A tendência é querer destruir tudo e recomeçar — mas isso é desnecessário e lento.
+
+### Solução
+
+O Terraform é **idempotente**: rodar `terraform apply` numa infra que já existe resulta em zero mudanças. Basta:
+
+1. Corrigir o código que causou a falha
+2. Fazer push da correção
+3. Disparar uma nova run do `workflow_dispatch` (não usar "Re-run failed jobs" — veja item 12)
+
+Na nova run, os steps de Terraform concluem em segundos (nada a criar), e o `build_and_push` roda com o fix.
+
+---
+
+## 12. "Re-run failed jobs" não pega commits novos
+
+### Problema
+
+Ao clicar em "Re-run failed jobs" no GitHub Actions, o comportamento esperado é que a pipeline rode com o código mais recente — mas não é isso que acontece.
+
+### Como funciona de verdade
+
+"Re-run failed jobs" reabre os jobs com o **mesmo commit SHA** da run original. Qualquer push feito depois daquele commit é ignorado.
+
+### Solução
+
+Para incluir um fix num job que falhou, é necessário **disparar uma nova run**:
+
+- Actions → Deploy Infrastructure → **Run workflow** → selecionar a branch → preencher inputs → Run
+
+---
+
+## 13. `Terraform Apply` só roda na branch `main` — feature branches pulam esse step
+
+### Como está configurado
+
+```yaml
+- name: Terraform Apply
+  if: github.ref == 'refs/heads/main'
+```
+
+Isso significa que ao rodar o `workflow_dispatch` a partir de uma feature branch:
+- Os steps de `terraform init`, `plan` e outputs rodam normalmente
+- O `terraform apply` é **pulado** automaticamente
+- O job `build_and_push` **continua rodando** — não tem restrição de branch
+
+### Quando isso é útil
+
+Se a infra já existe e você só quer atualizar as imagens Docker (ex: corrigir um bug no frontend), pode rodar a pipeline direto da feature branch sem risco de alterar a infraestrutura. O Terraform plan vai mostrar zero mudanças, o Apply é pulado, e as imagens são buildadas e enviadas ao ECR normalmente.
+
+### Regra geral
+
+| Situação | Rodar de |
+|---|---|
+| Primeira criação da infra | `main` |
+| Mudança de infra (Terraform) | `main` |
+| Só atualizar imagens (código) | feature branch ou `main` |
+| Teste rápido após bug no build | feature branch |
+
+---
+
+## 14. Nomenclatura: "dev" no input da pipeline ≠ `Dockerfile.dev`
+
+### Problema
+
+A pipeline pede um input `environment` com default `dev`. Ao mesmo tempo, existia um `Dockerfile.dev` no repositório. Isso criava confusão: parecia que rodar com `environment: dev` usaria o `Dockerfile.dev`.
+
+### Como realmente funciona
+
+| Nome | Significado |
+|---|---|
+| `environment: dev` (input da pipeline) | **Ambiente AWS** — aponta para `terraform/dev/` e suas variáveis |
+| `Dockerfile.local` | **Imagem de desenvolvimento local** — usa `tail -f /dev/null`, hot reload, sem build |
+| `Dockerfile.prod` | **Imagem deployável** — multi-stage build, compila o React, serve via Nginx + Gunicorn |
+
+A pipeline **sempre** usa `Dockerfile.prod` para os dois serviços, independente do ambiente escolhido. O que muda entre `dev`, `staging` e `prod` é a infraestrutura Terraform (tamanho das instâncias, variáveis de banco, etc.), não a imagem Docker.
+
+### Solução aplicada
+
+`Dockerfile.dev` foi renomeado para `Dockerfile.local` em todo o repositório (arquivos físicos + docker-compose + docs).
+
+---
+
+## 15. Peer dependency não declarada quebra o build de produção silenciosamente
+
+### Problema
+
+A biblioteca `react-timezone-select` depende de `react-select` como peer dependency. Localmente, `npm install --legacy-peer-deps` instala sem erro e a aplicação funciona. Na pipeline, o build falhou com:
+
+```
+[vite]: Rollup failed to resolve import "react-select" from "react-timezone-select/dist/index.js"
+```
+
+### Por que só falha na pipeline
+
+Localmente, o `node_modules` pode ter o `react-select` instalado indiretamente por outra lib. Na pipeline, o Docker faz um `npm install` limpo a partir do `package.json` — e o que não está declarado, não é instalado.
+
+### Solução
+
+Sempre declarar explicitamente todas as peer dependencies no `package.json`, mesmo que `npm install` não reclame:
+
+```json
+"react-select": "^5.8.0",
+"react-timezone-select": "^3.3.3"
+```
+
+### Regra geral
+
+Se uma biblioteca exige outra no `peerDependencies`, declare as duas no seu `package.json`. O `--legacy-peer-deps` mascara o problema localmente mas não resolve na CI.

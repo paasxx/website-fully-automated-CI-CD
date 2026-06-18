@@ -10,9 +10,6 @@ COPY requirements.txt .
 # Instala as dependências do projeto
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY wait-for-it.sh /usr/local/bin/wait-for-it.sh
-RUN chmod +x /usr/local/bin/wait-for-it.sh
-
 # Copy the test_db_connection.py script
 COPY test_db_connection.py /app
 
@@ -22,7 +19,7 @@ COPY fintrack/ /app
 
 # Instala o Nginx e o netcat-openbsd (para verificar o estado do banco de dados)
 RUN apt-get update && \
-    apt-get install -y nginx netcat-openbsd && \
+    apt-get install -y nginx && \
     rm /etc/nginx/sites-enabled/default && \
     ln -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/
 

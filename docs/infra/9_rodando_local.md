@@ -94,7 +94,7 @@ docker-compose -f docker-compose.dev.yml down
 
 ## Estrutura dos Dockerfiles
 
-- **Backend**: `backend/Dockerfile.dev`
+- **Backend**: `backend/Dockerfile.local`
 - **Frontend**: `frontend/DockerFile.dev` _(Atenção ao nome, deve ser igual ao especificado no `docker-compose.yml`)_
 
 ---
@@ -161,7 +161,7 @@ Esse volume anônimo instrui o Docker a **manter um volume separado apenas para 
 
 ## Como funciona na prática?
 
-1. Você faz o `docker build`, e o `Dockerfile.dev` do React instala os pacotes (`npm install`).
+1. Você faz o `docker build`, e o `Dockerfile.local` do React instala os pacotes (`npm install`).
 2. Depois, o bind mount (`../frontend/front:/app`) monta a pasta do host no container, **sobrescrevendo tudo** — exceto o que está explicitamente isolado com volume.
 3. O volume `/app/node_modules` continua existindo, **preservando as dependências**.
 4. O container React roda normalmente, mesmo que você não tenha rodado `npm install` localmente.
@@ -176,7 +176,7 @@ frontend:
   container_name: front
   build:
     context: ../frontend
-    dockerfile: Dockerfile.dev
+    dockerfile: Dockerfile.local
   volumes:
     - ../frontend/front:/app # Bind mount do código local
     - /app/node_modules # Protege dependências internas
