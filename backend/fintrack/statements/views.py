@@ -13,6 +13,7 @@ class StatementUploadView(APIView):
     def post(self, request):
         file = request.FILES.get("file")
         bank = request.data.get("bank", "").lower()
+        password = request.data.get("password") or None
 
         if not file:
             return Response({"error": "No file provided."}, status=400)
@@ -28,6 +29,7 @@ class StatementUploadView(APIView):
                 file=file,
                 filename=file.name,
                 bank=bank,
+                password=password,
             )
             return Response(
                 {

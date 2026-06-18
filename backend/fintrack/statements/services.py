@@ -4,7 +4,7 @@ from .models import Statement
 from .parsers.registry import get_parser
 
 
-def process_statement(user, file, filename: str, bank: str) -> Statement:
+def process_statement(user, file, filename: str, bank: str, password: str = None) -> Statement:
     if Statement.objects.filter(user=user, filename=filename).exists():
         raise ValueError(f"'{filename}' has already been imported.")
 
@@ -17,7 +17,7 @@ def process_statement(user, file, filename: str, bank: str) -> Statement:
 
     try:
         parser = get_parser(bank)
-        dtos = parser.parse(file)
+        dtos = parser.parse(file, password=password) if bank == "btg" else parser.parse(file)
 
         rows = [
             Transaction(

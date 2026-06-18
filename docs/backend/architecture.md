@@ -114,33 +114,51 @@ Owns the import pipeline: file upload → parsing → saving transactions.
 
 #### Parser pattern — Strategy + Registry
 
-Adding a new bank requires **one new file** only:
-
-```python
-# statements/parsers/mybank.py
-class MyBankParser(StatementParser):
-    BANK = "mybank"
-
-    @classmethod
-    def detect(cls, headers: set) -> bool:
-        return {"Data", "Valor", "Descricao"}.issubset(headers)
-
-    def parse(self, file) -> list[TransactionDTO]:
-        # read CSV, return list of TransactionDTO
-        ...
-```
+Adding a new bank requires **one new file** only. The registry maps bank name → parser instance; `services.py` calls `get_parser(bank)` without knowing which parser handles which bank.
 
 ```python
 # statements/parsers/registry.py
-from .mybank import MyBankParser
-
 _PARSERS = {
     "nubank": NubankParser(),
+    "btg":    BTGParser(),
     "mybank": MyBankParser(),  # ← add here
 }
 ```
 
-Nothing else changes. The `services.py`, `views.py`, `models.py` don't need to know about the new bank.
+---
+
+#### `NubankParser` — CSV, separador `,`, encoding UTF-8
+
+Colunas: `date` (YYYY-MM-DD), `title`, `amount` (negativo = crédito).
+
+Parcelas detectadas por sufixo na descrição: `"- Parcela 2/6"` → removido da descrição, preenchido em `installment_number` e `installment_total`.
+
+```python
+REQUIRED_HEADERS = {"date", "title", "amount"}
+
+def detect(cls, headers):
+    return cls.REQUIRED_HEADERS.issubset(headers)
+```
+
+---
+
+#### `BTGParser` — XLSX criptografado, senha = CPF do titular
+
+O BTG exporta faturas como `.xlsx` protegido por senha (padrão: CPF sem pontuação). O parser:
+
+1. Lê o arquivo como bytes e carrega em `io.BytesIO`
+2. Se `password` fornecida: descriptografa com `msoffcrypto`, depois lê com `openpyxl`
+3. Localiza o header **dinamicamente** (busca linha com `'Data'` na col 1, `'Descrição'` na col 2) — necessário porque as primeiras 24 linhas são resumo da fatura
+4. Itera as linhas de transação: col 1 = data, col 2 = descrição, col 4 = valor, col 5 = tipo de compra
+5. Parcelas detectadas por regex `(N/M)` embutido na descrição
+
+Tipos de compra mapeados para `transaction_type`: `'Parcela sem juros'`, `'Compra à vista'`, `'Compra internacional'`.
+
+`detect()` retorna sempre `False` — BTG nunca é detectado por headers CSV. A identificação é feita pelo campo `bank` enviado no upload.
+
+**Dependências adicionais:** `msoffcrypto-tool`, `openpyxl` (em `requirements.txt`).
+
+**Upload flow:** o frontend exibe um modal pedindo a senha quando o banco BTG é selecionado. A senha é enviada no campo `password` do `multipart/form-data`. O `views.py` repassa para `services.py` que repassa para `BTGParser.parse(file, password=password)`.
 
 #### `TransactionDTO` — the normalized interface
 
