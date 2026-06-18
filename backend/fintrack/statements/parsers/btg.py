@@ -5,6 +5,7 @@ from decimal import Decimal
 
 import msoffcrypto
 import openpyxl
+from dateutil.relativedelta import relativedelta
 
 from .base import StatementParser, TransactionDTO
 
@@ -58,15 +59,31 @@ class BTGParser(StatementParser):
             match = INSTALLMENT_RE.search(description or "")
             clean_desc = INSTALLMENT_RE.sub("", description or "").strip()
 
+            purchase_date = date_val.date()
+
+            if match:
+                installment_number = int(match.group(1))
+                installment_total = int(match.group(2))
+                # BTG stores all N installments with the original purchase date.
+                # We shift each installment forward so it lands on its actual
+                # billing month — making BTG data comparable to Nubank, which
+                # already reports each installment on the invoice date.
+                # relativedelta handles month-end edge cases (e.g. Jan 31 → Feb 28).
+                billing_date = purchase_date + relativedelta(months=installment_number - 1)
+            else:
+                installment_number = None
+                installment_total = None
+                billing_date = purchase_date
+
             transactions.append(TransactionDTO(
-                date=date_val.date(),
+                date=billing_date,
                 description=clean_desc,
                 amount=amount,
                 bank=self.BANK,
                 is_credit=amount < 0,
                 is_installment=bool(match),
-                installment_number=int(match.group(1)) if match else None,
-                installment_total=int(match.group(2)) if match else None,
+                installment_number=installment_number,
+                installment_total=installment_total,
                 transaction_type=transaction_type,
             ))
 
