@@ -21,17 +21,14 @@
 
 .dashboard-card--large{
     @include card-base;
-    @include custom-scrollbar(var(--button-bg)); 
+    @include custom-scrollbar(var(--button-bg));
     display: flex;
     flex-direction: column;
-    flex-grow: 2;
-    min-width: 500px;
-    max-width: 700px;
+    width: 660px;        // fixed — prevents resize when description lengths change
     min-height: 500px;
     max-height: 600px;
     height: 100%;
-
-
+    flex-shrink: 0;
 
     h2 {
         font-size: $heading-font-size;
@@ -42,9 +39,8 @@
         font-size: $base-font-size;
     }
 
-
     &__scrollable {
-        max-height: 100%; // limita a altura ao tamanho do card
+        max-height: 100%;
     }
 
     &__header{
@@ -53,6 +49,7 @@
     }
 
     &__body {
+        position: relative;   // needed for overlay positioning
         text-align: left;
         padding: $space-md;
         overflow-y: auto;
@@ -66,20 +63,47 @@
     }
 }
 
+// Spinner overlay — shown during filter/page changes so the list stays visible
+.tx-loading-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    pointer-events: none;
+
+    // Semi-transparent backdrop via pseudo-element so the spinner keeps full opacity
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: var(--card-bg);
+        opacity: 0.6;
+        border-radius: $radius-sm;
+    }
+
+    .spinner {
+        position: relative;
+        z-index: 3;
+        margin: 0; // flexbox centering already handles placement
+    }
+}
+
 .dashboard-card--small {
     @include card-base;
-    @include custom-scrollbar(var(--button-bg)); 
+    @include custom-scrollbar(var(--button-bg));
     display: flex;
     flex-direction: column;
     width: 220px;
     max-height: 300px;
-    height: 100%;
-
+    height: fit-content;
+    overflow-x: hidden;
+    overflow-y: auto;
 
     h2 {
         font-size: $heading-font-size;
         text-align: center;
-        flex: 1;
     }
 
     p {
@@ -140,6 +164,9 @@
     cursor: pointer;
     opacity: 0.7;
     transition: opacity 0.2s;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 
     &:hover {
         opacity: 1;
@@ -150,9 +177,124 @@
     font-size: 11px;
     text-align: center;
     opacity: 0.85;
+    padding: $space-xs $space-sm;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    overflow: hidden;
 
     &--success { color: #4caf50; }
     &--error   { color: #e53e3e; }
+}
+
+// ── Transaction filters ───────────────────────────────────
+
+.tx-filters {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+    padding: $space-xs $space-md $space-sm;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tx-filter-search-row {
+    display: flex;
+    gap: $space-xs;
+    align-items: center;
+}
+
+.tx-filter-row {
+    display: flex;
+    gap: $space-xs;
+    flex-wrap: wrap;
+}
+
+.tx-filter-input {
+    padding: $space-xs $space-sm;
+    border-radius: $radius-sm;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-color);
+    font-size: 12px;
+    outline: none;
+
+    &:focus { border-color: var(--button-bg); }
+}
+
+.tx-filter-search {
+    flex: 1;
+}
+
+.tx-filter-date {
+    width: 130px;
+    color-scheme: dark light; // native date picker respects theme
+}
+
+.tx-filter-select {
+    padding: $space-xs $space-sm;
+    border-radius: $radius-sm;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-color);
+    font-size: 12px;
+    cursor: pointer;
+    outline: none;
+
+    &:focus { border-color: var(--button-bg); }
+}
+
+.tx-filter-clear {
+    padding: $space-xs $space-sm;
+    border-radius: $radius-sm;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-color);
+    font-size: 11px;
+    cursor: pointer;
+    opacity: 0.6;
+    white-space: nowrap;
+
+    &:hover { opacity: 1; background: var(--input-bg); }
+}
+
+// ── Pagination ────────────────────────────────────────────
+
+.tx-pagination {
+    display: flex;
+    justify-content: center;
+    gap: $space-sm;
+    padding: $space-sm $space-md;
+    border-top: 1px solid var(--border-color);
+}
+
+.tx-pagination-btn {
+    @include button-base;
+    padding: $space-xs $space-sm;
+    min-width: 32px;
+    font-size: 12px;
+    opacity: 0.7;
+
+    &:hover:not(:disabled) {
+        background-color: var(--button-bg-hover);
+        opacity: 1;
+    }
+
+    &:disabled {
+        opacity: 0.25;
+        cursor: not-allowed;
+    }
+
+    &--active {
+        opacity: 1;
+        outline: 2px solid var(--button-bg);
+        outline-offset: 1px;
+    }
+}
+
+.tx-pagination-ellipsis {
+    padding: $space-xs $space-xs;
+    font-size: 12px;
+    opacity: 0.4;
+    user-select: none;
 }
 
 // ── Transaction list ──────────────────────────────────────
@@ -185,6 +327,28 @@
     min-width: 90px;
     opacity: 0.5;
     font-size: 12px;
+}
+
+.transaction-bank {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 2px 7px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.transaction-category {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 80px;
+    text-align: center;
 }
 
 .transaction-description {
@@ -252,10 +416,13 @@
 }
 
 .recent-uploads-bank {
+    display: inline-block;
     font-weight: 600;
-    font-size: 11px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 20px;
 }
 
 .recent-uploads-filename {
@@ -275,6 +442,115 @@
     font-size: $paragraph-font-size;
     text-align: center;
     padding: $space-md;
+}
+
+// ── BTG Password Modal ────────────────────────────────────
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-card {
+    @include card-base;
+    width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+    padding: $space-lg;
+}
+
+.modal-title {
+    font-size: $heading-font-size;
+    font-weight: 600;
+}
+
+.modal-description {
+    font-size: $paragraph-font-size;
+    opacity: 0.7;
+    line-height: 1.5;
+}
+
+.modal-actions {
+    display: flex;
+    gap: $space-sm;
+    justify-content: flex-end;
+}
+
+.modal-btn {
+    @include button-base;
+    padding: $space-xs $space-md;
+
+    &--cancel {
+        background: transparent;
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        &:hover { background: var(--input-bg); }
+    }
+
+    &--confirm {
+        &:hover { background-color: var(--button-bg-hover); }
+        &:disabled { opacity: 0.5; cursor: not-allowed; }
+    }
+}
+
+.upload-bank-row {
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+
+    .upload-select {
+        flex: 1;
+        min-width: 0;
+    }
+}
+
+.upload-btg-info {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-style: italic;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+    color: var(--text-color);
+    opacity: 0.6;
+    user-select: none;
+    transition: opacity 0.15s, border-color 0.15s;
+
+    &:hover {
+        opacity: 1;
+        border-color: var(--button-bg);
+    }
+}
+
+// Rendered into document.body via portal — escapes all overflow contexts.
+.upload-btg-tooltip {
+    position: fixed;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: $radius-sm;
+    padding: $space-xs $space-sm;
+    font-size: 11px;
+    line-height: 1.6;
+    width: 210px;
+    z-index: 9999;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    color: var(--text-color);
+    font-weight: normal;
+    font-style: normal;
+    pointer-events: none;
 }
 
 // ── Charts page ───────────────────────────────────────────
@@ -368,4 +644,33 @@
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+// ── Chart legend medallions ───────────────────────────────
+
+.chart-legend {
+    display: flex;
+    justify-content: center;
+    gap: $space-md;
+    padding-top: $space-sm;
+    flex-wrap: wrap;
+}
+
+.chart-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 3px 10px 3px 8px;
+    font-size: 12px;
+    color: var(--text-color);
+}
+
+.chart-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
 }

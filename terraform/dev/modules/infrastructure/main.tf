@@ -3,14 +3,24 @@ data "aws_availability_zones" "available" {}
 
 provider "aws" {
   region = var.aws_region
+
+  default_tags {
+    tags = {
+      Project     = "fintrack"
+      Environment = "dev"
+      ManagedBy   = "terraform"
+    }
+  }
 }
 
 resource "aws_ecr_repository" "frontend" {
-  name = "frontend-repo"
+  name         = "frontend-repo"
+  force_delete = true
 }
 
 resource "aws_ecr_repository" "backend" {
-  name = "backend-repo"
+  name         = "backend-repo"
+  force_delete = true
 }
 
 

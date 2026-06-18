@@ -30,7 +30,7 @@ class StatementParser(ABC):
     BANK: str = ""
 
     @abstractmethod
-    def parse(self, file) -> list[TransactionDTO]:
+    def parse(self, file, password=None) -> list[TransactionDTO]:
         """Parse a file object and return a list of TransactionDTOs."""
         ...
 

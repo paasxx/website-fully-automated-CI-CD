@@ -18,7 +18,7 @@ class NubankParser(StatementParser):
     def detect(cls, headers: set) -> bool:
         return cls.REQUIRED_HEADERS.issubset(headers)
 
-    def parse(self, file) -> list[TransactionDTO]:
+    def parse(self, file, password=None) -> list[TransactionDTO]:
         reader = csv.DictReader(TextIOWrapper(file, encoding="utf-8"))
         transactions = []
 

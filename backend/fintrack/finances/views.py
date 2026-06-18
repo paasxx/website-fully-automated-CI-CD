@@ -1,30 +1,29 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import permissions
+from rest_framework import generics, permissions
 from django.db.models import Sum
 from django.db.models.functions import TruncMonth
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
 from .models import Transaction
 from .serializers import TransactionSerializer
+from .filters import TransactionFilter
+from .pagination import TransactionPagePagination
 
 
-class TransactionListView(APIView):
+class TransactionListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = TransactionSerializer
+    pagination_class = TransactionPagePagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = TransactionFilter
 
-    def get(self, request):
-        qs = Transaction.objects.filter(user=request.user).select_related("category")
-
-        month = request.query_params.get("month")
-        year = request.query_params.get("year")
-        bank = request.query_params.get("bank")
-
-        if year:
-            qs = qs.filter(date__year=year)
-        if month:
-            qs = qs.filter(date__month=month)
-        if bank:
-            qs = qs.filter(bank=bank)
-
-        return Response(TransactionSerializer(qs, many=True).data)
+    def get_queryset(self):
+        return (
+            Transaction.objects
+            .filter(user=self.request.user)
+            .select_related("category")
+        )
 
 
 class SpendingOverTimeView(APIView):

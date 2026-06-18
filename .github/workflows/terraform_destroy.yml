@@ -47,28 +47,6 @@ jobs:
       run: terraform state list
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
-    - name: Remover repositório ECR frontend-repo do estado do Terraform
-      run: |
-        terraform state rm module.infrastructure.aws_ecr_repository.frontend || true
-      working-directory: ./terraform/${{ github.event.inputs.environment }}
-    
-    - name: Remover repositório ECR backend-repo do estado do Terraform
-      run: |
-        terraform state rm module.infrastructure.aws_ecr_repository.backend || true
-      working-directory: ./terraform/${{ github.event.inputs.environment }}
-  
-     # Deletar o repositório ECR frontend-repo
-    - name: Deletar repositório ECR frontend-repo
-      run: |
-        aws ecr delete-repository --repository-name frontend-repo --force --region us-east-1  || true
-      working-directory: ./terraform/${{ github.event.inputs.environment }}
- 
-   # Deletar o repositório ECR backend-repo
-    - name: Deletar repositório ECR backend-repo
-      run: |
-        aws ecr delete-repository --repository-name backend-repo --force --region us-east-1  || true
-      working-directory: ./terraform/${{ github.event.inputs.environment }}
-
     - name: Terraform Plan
       run: terraform plan -target=module.infrastructure -var-file=${{ github.event.inputs.environment }}.tfvars
       working-directory: ./terraform/${{ github.event.inputs.environment }}
@@ -152,12 +130,6 @@ jobs:
         run: |
           aws dynamodb delete-table --table-name terraform-locks --region us-east-1
         working-directory: ./terraform/bootstrap-backend
-
-      - name: Remover estado do Terraform do S3
-        run: |
-          aws s3 rm s3://meu-bucket-terraform-pedro-silveira/terraform.tfstate --region us-east-1 --debug
-        working-directory: ./terraform/bootstrap-backend
-
 
       - name: Esvaziar todos os objetos do bucket S3
         run: |

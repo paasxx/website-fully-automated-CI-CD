@@ -3,6 +3,14 @@ data "aws_availability_zones" "available" {}
 
 provider "aws" {
   region = var.aws_region
+
+  default_tags {
+    tags = {
+      Project     = "fintrack"
+      Environment = "dev"
+      ManagedBy   = "terraform"
+    }
+  }
 }
 
 

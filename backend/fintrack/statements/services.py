@@ -1,10 +1,11 @@
 from django.db import transaction as db_transaction
-from finances.models import Transaction
+from finances.models import Transaction, Category
+from finances.categorizer import categorize
 from .models import Statement
 from .parsers.registry import get_parser
 
 
-def process_statement(user, file, filename: str, bank: str) -> Statement:
+def process_statement(user, file, filename: str, bank: str, password: str = None) -> Statement:
     if Statement.objects.filter(user=user, filename=filename).exists():
         raise ValueError(f"'{filename}' has already been imported.")
 
@@ -17,7 +18,9 @@ def process_statement(user, file, filename: str, bank: str) -> Statement:
 
     try:
         parser = get_parser(bank)
-        dtos = parser.parse(file)
+        dtos = parser.parse(file, password=password)
+
+        categories = {c.name: c for c in Category.objects.filter(user=None)}
 
         rows = [
             Transaction(
@@ -34,6 +37,7 @@ def process_statement(user, file, filename: str, bank: str) -> Statement:
                 balance_after=dto.balance_after,
                 bank_category=dto.bank_category,
                 transaction_type=dto.transaction_type,
+                category=categorize(dto.description, categories),
             )
             for dto in dtos
         ]
