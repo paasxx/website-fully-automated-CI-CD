@@ -111,11 +111,12 @@ Update user data and/or profile. Supports partial updates — omit any field to 
 ## Statements — `/api/import/`
 
 ### `POST /api/import/upload/`
-Upload a bank statement CSV file.
+Upload a bank statement file (CSV or XLSX).
 
 **Request:** `multipart/form-data`
-- `file`: CSV file
+- `file`: `.csv` (Nubank, Inter) or `.xlsx` (BTG)
 - `bank`: `nubank` | `inter` | `btg`
+- `password` *(optional)*: required for BTG — the file is encrypted; default password is the account holder's CPF (digits only)
 
 **Response 201:**
 ```json
