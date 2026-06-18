@@ -13,7 +13,7 @@ const BANK_LABELS = {
     btg:    'BTG',
 };
 
-const PT_MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+const PAGE_SIZE = 25; // must match backend TransactionPagePagination.page_size
 
 const formatDate = (dateStr) => {
     const [year, month, day] = dateStr.split('-');
@@ -23,18 +23,29 @@ const formatDate = (dateStr) => {
 const formatCurrency = (amount) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Math.abs(amount));
 
-// Extracts the ?cursor=... value from the DRF pagination next/previous URL.
-const extractCursor = (url) => {
-    if (!url) return null;
-    try { return new URL(url).searchParams.get('cursor'); } catch { return null; }
+// Returns page numbers to display, inserting null as ellipsis placeholder.
+// E.g. for 10 pages at page 6: [1, null, 4, 5, 6, 7, 8, null, 10]
+const buildPageItems = (currentPage, totalPages) => {
+    const pages = new Set([1, totalPages]);
+    for (let i = Math.max(2, currentPage - 2); i <= Math.min(totalPages - 1, currentPage + 2); i++) {
+        pages.add(i);
+    }
+    const sorted = [...pages].sort((a, b) => a - b);
+    const items = [];
+    let prev = 0;
+    for (const p of sorted) {
+        if (p - prev > 1) items.push(null); // null = ellipsis
+        items.push(p);
+        prev = p;
+    }
+    return items;
 };
 
 const TransactionList = ({ refreshKey }) => {
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [nextCursor, setNextCursor] = useState(null);
-    const [prevCursor, setPrevCursor] = useState(null);
-    const [activeCursor, setActiveCursor] = useState(null);
+    const [count, setCount] = useState(0);
+    const [currentPage, setCurrentPage] = useState(1);
 
     // Filter state
     const [searchInput, setSearchInput] = useState('');
@@ -44,56 +55,57 @@ const TransactionList = ({ refreshKey }) => {
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
 
-    // Debounce the search field — waits 300ms after the user stops typing
-    // before triggering a fetch, avoiding a request on every keystroke.
+    // Debounce search — waits 300ms after user stops typing before fetching
     useEffect(() => {
         const t = setTimeout(() => {
             setDebouncedSearch(searchInput);
-            setActiveCursor(null); // new search always goes back to page 1
+            setCurrentPage(1);
         }, 300);
         return () => clearTimeout(t);
     }, [searchInput]);
 
-    // When refreshKey changes (new upload), reset to page 1.
-    useEffect(() => { setActiveCursor(null); }, [refreshKey]);
+    // New upload → reset to page 1
+    useEffect(() => { setCurrentPage(1); }, [refreshKey]);
 
-    // Main fetch — runs whenever any filter or cursor changes.
+    // Main fetch
     useEffect(() => {
         setLoading(true);
 
-        const params = {};
+        const params = { page: currentPage };
         if (debouncedSearch) params.search    = debouncedSearch;
         if (bank)            params.bank       = bank;
         if (isCredit !== '') params.is_credit  = isCredit;
         if (dateFrom)        params.date_from  = dateFrom;
         if (dateTo)          params.date_to    = dateTo;
-        if (activeCursor)    params.cursor     = activeCursor;
 
         axiosInstance
             .get('/finances/transactions/', { params })
             .then(res => {
                 setTransactions(res.data.results);
-                setNextCursor(extractCursor(res.data.next));
-                setPrevCursor(extractCursor(res.data.previous));
+                setCount(res.data.count);
             })
             .catch(console.error)
             .finally(() => setLoading(false));
-    }, [debouncedSearch, bank, isCredit, dateFrom, dateTo, activeCursor, refreshKey]);
+    }, [debouncedSearch, bank, isCredit, dateFrom, dateTo, currentPage, refreshKey]);
 
-    const handleBankChange = (e)     => { setBank(e.target.value);     setActiveCursor(null); };
-    const handleIsCreditChange = (e) => { setIsCredit(e.target.value); setActiveCursor(null); };
-    const handleDateFromChange = (e) => { setDateFrom(e.target.value); setActiveCursor(null); };
-    const handleDateToChange = (e)   => { setDateTo(e.target.value);   setActiveCursor(null); };
+    const goToPage    = (p) => setCurrentPage(p);
+    const handleBank  = (e) => { setBank(e.target.value);     setCurrentPage(1); };
+    const handleType  = (e) => { setIsCredit(e.target.value); setCurrentPage(1); };
+    const handleFrom  = (e) => { setDateFrom(e.target.value); setCurrentPage(1); };
+    const handleTo    = (e) => { setDateTo(e.target.value);   setCurrentPage(1); };
 
-    const hasFilters = searchInput || bank || isCredit || dateFrom || dateTo;
+    const hasFilters  = searchInput || bank || isCredit || dateFrom || dateTo;
     const clearFilters = () => {
         setSearchInput('');
         setBank('');
         setIsCredit('');
         setDateFrom('');
         setDateTo('');
-        setActiveCursor(null);
+        setCurrentPage(1);
     };
+
+    const totalPages = Math.ceil(count / PAGE_SIZE);
+    const pageItems  = totalPages > 1 ? buildPageItems(currentPage, totalPages) : [];
 
     return (
         <div className="dashboard-card--large">
@@ -110,37 +122,23 @@ const TransactionList = ({ refreshKey }) => {
                         onChange={e => setSearchInput(e.target.value)}
                     />
                     {hasFilters && (
-                        <button className="tx-filter-clear" onClick={clearFilters}>
-                            Clear
-                        </button>
+                        <button className="tx-filter-clear" onClick={clearFilters}>Clear</button>
                     )}
                 </div>
                 <div className="tx-filter-row">
-                    <select className="tx-filter-select" value={bank} onChange={handleBankChange}>
+                    <select className="tx-filter-select" value={bank} onChange={handleBank}>
                         <option value="">All banks</option>
                         <option value="nubank">Nubank</option>
                         <option value="inter">Inter</option>
                         <option value="btg">BTG</option>
                     </select>
-                    <select className="tx-filter-select" value={isCredit} onChange={handleIsCreditChange}>
+                    <select className="tx-filter-select" value={isCredit} onChange={handleType}>
                         <option value="">All</option>
                         <option value="false">Expenses</option>
                         <option value="true">Credits</option>
                     </select>
-                    <input
-                        type="date"
-                        className="tx-filter-input tx-filter-date"
-                        value={dateFrom}
-                        onChange={handleDateFromChange}
-                        title="From date"
-                    />
-                    <input
-                        type="date"
-                        className="tx-filter-input tx-filter-date"
-                        value={dateTo}
-                        onChange={handleDateToChange}
-                        title="To date"
-                    />
+                    <input type="date" className="tx-filter-input tx-filter-date" value={dateFrom} onChange={handleFrom} title="From" />
+                    <input type="date" className="tx-filter-input tx-filter-date" value={dateTo}   onChange={handleTo}   title="To" />
                 </div>
             </div>
 
@@ -186,21 +184,36 @@ const TransactionList = ({ refreshKey }) => {
                 )}
             </div>
 
-            {(prevCursor || nextCursor) && (
+            {totalPages > 1 && (
                 <div className="tx-pagination">
                     <button
                         className="tx-pagination-btn"
-                        disabled={!prevCursor}
-                        onClick={() => setActiveCursor(prevCursor)}
+                        disabled={currentPage === 1}
+                        onClick={() => goToPage(currentPage - 1)}
                     >
-                        ← Previous
+                        ←
                     </button>
+
+                    {pageItems.map((item, i) =>
+                        item === null ? (
+                            <span key={`ellipsis-${i}`} className="tx-pagination-ellipsis">…</span>
+                        ) : (
+                            <button
+                                key={item}
+                                className={`tx-pagination-btn ${item === currentPage ? 'tx-pagination-btn--active' : ''}`}
+                                onClick={() => goToPage(item)}
+                            >
+                                {item}
+                            </button>
+                        )
+                    )}
+
                     <button
                         className="tx-pagination-btn"
-                        disabled={!nextCursor}
-                        onClick={() => setActiveCursor(nextCursor)}
+                        disabled={currentPage === totalPages}
+                        onClick={() => goToPage(currentPage + 1)}
                     >
-                        Next →
+                        →
                     </button>
                 </div>
             )}

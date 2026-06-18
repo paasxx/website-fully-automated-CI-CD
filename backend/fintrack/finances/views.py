@@ -8,13 +8,13 @@ from rest_framework.response import Response
 from .models import Transaction
 from .serializers import TransactionSerializer
 from .filters import TransactionFilter
-from .pagination import TransactionCursorPagination
+from .pagination import TransactionPagePagination
 
 
 class TransactionListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = TransactionSerializer
-    pagination_class = TransactionCursorPagination
+    pagination_class = TransactionPagePagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = TransactionFilter
 

@@ -2,6 +2,7 @@ import io
 import re
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
+from typing import Optional
 
 import pdfplumber
 
@@ -11,7 +12,7 @@ from .base import StatementParser, TransactionDTO
 INSTALLMENT_RE = re.compile(r"Parcela\s+(\d+)\s*/\s*(\d+)", re.IGNORECASE)
 
 
-def _parse_br_decimal(value_str: str) -> Decimal | None:
+def _parse_br_decimal(value_str: str) -> Optional[Decimal]:
     """Convert Brazilian decimal format to Decimal.
 
     Inter uses "1.234,56" (dot=thousands, comma=decimal).
