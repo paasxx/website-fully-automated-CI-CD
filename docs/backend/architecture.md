@@ -151,12 +151,40 @@ O BTG exporta faturas como `.xlsx` protegido por senha (padrão: CPF sem pontua�
 3. Localiza o header **dinamicamente** (busca linha com `'Data'` na col 1, `'Descrição'` na col 2) — necessário porque as primeiras 24 linhas são resumo da fatura
 4. Itera as linhas de transação: col 1 = data, col 2 = descrição, col 4 = valor, col 5 = tipo de compra
 5. Parcelas detectadas por regex `(N/M)` embutido na descrição
+6. **Normalização de data de parcelas** (ver seção abaixo)
 
 Tipos de compra mapeados para `transaction_type`: `'Parcela sem juros'`, `'Compra à vista'`, `'Compra internacional'`.
 
 `detect()` retorna sempre `False` — BTG nunca é detectado por headers CSV. A identificação é feita pelo campo `bank` enviado no upload.
 
-**Dependências adicionais:** `msoffcrypto-tool`, `openpyxl` (em `requirements.txt`).
+**Dependências adicionais:** `msoffcrypto-tool`, `openpyxl`, `python-dateutil` (em `requirements.txt`).
+
+#### Normalização de datas de parcelas BTG
+
+**Problema:** o extrato BTG lista todas as N parcelas de uma compra com a data original da compra. O Nubank, por contraste, registra cada parcela na data em que ela caiu na fatura mensal.
+
+Sem normalização, uma compra de R$600 em 3x feita em abril apareceria assim no BTG:
+
+```
+Netflix (1/3)  date=01/04  R$200
+Netflix (2/3)  date=01/04  R$200   ← errado: deveria ser maio
+Netflix (3/3)  date=01/04  R$200   ← errado: deveria ser junho
+```
+
+Isso empilharia R$600 em abril no gráfico, distorcendo o spending-over-time.
+
+**Solução implementada:** o parser aplica `billing_date = purchase_date + relativedelta(months=N-1)` para cada parcela:
+
+```python
+billing_date = purchase_date + relativedelta(months=installment_number - 1)
+# (1/3) → +0 meses  → abril   ✓
+# (2/3) → +1 mês    → maio    ✓
+# (3/3) → +2 meses  → junho   ✓
+```
+
+`relativedelta` (do `python-dateutil`) é usado no lugar de `timedelta(days=30)` porque respeita os limites do calendário — `Jan 31 + 1 mês = Fev 28`, não um erro.
+
+**Atenção:** essa lógica assume que o BTG exporta todas as N parcelas de uma compra com a data original em um único extrato. Se o BTG mudar o comportamento e passar a exportar apenas a parcela do mês corrente (como o Nubank), a normalização ficaria errada — deslocaria uma data que já está correta. Validar com extratos futuros.
 
 **Upload flow:** o frontend exibe um modal pedindo a senha quando o banco BTG é selecionado. A senha é enviada no campo `password` do `multipart/form-data`. O `views.py` repassa para `services.py` que repassa para `BTGParser.parse(file, password=password)`.
 
