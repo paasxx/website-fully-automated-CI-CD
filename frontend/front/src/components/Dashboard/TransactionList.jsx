@@ -13,6 +13,13 @@ const BANK_LABELS = {
     btg:    'BTG',
 };
 
+const PT_MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+const formatDate = (dateStr) => {
+    const [year, month, day] = dateStr.split('-');
+    return `${parseInt(day, 10)} ${PT_MONTHS[parseInt(month, 10) - 1]} ${year.slice(2)}`;
+};
+
 const formatCurrency = (amount) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Math.abs(amount));
 
@@ -44,7 +51,7 @@ const TransactionList = ({ refreshKey }) => {
                     <ul className="transaction-list dashboard-card--large__scrollable">
                         {transactions.map(t => (
                             <li key={t.id} className="transaction-row">
-                                <span className="transaction-date">{t.date}</span>
+                                <span className="transaction-date">{formatDate(t.date)}</span>
 
                                 <span
                                     className="transaction-bank"
