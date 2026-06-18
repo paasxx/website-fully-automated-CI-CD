@@ -68,12 +68,13 @@
 
 .dashboard-card--small {
     @include card-base;
-    @include custom-scrollbar(var(--button-bg)); 
+    @include custom-scrollbar(var(--button-bg));
     display: flex;
     flex-direction: column;
     width: 220px;
     max-height: 300px;
     height: 100%;
+    overflow: hidden;
 
 
     h2 {

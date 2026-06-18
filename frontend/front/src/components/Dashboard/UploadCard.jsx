@@ -35,6 +35,7 @@ const UploadCard = ({ onUploadSuccess }) => {
         } catch (err) {
             setStatus('error');
             setErrorMsg(err.response?.data?.error || 'Upload failed.');
+            setTimeout(() => setStatus('idle'), 6000);
         }
     };
 
