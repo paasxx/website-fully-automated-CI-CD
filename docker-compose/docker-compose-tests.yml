@@ -22,7 +22,7 @@ services:
     container_name: back
     build: 
       context: ../backend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile.local
 
     ##### Retirei o bind mount porque não funcionava no actions
     # volumes:
@@ -43,7 +43,7 @@ services:
     container_name: front
     build: 
       context: ../frontend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile.local
     volumes:
       - ../frontend/front:/app
     ports:

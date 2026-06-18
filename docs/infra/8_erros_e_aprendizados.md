@@ -263,21 +263,21 @@ Se a infra já existe e você só quer atualizar as imagens Docker (ex: corrigir
 
 ### Problema
 
-A pipeline pede um input `environment` com default `dev`. Ao mesmo tempo, existe um `Dockerfile.dev` no repositório. Isso cria uma confusão: parece que rodar com `environment: dev` usaria o `Dockerfile.dev`.
+A pipeline pede um input `environment` com default `dev`. Ao mesmo tempo, existia um `Dockerfile.dev` no repositório. Isso criava confusão: parecia que rodar com `environment: dev` usaria o `Dockerfile.dev`.
 
 ### Como realmente funciona
 
 | Nome | Significado |
 |---|---|
 | `environment: dev` (input da pipeline) | **Ambiente AWS** — aponta para `terraform/dev/` e suas variáveis |
-| `Dockerfile.dev` | **Imagem de desenvolvimento local** — usa `tail -f /dev/null`, hot reload, sem build |
+| `Dockerfile.local` | **Imagem de desenvolvimento local** — usa `tail -f /dev/null`, hot reload, sem build |
 | `Dockerfile.prod` | **Imagem deployável** — multi-stage build, compila o React, serve via Nginx + Gunicorn |
 
 A pipeline **sempre** usa `Dockerfile.prod` para os dois serviços, independente do ambiente escolhido. O que muda entre `dev`, `staging` e `prod` é a infraestrutura Terraform (tamanho das instâncias, variáveis de banco, etc.), não a imagem Docker.
 
-### Melhoria pendente
+### Solução aplicada
 
-Renomear `Dockerfile.dev` → `Dockerfile.local` para eliminar essa ambiguidade. Impacta `docker-compose.dev.yml` e o `Makefile`.
+`Dockerfile.dev` foi renomeado para `Dockerfile.local` em todo o repositório (arquivos físicos + docker-compose + docs).
 
 ---
 

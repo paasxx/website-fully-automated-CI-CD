@@ -10,7 +10,7 @@ The backend is a **Django 4.2 + Django REST Framework** API. It follows **Domain
 
 ```
 backend/
-├── Dockerfile.dev          # Dev: tail -f /dev/null (manual server start)
+├── Dockerfile.local          # Dev: tail -f /dev/null (manual server start)
 ├── Dockerfile.prod         # Prod: gunicorn + nginx, entrypoint.sh
 ├── entrypoint.sh           # Prod startup: wait-for-db → migrate → gunicorn
 ├── nginx.conf              # Nginx config: proxies /api/ to gunicorn socket
