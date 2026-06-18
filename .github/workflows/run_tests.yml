@@ -57,9 +57,9 @@ jobs:
         run: |
             docker exec back bash -c "cd /var && ls" 
 
-      - name: Run run.sh script inside Docker container
+      - name: Run tests
         run: |
-          docker exec back bash -c "chmod +x ./tests.sh && ./tests.sh"
+          docker exec back bash -c "cd /app && python manage.py test --verbosity=2"
 
       - name: Print container logs
         run: docker logs back
