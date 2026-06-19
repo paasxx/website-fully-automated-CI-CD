@@ -5,12 +5,20 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .models import Transaction
-from .serializers import TransactionSerializer
+from .models import Transaction, Category
+from .serializers import TransactionSerializer, CategorySerializer
 from .filters import TransactionFilter
 from .pagination import TransactionPagePagination
 
+class CategoryListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CategorySerializer
 
+
+    def get_queryset(self):
+        return Category.objects.filter(user=None).order_by("name")
+    
+    
 class TransactionListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = TransactionSerializer

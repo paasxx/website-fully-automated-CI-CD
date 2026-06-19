@@ -54,6 +54,12 @@ const TransactionList = ({ refreshKey }) => {
     const [isCredit, setIsCredit] = useState('');
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
+    const [category, setCategory] = useState('');
+    const [categories, setCategories] = useState([]);
+
+    useEffect(() => {
+        axiosInstance.get('/finances/categories/').then(res => setCategories(res.data));
+    }, []);
 
     // Debounce search — waits 300ms after user stops typing before fetching
     useEffect(() => {
@@ -77,6 +83,7 @@ const TransactionList = ({ refreshKey }) => {
         if (isCredit !== '') params.is_credit  = isCredit;
         if (dateFrom)        params.date_from  = dateFrom;
         if (dateTo)          params.date_to    = dateTo;
+        if (category)        params.category   = category;
 
         axiosInstance
             .get('/finances/transactions/', { params })
@@ -86,21 +93,23 @@ const TransactionList = ({ refreshKey }) => {
             })
             .catch(console.error)
             .finally(() => setLoading(false));
-    }, [debouncedSearch, bank, isCredit, dateFrom, dateTo, currentPage, refreshKey]);
+    }, [debouncedSearch, bank, isCredit, dateFrom, dateTo, category, currentPage, refreshKey]);
 
     const goToPage    = (p) => setCurrentPage(p);
     const handleBank  = (e) => { setBank(e.target.value);     setCurrentPage(1); };
     const handleType  = (e) => { setIsCredit(e.target.value); setCurrentPage(1); };
     const handleFrom  = (e) => { setDateFrom(e.target.value); setCurrentPage(1); };
     const handleTo    = (e) => { setDateTo(e.target.value);   setCurrentPage(1); };
+    const handleCategory = (e) => { setCategory(e.target.value); setCurrentPage(1); };
 
-    const hasFilters  = searchInput || bank || isCredit || dateFrom || dateTo;
+    const hasFilters  = searchInput || bank || isCredit || dateFrom || dateTo || category;
     const clearFilters = () => {
         setSearchInput('');
         setBank('');
         setIsCredit('');
         setDateFrom('');
         setDateTo('');
+        setCategory('');
         setCurrentPage(1);
     };
 
@@ -139,6 +148,14 @@ const TransactionList = ({ refreshKey }) => {
                     </select>
                     <input type="date" className="tx-filter-input tx-filter-date" value={dateFrom} onChange={handleFrom} title="From" />
                     <input type="date" className="tx-filter-input tx-filter-date" value={dateTo}   onChange={handleTo}   title="To" />
+                    <select className="tx-filter-select" value={category} onChange={handleCategory}>
+                        <option value="">All categories</option>
+                        {categories.map(c => (
+                            <option key={c.id} value={c.id}>
+                                {c.name}
+                            </option>
+                        ))}
+                    </select>   
                 </div>
             </div>
 
