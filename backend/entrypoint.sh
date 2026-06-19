@@ -6,7 +6,6 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-python manage.py makemigrations
 python manage.py migrate
 python manage.py collectstatic --no-input
 

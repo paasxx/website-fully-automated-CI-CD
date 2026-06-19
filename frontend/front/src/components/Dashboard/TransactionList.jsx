@@ -142,7 +142,7 @@ const TransactionList = ({ refreshKey }) => {
                         <option value="btg">BTG</option>
                     </select>
                     <select className="tx-filter-select" value={isCredit} onChange={handleType}>
-                        <option value="">All</option>
+                        <option value="">All types</option>
                         <option value="false">Expenses</option>
                         <option value="true">Credits</option>
                     </select>
