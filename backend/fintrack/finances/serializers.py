@@ -10,6 +10,9 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class TransactionSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
+    category_id = serializers.PrimaryKeyRelatedField(
+    queryset=Category.objects.all(), source="category", write_only=True)
+
 
     class Meta:
         model = Transaction
@@ -27,5 +30,6 @@ class TransactionSerializer(serializers.ModelSerializer):
             "bank_category",
             "transaction_type",
             "category",
+            "category_id",
         ]
         read_only_fields = ["id"]

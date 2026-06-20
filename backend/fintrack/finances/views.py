@@ -32,6 +32,15 @@ class TransactionListView(generics.ListAPIView):
             .filter(user=self.request.user)
             .select_related("category")
         )
+    
+class TransactionUpdateView(generics.RetrieveUpdateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = TransactionSerializer
+
+    def get_queryset(self):
+        return Transaction.objects.filter(user=self.request.user)
+    
+
 
 
 class SpendingOverTimeView(APIView):
