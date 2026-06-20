@@ -102,6 +102,21 @@ const TransactionList = ({ refreshKey }) => {
     const handleTo    = (e) => { setDateTo(e.target.value);   setCurrentPage(1); };
     const handleCategory = (e) => { setCategory(e.target.value); setCurrentPage(1); };
 
+    const handleChangeCategory = (transactionId, newCategoryId) => {
+        axiosInstance.patch(`/finances/transactions/${transactionId}/`, { category_id: newCategoryId })
+            .then(res => {
+                // Update the transaction in the local state
+                setTransactions(prevTransactions =>
+                    prevTransactions.map(t =>
+                        t.id === transactionId ? { ...t, category: res.data.category } : t
+                    ).filter(t => t.category.id === category.id || !category) // Remove transaction if it no longer matches the filter
+                
+                );
+               
+            })
+            .catch(console.error);
+    };
+
     const hasFilters  = searchInput || bank || isCredit || dateFrom || dateTo || category;
     const clearFilters = () => {
         setSearchInput('');
@@ -202,18 +217,19 @@ const TransactionList = ({ refreshKey }) => {
                                             )}
                                         </span>
 
-                                        {t.category && (
-                                            <span
-                                                className="transaction-category"
-                                                style={{
-                                                    color: t.category.color,
-                                                    background: t.category.color + '1a',
-                                                    border: `1px solid ${t.category.color}80`,
-                                                }}
-                                            >
-                                                {t.category.name}
-                                            </span>
-                                        )}
+
+                                        <select className="transaction-category" style={{
+                                                    color: t.category?.color ?? '#888',
+                                                    background: (t.category?.color ?? '#888') + '1a',
+                                                    border: `1px solid ${(t.category?.color ?? '#888')}80`,
+
+                                                }} value={t.category.id} onChange={e => handleChangeCategory(t.id, e.target.value)}>
+                                            {categories.map(c => (
+                                                <option key={c.id} value={c.id} className='tx-filter-select'>
+                                                    {c.name}
+                                                </option>
+                                            ))}
+                                        </select>   
 
                                         <span className={`transaction-amount ${t.is_credit ? 'transaction-amount--credit' : 'transaction-amount--debit'}`}>
                                             {t.is_credit ? '+' : '-'}{formatCurrency(t.amount)}
