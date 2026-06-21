@@ -699,3 +699,59 @@
     border-radius: 50%;
     flex-shrink: 0;
 }
+
+// ── Toast Error Update Category ───────────────────────────────────
+
+
+.error-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.error-modal-card {
+    @include card-base;
+    width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+    padding: $space-lg;
+}
+
+.error-modal-title {
+    font-size: $heading-font-size;
+    font-weight: 600;
+}
+
+.error-modal-description {
+    font-size: $paragraph-font-size;
+    opacity: 0.7;
+    line-height: 1.5;
+}
+
+.error-modal-actions {
+    display: flex;
+    gap: $space-sm;
+    justify-content: flex-end;
+}
+
+.error-modal-btn {
+    @include button-base;
+    padding: $space-xs $space-md;
+
+    &--cancel {
+        background: transparent;
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        &:hover { background: var(--input-bg); }
+    }
+
+    &--confirm {
+        &:hover { background-color: var(--button-bg-hover); }
+        &:disabled { opacity: 0.5; cursor: not-allowed; }
+    }
+}

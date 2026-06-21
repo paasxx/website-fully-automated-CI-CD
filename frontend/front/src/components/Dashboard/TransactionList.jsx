@@ -56,6 +56,8 @@ const TransactionList = ({ refreshKey }) => {
     const [dateTo, setDateTo] = useState('');
     const [category, setCategory] = useState('');
     const [categories, setCategories] = useState([]);
+    const [statusUpdateCategory, setStatusUpdateCategory] = useState(""); // To track which transaction is being updated for category change  
+    const [errorMsg, setErrorMsg] = useState(""); // To store error message for category update
 
     useEffect(() => {
         axiosInstance.get('/finances/categories/').then(res => setCategories(res.data));
@@ -103,6 +105,7 @@ const TransactionList = ({ refreshKey }) => {
     const handleCategory = (e) => { setCategory(e.target.value); setCurrentPage(1); };
 
     const handleChangeCategory = (transactionId, newCategoryId) => {
+        
         axiosInstance.patch(`/finances/transactions/${transactionId}/`, { category_id: newCategoryId })
             .then(res => {
                 // Update the transaction in the local state
@@ -114,7 +117,17 @@ const TransactionList = ({ refreshKey }) => {
                 );
                
             })
-            .catch(console.error);
+            .catch(err =>{
+                console.error(err);
+                setStatusUpdateCategory('error');
+                setErrorMsg(err.response?.data?.error || 'Não foi possível atualizar a categoria.');
+                setTimeout(() => {
+                    setStatusUpdateCategory(''); // Reset status after 3 seconds
+                    setErrorMsg(''); // Clear error message after 3 seconds
+                }, 3000);
+            }
+                
+            );
     };
 
     const hasFilters  = searchInput || bank || isCredit || dateFrom || dateTo || category;
@@ -133,6 +146,18 @@ const TransactionList = ({ refreshKey }) => {
 
     return (
         <div className="dashboard-card--large">
+
+            {statusUpdateCategory === 'error' && (
+                <div className="error-modal-overlay">
+                    <div className='error-modal-card'>
+                        <div className="error-modal-title">Erro ao atualizar categoria.</div>
+                        <div className="error-modal-description">{errorMsg}</div>
+                        <button className="error-modal-btn" onClick={() => setStatusUpdateCategory('')}>Ok</button>
+                    </div>
+                </div>
+            )}
+               
+
             <div className="dashboard-card--large__header">
                 <h2>Transactions</h2>
             </div>
@@ -176,6 +201,7 @@ const TransactionList = ({ refreshKey }) => {
 
             <div className="dashboard-card--large__body">
                 {/* First load: blank spinner (no previous content to show) */}
+                
                 {loading && transactions.length === 0 ? (
                     <div className="spinner" />
                 ) : (
