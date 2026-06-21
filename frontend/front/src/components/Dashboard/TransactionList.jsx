@@ -56,8 +56,10 @@ const TransactionList = ({ refreshKey }) => {
     const [dateTo, setDateTo] = useState('');
     const [category, setCategory] = useState('');
     const [categories, setCategories] = useState([]);
+    const [statusListTransactions, setStatusListTransactions] = useState(""); // To track status of loading all transactions.
     const [statusUpdateCategory, setStatusUpdateCategory] = useState(""); // To track which transaction is being updated for category change  
-    const [errorMsg, setErrorMsg] = useState(""); // To store error message for category update
+    const [errorUpdateCategoryMsg, setErrorUpdateCategoryMsg] = useState(""); // To store error message for category update
+    const [errorListTransactionsMsg, setErrorListTransactionsMsg] = useState(""); // To store error message for loading transactions
 
     useEffect(() => {
         axiosInstance.get('/finances/categories/').then(res => setCategories(res.data));
@@ -93,7 +95,16 @@ const TransactionList = ({ refreshKey }) => {
                 setTransactions(res.data.results);
                 setCount(res.data.count);
             })
-            .catch(console.error)
+            .catch(err => 
+                {
+                console.error(err);
+                setStatusListTransactions('error');
+                setErrorListTransactionsMsg(err.response?.data?.error || 'Não foi possível carregar as transações.');
+                setTimeout(() => {
+                    setStatusListTransactions(''); // Reset status after 3 seconds
+                    setErrorListTransactionsMsg(''); // Clear error message after 3 seconds
+                }, 3000);
+            })
             .finally(() => setLoading(false));
     }, [debouncedSearch, bank, isCredit, dateFrom, dateTo, category, currentPage, refreshKey]);
 
@@ -106,7 +117,7 @@ const TransactionList = ({ refreshKey }) => {
 
     const handleChangeCategory = (transactionId, newCategoryId) => {
         
-        axiosInstance.patch(`/finances/transactions/${transactionId}/`, { category_id: newCategoryId })
+        axiosInstance.patch(`/finances/transactionss/${transactionId}/`, { category_id: newCategoryId })
             .then(res => {
                 // Update the transaction in the local state
                 setTransactions(prevTransactions =>
@@ -120,10 +131,10 @@ const TransactionList = ({ refreshKey }) => {
             .catch(err =>{
                 console.error(err);
                 setStatusUpdateCategory('error');
-                setErrorMsg(err.response?.data?.error || 'Não foi possível atualizar a categoria.');
+                setErrorUpdateCategoryMsg(err.response?.data?.error || 'Não foi possível atualizar a categoria.');
                 setTimeout(() => {
                     setStatusUpdateCategory(''); // Reset status after 3 seconds
-                    setErrorMsg(''); // Clear error message after 3 seconds
+                    setErrorUpdateCategoryMsg(''); // Clear error message after 3 seconds
                 }, 3000);
             }
                 
@@ -151,8 +162,18 @@ const TransactionList = ({ refreshKey }) => {
                 <div className="error-modal-overlay">
                     <div className='error-modal-card'>
                         <div className="error-modal-title">Erro ao atualizar categoria.</div>
-                        <div className="error-modal-description">{errorMsg}</div>
+                        <div className="error-modal-description">{errorUpdateCategoryMsg}</div>
                         <button className="error-modal-btn" onClick={() => setStatusUpdateCategory('')}>Ok</button>
+                    </div>
+                </div>
+            )}
+
+            {statusListTransactions === 'error' && (
+                <div className="error-modal-overlay">
+                    <div className='error-modal-card'>
+                        <div className="error-modal-title">Erro ao carregar transações.</div>
+                        <div className="error-modal-description">{errorListTransactionsMsg}</div>
+                        <button className="error-modal-btn" onClick={() => setStatusListTransactions('')}>Ok</button>
                     </div>
                 </div>
             )}
