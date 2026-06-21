@@ -109,7 +109,7 @@ const TransactionList = ({ refreshKey }) => {
                 setTransactions(prevTransactions =>
                     prevTransactions.map(t =>
                         t.id === transactionId ? { ...t, category: res.data.category } : t
-                    ).filter(t => t.category.id === category.id || !category) // Remove transaction if it no longer matches the filter
+                    ).filter(t => String(t.category.id) === category || !category) // Remove transaction if it no longer matches the filter
                 
                 );
                

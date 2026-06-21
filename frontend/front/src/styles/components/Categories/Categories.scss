@@ -1,0 +1,114 @@
+.dashboard-card--large{
+    @include card-base;
+    @include custom-scrollbar(var(--button-bg));
+    display: flex;
+    flex-direction: column;
+    width: 660px;        // fixed — prevents resize when description lengths change
+    min-height: 500px;
+    max-height: 600px;
+    height: 100%;
+    flex-shrink: 0;
+
+    h2 {
+        font-size: $heading-font-size;
+        text-align: center;
+    }
+
+    p {
+        font-size: $base-font-size;
+    }
+
+    &__scrollable {
+        max-height: 100%;
+    }
+
+    &__header{
+        text-align: center;
+        padding: $space-md;
+    }
+
+    &__body {
+        position: relative;   // needed for overlay positioning
+        text-align: left;
+        padding: $space-md;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    &__footer {
+        margin-top: $space-sm;
+        font-size: 12px;
+        text-align: center;
+    }
+}
+
+
+// ── Transaction filters ───────────────────────────────────
+
+.tx-filters {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+    padding: $space-xs $space-md $space-sm;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tx-filter-search-row {
+    display: flex;
+    gap: $space-xs;
+    align-items: center;
+}
+
+.tx-filter-row {
+    display: flex;
+    gap: $space-xs;
+    flex-wrap: wrap;
+}
+
+.tx-filter-input {
+    padding: $space-xs $space-sm;
+    border-radius: $radius-sm;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-color);
+    font-size: 12px;
+    outline: none;
+
+    &:focus { border-color: var(--button-bg); }
+}
+
+.tx-filter-search {
+    flex: 1;
+}
+
+.tx-filter-date {
+    width: 130px;
+    color-scheme: dark light; // native date picker respects theme
+}
+
+.tx-filter-select {
+    padding: $space-xs $space-sm;
+    border-radius: $radius-sm;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-color);
+    font-size: 12px;
+    cursor: pointer;
+    outline: none;
+
+    &:focus { border-color: var(--button-bg); }
+}
+
+.tx-filter-clear {
+    padding: $space-xs $space-sm;
+    border-radius: $radius-sm;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-color);
+    font-size: 11px;
+    cursor: pointer;
+    opacity: 0.6;
+    white-space: nowrap;
+
+    &:hover { opacity: 1; background: var(--input-bg); }
+}

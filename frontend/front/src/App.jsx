@@ -9,6 +9,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Charts from './pages/Charts';
 import Profile from './pages/Profile';
+import Categories from './pages/Categories';
 
 import './styles/main.scss';
 import './fonts.css';
@@ -27,6 +28,7 @@ function App() {
                             <Route path="/dashboard" element={
                                 <PrivateRoute><Dashboard /></PrivateRoute>
                             } />
+                            <Route path="/categories" element={<PrivateRoute><Categories /></PrivateRoute>} />
                             <Route path="/charts" element={
                                 <PrivateRoute><Charts /></PrivateRoute>
                             } />

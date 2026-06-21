@@ -23,6 +23,7 @@ const Navbar = () => {
                 {user ? (
                     <>
                         <NavLink to="/dashboard" className="navbar-link">Dashboard</NavLink>
+                        <NavLink to="/categories" className="navbar-link">Categories</NavLink>
                         <NavLink to="/charts" className="navbar-link">Charts</NavLink>
                         <NavLink to="/profile" className="navbar-link">Profile</NavLink>
                         <NavLink to="/profile" className="navbar-avatar" title={user?.email}>
