@@ -99,7 +99,7 @@ const TransactionList = ({ refreshKey }) => {
                 {
                 console.error(err);
                 setStatusListTransactions('error');
-                setErrorListTransactionsMsg(err.response?.data?.error || 'Não foi possível carregar as transações.');
+                setErrorListTransactionsMsg(err.response?.data?.error || 'Failed to load transactions.');
                 setTimeout(() => {
                     setStatusListTransactions(''); // Reset status after 3 seconds
                     setErrorListTransactionsMsg(''); // Clear error message after 3 seconds
@@ -131,7 +131,7 @@ const TransactionList = ({ refreshKey }) => {
             .catch(err =>{
                 console.error(err);
                 setStatusUpdateCategory('error');
-                setErrorUpdateCategoryMsg(err.response?.data?.error || 'Não foi possível atualizar a categoria.');
+                setErrorUpdateCategoryMsg(err.response?.data?.error || 'Category updated failed.');
                 setTimeout(() => {
                     setStatusUpdateCategory(''); // Reset status after 3 seconds
                     setErrorUpdateCategoryMsg(''); // Clear error message after 3 seconds
@@ -161,7 +161,7 @@ const TransactionList = ({ refreshKey }) => {
             {statusUpdateCategory === 'error' && (
                 <div className="error-modal-overlay">
                     <div className='error-modal-card'>
-                        <div className="error-modal-title">Erro ao atualizar categoria.</div>
+                        <div className="error-modal-title">Error updating category.</div>
                         <div className="error-modal-description">{errorUpdateCategoryMsg}</div>
                         <button className="error-modal-btn" onClick={() => setStatusUpdateCategory('')}>Ok</button>
                     </div>
@@ -171,7 +171,7 @@ const TransactionList = ({ refreshKey }) => {
             {statusListTransactions === 'error' && (
                 <div className="error-modal-overlay">
                     <div className='error-modal-card'>
-                        <div className="error-modal-title">Erro ao carregar transações.</div>
+                        <div className="error-modal-title">Error loading transactions.</div>
                         <div className="error-modal-description">{errorListTransactionsMsg}</div>
                         <button className="error-modal-btn" onClick={() => setStatusListTransactions('')}>Ok</button>
                     </div>

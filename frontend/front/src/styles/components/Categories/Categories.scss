@@ -1,4 +1,4 @@
-.dashboard-card--large{
+.categories-card--large{
     @include card-base;
     @include custom-scrollbar(var(--button-bg));
     display: flex;
@@ -43,72 +43,82 @@
 }
 
 
-// ── Transaction filters ───────────────────────────────────
+// ── Categories filters ───────────────────────────────────
 
-.tx-filters {
+
+
+
+.ctg-container {
     display: flex;
     flex-direction: column;
-    gap: $space-xs;
-    padding: $space-xs $space-md $space-sm;
-    border-bottom: 1px solid var(--border-color);
+    padding: 0;
+    margin: 0;
 }
 
-.tx-filter-search-row {
+.ctg-line {
     display: flex;
-    gap: $space-xs;
     align-items: center;
+    gap: $space-sm;
+    padding: $space-sm;
+    border-radius: $radius-sm;
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.15s ease;
+
+    &:last-child { border-bottom: none; }
+
+    &:hover {
+        background: var(--input-bg);
+
+        .ctg-actions { opacity: 1; }
+        .ctg-item { filter: brightness(1.1); }
+    }
 }
 
-.tx-filter-row {
+.ctg-item {
+    padding: 4px $space-md;
+    border-radius: $radius-lg;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+
+    transition: filter 0.15s ease, transform 0.15s ease;
+
+    &:hover { filter: brightness(1.15); transform: scale(1.05); }
+
+}
+
+.ctg-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $space-xs;
+    border-radius: $radius-sm;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+        background: var(--button-bg);
+        color: var(--button-text);
+        border-color: var(--button-bg);
+    }
+}
+
+.ctg-actions {
     display: flex;
     gap: $space-xs;
-    flex-wrap: wrap;
+    margin-left: auto;
+    opacity: 0.5;
+    transition: opacity 0.15s ease;
 }
+    
+    
 
-.tx-filter-input {
-    padding: $space-xs $space-sm;
-    border-radius: $radius-sm;
-    border: 1px solid var(--border-color);
-    background: var(--input-bg);
-    color: var(--text-color);
-    font-size: 12px;
-    outline: none;
-
-    &:focus { border-color: var(--button-bg); }
-}
-
-.tx-filter-search {
-    flex: 1;
-}
-
-.tx-filter-date {
-    width: 130px;
-    color-scheme: dark light; // native date picker respects theme
-}
-
-.tx-filter-select {
-    padding: $space-xs $space-sm;
-    border-radius: $radius-sm;
-    border: 1px solid var(--border-color);
-    background: var(--input-bg);
-    color: var(--text-color);
-    font-size: 12px;
-    cursor: pointer;
-    outline: none;
-
-    &:focus { border-color: var(--button-bg); }
-}
-
-.tx-filter-clear {
-    padding: $space-xs $space-sm;
-    border-radius: $radius-sm;
-    border: 1px solid var(--border-color);
-    background: transparent;
-    color: var(--text-color);
-    font-size: 11px;
-    cursor: pointer;
-    opacity: 0.6;
-    white-space: nowrap;
-
-    &:hover { opacity: 1; background: var(--input-bg); }
-}
