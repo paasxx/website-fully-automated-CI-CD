@@ -117,7 +117,7 @@ const TransactionList = ({ refreshKey }) => {
 
     const handleChangeCategory = (transactionId, newCategoryId) => {
         
-        axiosInstance.patch(`/finances/transactionss/${transactionId}/`, { category_id: newCategoryId })
+        axiosInstance.patch(`/finances/transactions/${transactionId}/`, { category_id: newCategoryId })
             .then(res => {
                 // Update the transaction in the local state
                 setTransactions(prevTransactions =>
@@ -159,21 +159,21 @@ const TransactionList = ({ refreshKey }) => {
         <div className="dashboard-card--large">
 
             {statusUpdateCategory === 'error' && (
-                <div className="error-modal-overlay">
-                    <div className='error-modal-card'>
-                        <div className="error-modal-title">Error updating category.</div>
-                        <div className="error-modal-description">{errorUpdateCategoryMsg}</div>
-                        <button className="error-modal-btn" onClick={() => setStatusUpdateCategory('')}>Ok</button>
+                <div className="modal-overlay">
+                    <div className='modal-card'>
+                        <div className="modal-title">Error updating category.</div>
+                        <div className="modal-description">{errorUpdateCategoryMsg}</div>
+                        <button className="modal-btn" onClick={() => setStatusUpdateCategory('')}>Ok</button>
                     </div>
                 </div>
             )}
 
             {statusListTransactions === 'error' && (
-                <div className="error-modal-overlay">
-                    <div className='error-modal-card'>
-                        <div className="error-modal-title">Error loading transactions.</div>
-                        <div className="error-modal-description">{errorListTransactionsMsg}</div>
-                        <button className="error-modal-btn" onClick={() => setStatusListTransactions('')}>Ok</button>
+                <div className="modal-overlay">
+                    <div className='modal-card'>
+                        <div className="modal-title">Error loading transactions.</div>
+                        <div className="modal-description">{errorListTransactionsMsg}</div>
+                        <button className="modal-btn" onClick={() => setStatusListTransactions('')}>Ok</button>
                     </div>
                 </div>
             )}
@@ -270,7 +270,7 @@ const TransactionList = ({ refreshKey }) => {
                                                     background: (t.category?.color ?? '#888') + '1a',
                                                     border: `1px solid ${(t.category?.color ?? '#888')}80`,
 
-                                                }} value={t.category.id} onChange={e => handleChangeCategory(t.id, e.target.value)}>
+                                                }} value={t.category?.id ?? ''} onChange={e => handleChangeCategory(t.id, e.target.value)}>
                                             {categories.map(c => (
                                                 <option key={c.id} value={c.id} className='tx-filter-select'>
                                                     {c.name}

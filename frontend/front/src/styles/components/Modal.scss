@@ -1,0 +1,148 @@
+// ── Shared Modal Styles ───────────────────────────────────
+// Used by any component that needs a modal or form dialog.
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-card {
+    @include card-base;
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+    padding: $space-lg;
+}
+
+.modal-title {
+    font-size: $heading-font-size;
+    font-weight: 600;
+}
+
+.modal-description {
+    font-size: $paragraph-font-size;
+    opacity: 0.7;
+    line-height: 1.5;
+}
+
+.modal-actions {
+    display: flex;
+    gap: $space-sm;
+    justify-content: flex-end;
+}
+
+.modal-btn {
+    @include button-base;
+    padding: $space-xs $space-md;
+
+    &--cancel {
+        background: transparent;
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        &:hover { background: var(--input-bg); }
+    }
+
+    &--confirm {
+        &:hover { background-color: var(--button-bg-hover); }
+        &:disabled { opacity: 0.5; cursor: not-allowed; }
+    }
+}
+
+// ── Modal Form ────────────────────────────────────────────
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+}
+
+.modal-form .form-label {
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+
+    input[type="text"] {
+        padding: $space-xs $space-sm;
+        border-radius: $radius-sm;
+        border: 1px solid var(--border-color);
+        background: var(--input-bg);
+        color: var(--text-color);
+        font-size: $paragraph-font-size;
+        outline: none;
+
+        &:focus { border-color: var(--button-bg); }
+    }
+}
+
+.modal-form-actions {
+    display: flex;
+    gap: $space-sm;
+    justify-content: flex-end;
+    margin-top: $space-xs;
+}
+
+.modal-form-btn-cancel {
+    @include button-base;
+    padding: $space-xs $space-md;
+    background: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    &:hover { background: var(--input-bg); }
+}
+
+.modal-form-btn-submit {
+    @include button-base;
+    padding: $space-xs $space-md;
+    &:hover { background-color: var(--button-bg-hover); }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+// ── Color Picker ──────────────────────────────────────────
+
+.color-picker-group {
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm;
+}
+
+.color-picker-row {
+    display: flex;
+    align-items: center;
+    gap: $space-sm;
+}
+
+.color-picker-hex-input {
+    padding: $space-xs $space-sm;
+    border-radius: $radius-sm;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-color);
+    font-size: $paragraph-font-size;
+    font-family: monospace;
+    width: 100px;
+    outline: none;
+
+    &:focus { border-color: var(--button-bg); }
+}
+
+.color-picker-preview {
+    width: 28px;
+    height: 28px;
+    border-radius: $radius-sm;
+    border: 1px solid var(--border-color);
+    flex-shrink: 0;
+}

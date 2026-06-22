@@ -1,5 +1,5 @@
 from rest_framework import generics, permissions
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.db.models.functions import TruncMonth
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.views import APIView
@@ -16,9 +16,42 @@ class CategoryListView(generics.ListAPIView):
 
 
     def get_queryset(self):
-        return Category.objects.filter(user=None).order_by("name")
+        return Category.objects.filter(
+            Q(user=None) | Q(user=self.request.user)
+        ).order_by("name")
     
+class CategoryCreateView(generics.CreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CategorySerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class CategoryDeleteView(generics.DestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CategorySerializer
+    queryset = Category.objects.all()
+
+    def get_queryset(self):
+        return Category.objects.filter(user=self.request.user)
     
+    def perform_destroy(self, instance):
+        others = Category.objects.filter(user=None, name = "Outros").first()
+
+        if others:
+            Transaction.objects.filter(
+                user = self.request.user,category=instance).update(category=others)
+        instance.delete()
+
+    
+class CategoryUpdateView(generics.RetrieveUpdateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CategorySerializer
+    queryset = Category.objects.all()
+
+    def get_queryset(self):
+        return Category.objects.filter(user=self.request.user)
+
 class TransactionListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = TransactionSerializer
