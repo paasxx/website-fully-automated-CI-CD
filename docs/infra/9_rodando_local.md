@@ -87,6 +87,52 @@ docker-compose -f docker-compose.dev.yml down
 
 - Isso para e remove todos os containers, redes e volumes anônimos criados pelo `up`.
 
+## Seed de dados / teste de escalabilidade
+
+Para popular o banco com transações sintéticas (testar performance com muitos registros), use o comando `seed`. Ele gera transações direto no banco — **sem passar pelos parsers** — variando descrições (cobrindo todas as categorias do usuário), bancos, valores e datas ao longo de N anos.
+
+**Pré-requisito:** o usuário-alvo já deve estar registrado pelo app (as categorias nascem no registro).
+
+1. Crie seu config local a partir do template (o `seed_config.yml` é gitignorado):
+
+   ```bash
+   cp backend/fintrack/finances/seed_config.example.yml backend/fintrack/finances/seed_config.yml
+   ```
+
+2. Edite `backend/fintrack/finances/seed_config.yml`:
+
+   ```yaml
+   email: teste@gmail.com       # usuário registrado
+   count: 1_000_000             # quantas transações gerar
+   years: 3                     # espalha as datas nos últimos N anos
+   banks: [nubank, inter, btg]  # bank sorteado por linha
+   credit_ratio: 0.10           # % de créditos/pagamentos
+   installment_ratio: 0.15      # % de parcelados (entre os não-crédito)
+   unknown_ratio: 0.10          # % sem match -> cai em "Other"
+   batch_size: 5000             # linhas por bulk_create
+   seed: 42                     # fixa o RNG (remova para aleatório)
+   ```
+
+3. Rode:
+
+   ```bash
+   make seed
+   ```
+
+   > Para 1M linhas leva alguns minutos (o `categorize()` roda linha a linha). O progresso aparece como `5000/1000000` no terminal.
+
+### Limpando os dados
+
+```bash
+# Apaga SÓ as transações de um usuário (rápido — DELETE via SQL)
+make clear-transactions EMAIL=teste@gmail.com
+
+# Zera o banco INTEIRO (containers + volume postgres_data) — apaga tudo, todos os usuários
+make clean
+```
+
+> Para 1M+ linhas, use `make clear-transactions` (DELETE via SQL) em vez do `.delete()` do ORM Django, que é lento nesse volume (carrega PKs e processa cascade/signals um a um).
+
 ## Observações
 
 - O volume `postgres_data` garante persistência dos dados do banco mesmo após remover os containers.
