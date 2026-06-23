@@ -43,6 +43,9 @@
     }
 
     input {
+        height: 36px; // explicit height: type=password and type=text have
+                      // different intrinsic heights in Chrome when empty.
+                      // Without this, toggling the eye made the field shrink.
         padding: $space-sm $space-md;
         border-radius: $radius-sm;
         border: 1px solid var(--border-color);
@@ -95,6 +98,38 @@
             text-decoration: underline;
         }
     }
+}
+
+// Password field with show/hide toggle.
+// The button is position:absolute (out of flow) so the icon never affects layout.
+// The input gets padding-right to leave room for the icon.
+.password-field {
+    position: relative;
+    width: 100%;
+
+    input {
+        width: 100%;
+        padding-right: 40px;
+    }
+}
+
+.password-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: var(--text-color);
+    opacity: 0.4;
+
+    &:hover { opacity: 0.75; }
 }
 
 // Two-column name row on register
