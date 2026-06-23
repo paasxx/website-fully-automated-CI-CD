@@ -1,5 +1,5 @@
-from rest_framework import generics, permissions
-from django.db.models import Sum, Q
+from rest_framework import generics, permissions, status
+from django.db.models import Sum
 from django.db.models.functions import TruncMonth
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.views import APIView
@@ -7,6 +7,7 @@ from rest_framework.response import Response
 
 from .models import Transaction, Category
 from .serializers import TransactionSerializer, CategorySerializer
+from .categorizer import FALLBACK_CATEGORY
 from .filters import TransactionFilter
 from .pagination import TransactionPagePagination
 
@@ -16,9 +17,7 @@ class CategoryListView(generics.ListAPIView):
 
 
     def get_queryset(self):
-        return Category.objects.filter(
-            Q(user=None) | Q(user=self.request.user)
-        ).order_by("name")
+        return Category.objects.filter(user=self.request.user).order_by("name")
     
 class CategoryCreateView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -30,27 +29,47 @@ class CategoryCreateView(generics.CreateAPIView):
 class CategoryDeleteView(generics.DestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = CategorySerializer
-    queryset = Category.objects.all()
 
     def get_queryset(self):
         return Category.objects.filter(user=self.request.user)
-    
-    def perform_destroy(self, instance):
-        others = Category.objects.filter(user=None, name = "Outros").first()
 
-        if others:
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.name == FALLBACK_CATEGORY:
+            return Response(
+                {"error": f'The "{FALLBACK_CATEGORY}" category cannot be deleted.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return super().destroy(request, *args, **kwargs)
+
+    def perform_destroy(self, instance):
+        # Reassign this category's transactions to the user's fallback before deleting,
+        # so no transaction is left pointing at a category that no longer exists.
+        fallback = Category.objects.filter(
+            user=self.request.user, name=FALLBACK_CATEGORY
+        ).first()
+        if fallback:
             Transaction.objects.filter(
-                user = self.request.user,category=instance).update(category=others)
+                user=self.request.user, category=instance
+            ).update(category=fallback)
         instance.delete()
 
     
 class CategoryUpdateView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = CategorySerializer
-    queryset = Category.objects.all()
 
     def get_queryset(self):
         return Category.objects.filter(user=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.name == FALLBACK_CATEGORY:
+            return Response(
+                {"error": f'The "{FALLBACK_CATEGORY}" category cannot be edited.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return super().update(request, *args, **kwargs)
 
 class TransactionListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]

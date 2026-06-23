@@ -23,7 +23,7 @@ def process_statement(user, file, filename: str, bank: str, password: str = None
         parser = get_parser(bank)
         dtos = parser.parse(file, password=password)
 
-        categories = {c.name: c for c in Category.objects.filter(user=None)}
+        categories = {c.name: c for c in Category.objects.filter(user=user)}
 
         rows = [
             Transaction(

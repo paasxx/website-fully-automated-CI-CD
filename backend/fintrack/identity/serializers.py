@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from finances.services import seed_default_categories
 from .models import UserProfile
 
 User = get_user_model()
@@ -21,6 +22,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             last_name=validated_data.get("last_name", ""),
         )
         UserProfile.objects.create(user=user)  # Create an empty profile for the new user
+        seed_default_categories(user)  # Give the new user their own editable category set
 
         return user
 

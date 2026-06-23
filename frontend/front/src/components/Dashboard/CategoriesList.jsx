@@ -152,8 +152,8 @@ const CategoriesList = () => {
             {showSystemModal && (
             <div className="modal-overlay">
                 <div className="modal-card">
-                    <div className="modal-title">System Category</div>
-                    <div className="modal-description">This is a built-in category and cannot be edited or deleted. You can create your own custom categories using the button Add category below.</div>
+                    <div className="modal-title">Protected Category</div>
+                    <div className="modal-description">The "Other" category can't be edited or deleted — it's the fallback that holds transactions whose category was removed.</div>
                     <div className="modal-actions">
                         <button className="modal-btn modal-btn--confirm" onClick={() => setShowSystemModal(false)}>Got it</button>
                     </div>
@@ -284,7 +284,7 @@ const CategoriesList = () => {
                         >{category.name}
                         </div>
                         <div className="ctg-actions">
-                            {category.is_system ? (
+                            {category.is_locked ? (
                                <button className="ctg-button" onClick={() => setShowSystemModal(true)}><Lock size={14} /></button>
                             ) :  <>
                                     <button className="ctg-button" onClick={() => {setShowUpdateModal(true);setEditCategory(category); setUpdateColor(category.color);}}><Pencil size={14} /></button>

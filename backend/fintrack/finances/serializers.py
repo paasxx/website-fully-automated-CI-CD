@@ -1,18 +1,19 @@
 from rest_framework import serializers
 from .models import Transaction, Category
+from .categorizer import FALLBACK_CATEGORY
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    is_system = serializers.SerializerMethodField()
+    is_locked = serializers.SerializerMethodField()
 
-    def get_is_system(self, obj):
-        return obj.user is None
-    
-    
+    def get_is_locked(self, obj):
+        # The fallback category ("Other") can't be edited or deleted by the user.
+        return obj.name == FALLBACK_CATEGORY
+
     class Meta:
         model = Category
-        fields = ["id", "name", "color", "is_system"]
-        read_only_fields = ["id", "is_system"]
+        fields = ["id", "name", "color", "is_locked"]
+        read_only_fields = ["id", "is_locked"]
 
 
 class TransactionSerializer(serializers.ModelSerializer):
