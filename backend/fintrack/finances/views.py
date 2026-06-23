@@ -4,7 +4,7 @@ from django.db.models.functions import TruncMonth
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.views import APIView
 from rest_framework.response import Response
-
+from .decorators import log_execution_time
 from .models import Transaction, Category
 from .serializers import TransactionSerializer, CategorySerializer
 from .categorizer import FALLBACK_CATEGORY
@@ -93,11 +93,10 @@ class TransactionUpdateView(generics.RetrieveUpdateAPIView):
         return Transaction.objects.filter(user=self.request.user)
     
 
-
-
 class SpendingOverTimeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    @log_execution_time
     def get(self, request):
         from collections import defaultdict
 
