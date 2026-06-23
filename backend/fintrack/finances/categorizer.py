@@ -163,10 +163,13 @@ def categorize(description: str, categories: dict) -> Optional[object]:
     """
     Match description against keyword rules and return the corresponding Category instance.
     `categories` must be a dict mapping category name → Category model instance.
-    Returns the "Other" category when no keyword matches, or None if "Other" is not seeded.
+    Falls back to "Other" when no keyword matches OR when the matched category was
+    deleted by the user (so a transaction is never left uncategorized). Returns None
+    only if "Other" itself is not present.
     """
     desc_lower = description.lower()
     for name, _, keywords in CATEGORY_RULES:
         if keywords and any(kw in desc_lower for kw in keywords):
-            return categories.get(name)
+            # If the matched category was deleted by the user, fall back to "Other".
+            return categories.get(name) or categories.get(FALLBACK_CATEGORY)
     return categories.get(FALLBACK_CATEGORY)
