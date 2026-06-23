@@ -97,50 +97,6 @@
     }
 }
 
-// Password field: the wrapper acts as the visual border so the button
-// is a regular flex item — no absolute positioning, no layout shift on icon swap.
-.password-field {
-    display: flex;
-    align-items: center;
-    border: 1px solid var(--border-color);
-    border-radius: $radius-sm;
-    background: var(--input-bg);
-    transition: border-color 0.2s;
-    overflow: hidden; // clips button corners to match border-radius
-
-    &:focus-within {
-        border-color: var(--button-bg);
-    }
-
-    input {
-        flex: 1;
-        min-width: 0;
-        padding: $space-sm $space-md;
-        border: none;
-        background: transparent;
-        color: var(--text-color);
-        font-size: $paragraph-font-size;
-        outline: none;
-
-        &::placeholder { opacity: 0.4; }
-    }
-}
-
-.password-toggle {
-    flex-shrink: 0;
-    padding: 0 $space-sm;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--text-color);
-    opacity: 0.4;
-    display: flex;
-    align-items: center;
-    align-self: stretch; // fills the full height of the container
-
-    &:hover { opacity: 0.75; }
-}
-
 // Two-column name row on register
 .register-name-row {
     display: grid;
