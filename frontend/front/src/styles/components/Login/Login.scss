@@ -62,16 +62,6 @@
     }
 }
 
-.login-session-expired {
-    background: rgba(251, 191, 36, 0.15);
-    border: 1px solid rgba(251, 191, 36, 0.4);
-    color: #b45309;
-    border-radius: $radius-sm;
-    padding: $space-sm $space-md;
-    font-size: $paragraph-font-size;
-    text-align: center;
-}
-
 .login-error {
     color: #e53e3e;
     font-size: $paragraph-font-size;
@@ -87,5 +77,82 @@
     &:disabled {
         opacity: 0.6;
         cursor: not-allowed;
+    }
+}
+
+.login-footer-link {
+    text-align: center;
+    font-size: $paragraph-font-size;
+    opacity: 0.7;
+    margin-top: $space-xs;
+
+    a {
+        color: var(--button-bg);
+        text-decoration: none;
+        font-weight: 500;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+// Password field: the wrapper acts as the visual border so the button
+// is a regular flex item — no absolute positioning, no layout shift on icon swap.
+.password-field {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border-color);
+    border-radius: $radius-sm;
+    background: var(--input-bg);
+    transition: border-color 0.2s;
+    overflow: hidden; // clips button corners to match border-radius
+
+    &:focus-within {
+        border-color: var(--button-bg);
+    }
+
+    input {
+        flex: 1;
+        min-width: 0;
+        padding: $space-sm $space-md;
+        border: none;
+        background: transparent;
+        color: var(--text-color);
+        font-size: $paragraph-font-size;
+        outline: none;
+
+        &::placeholder { opacity: 0.4; }
+    }
+}
+
+.password-toggle {
+    flex-shrink: 0;
+    padding: 0 $space-sm;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-color);
+    opacity: 0.4;
+    display: flex;
+    align-items: center;
+    align-self: stretch; // fills the full height of the container
+
+    &:hover { opacity: 0.75; }
+}
+
+// Two-column name row on register
+.register-name-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $space-sm;
+
+    .form-group {
+        min-width: 0; // prevents grid item from overflowing card width
+    }
+
+    input {
+        width: 100%;
+        box-sizing: border-box;
     }
 }

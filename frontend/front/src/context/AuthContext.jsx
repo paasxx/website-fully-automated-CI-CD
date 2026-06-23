@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         setUser(null);
+        setSessionExpired(false);
     }, []);
 
     // Busca os dados do usuário usando um access token
@@ -26,12 +27,16 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const handle = () => {
-            logout();
+            // Remove tokens immediately so the interceptor stops retrying —
+            // but keep `user` alive so PrivateRoute doesn't redirect.
+            // The modal in App.jsx owns the navigation to /login.
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
             setSessionExpired(true);
         };
         window.addEventListener('auth:expired', handle);
         return () => window.removeEventListener('auth:expired', handle);
-    }, [logout]);
+    }, []);
 
     // Na inicialização: se já tem token salvo, tenta restaurar a sessão
     useEffect(() => {
