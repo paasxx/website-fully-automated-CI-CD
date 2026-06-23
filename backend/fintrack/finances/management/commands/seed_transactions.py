@@ -14,6 +14,7 @@ categorized against them using the real categorizer rules.
 """
 
 import random
+import time
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -85,6 +86,7 @@ class Command(BaseCommand):
             f"({years}y span, banks={banks})..."
         )
 
+        t0 = time.time()
         batch = []
         created = 0
         for _ in range(count):
@@ -131,6 +133,11 @@ class Command(BaseCommand):
             Transaction.objects.bulk_create(batch)
             created += len(batch)
 
+        elapsed = time.time() - t0
+        rate = created / elapsed if elapsed > 0 else 0
         self.stdout.write(
-            self.style.SUCCESS(f"\nDone. Created {created:,} transactions for {email}.")
+            self.style.SUCCESS(
+                f"\nDone. Created {created:,} transactions for {email} "
+                f"in {elapsed:.1f}s ({rate:,.0f}/s)."
+            )
         )
