@@ -1,13 +1,11 @@
 import io
 import re
 from datetime import date as date_
-from decimal import Decimal, InvalidOperation
-from typing import Optional
 
 import pdfplumber
 from dateutil.relativedelta import relativedelta
 
-from .base import StatementParser, TransactionDTO
+from .base import StatementParser, TransactionDTO, parse_amount
 
 # Portuguese month abbreviations → month number
 _MONTH = {
@@ -30,21 +28,10 @@ _TX_RE = re.compile(
 # Matches installment annotations e.g. "(Parcela 04 de 10)"
 _INST_RE = re.compile(r'\(Parcela\s+(\d+)\s+de\s+(\d+)\)', re.IGNORECASE)
 
-
-def _parse_br_decimal(value_str: str) -> Optional[Decimal]:
-    """Convert Brazilian decimal format ("1.234,56") to Decimal."""
-    cleaned = (
-        value_str
-        .replace("R$", "")
-        .replace("\xa0", "")
-        .replace(".", "")
-        .replace(",", ".")
-        .strip()
-    )
-    try:
-        return Decimal(cleaned)
-    except InvalidOperation:
-        return None
+# Amount parsing now lives in base.parse_amount (shared across parsers and
+# robust to signed/spaced values). Kept under the old name for internal use
+# and the existing test import.
+_parse_br_decimal = parse_amount
 
 
 class InterParser(StatementParser):

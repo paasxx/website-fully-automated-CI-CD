@@ -12,12 +12,27 @@ CSV_SIMPLE = b"date,title,amount\n2026-05-29,DAKI - NuPay,118.81\n"
 CSV_CREDIT = b"date,title,amount\n2026-05-25,Pagamento recebido,-4801.32\n"
 CSV_INSTALLMENT = b"date,title,amount\n2026-05-20,Amazon Marketplace - Parcela 8/10,54.77\n"
 CSV_MALFORMED = b"date,title,amount\n2026-05-20,Loja XYZ,not-a-number\n"
+CSV_MIXED = (
+    b"date,title,amount\n"
+    b"2026-05-29,DAKI - NuPay,118.81\n"      # valid
+    b"2026-05-20,Loja XYZ,not-a-number\n"    # malformed → skipped, valid row survives
+)
 CSV_MULTI = (
     b"date,title,amount\n"
     b"2026-05-29,DAKI - NuPay,118.81\n"
     b"2026-05-25,Pagamento recebido,-4801.32\n"
     b"2026-05-20,Amazon Marketplace - Parcela 8/10,54.77\n"
 )
+# Real Nubank invoice in BRAZILIAN number format (the format the export switched
+# to): comma decimals, dot thousands, a space between the minus sign and digits,
+# and quoted fields. The parser must handle this AND the older US format above.
+CSV_BR = (
+    'date,title,amount\n'
+    '2026-04-13,Conectc*Pedrosilve,"150,00"\n'
+    '2026-04-10,"Estorno de ""Amazon Marketplace"" (Amazon)","- 5,17"\n'
+    '2026-03-26,Pagamento recebido,"- 2.675,73"\n'
+    '2026-03-20,Amazon Marketplace Cc - Parcela 5/12,"289,81"\n'
+).encode("utf-8")
 # Nubank ACCOUNT statement ("extrato da conta") — a DIFFERENT export from the
 # credit-card invoice: Portuguese columns, no "title"/"amount". Must be rejected.
 CSV_ACCOUNT_STATEMENT = (
@@ -85,9 +100,39 @@ class TestNubankParse(SimpleTestCase):
         txs = self._parse(CSV_INSTALLMENT)
         self.assertEqual(txs[0].date, date(2026, 5, 20))
 
-    def test_malformed_amount_row_skipped(self):
-        txs = self._parse(CSV_MALFORMED)
-        self.assertEqual(len(txs), 0)
+    def test_brazilian_amount_format(self):
+        # Nubank invoices switched to BR number format ("150,00", "- 2.675,73");
+        # the parser must handle both BR and the older US format ("118.81").
+        txs = self._parse(CSV_BR)
+        self.assertEqual(len(txs), 4)
+        by_desc = {t.description: t for t in txs}
+
+        self.assertEqual(by_desc["Conectc*Pedrosilve"].amount, Decimal("150.00"))
+        # negative with internal space + thousands separator
+        self.assertEqual(by_desc["Pagamento recebido"].amount, Decimal("-2675.73"))
+        self.assertTrue(by_desc["Pagamento recebido"].is_credit)
+        # refund (estorno): negative with space; embedded quotes preserved
+        self.assertEqual(
+            by_desc['Estorno de "Amazon Marketplace" (Amazon)'].amount,
+            Decimal("-5.17"),
+        )
+        # installment suffix stripped, BR amount parsed
+        amz = by_desc["Amazon Marketplace Cc"]
+        self.assertEqual(amz.amount, Decimal("289.81"))
+        self.assertEqual(amz.installment_number, 5)
+        self.assertEqual(amz.installment_total, 12)
+
+    def test_malformed_row_skipped_among_valid(self):
+        # A bad row among good ones is tolerated (skipped); the good rows survive.
+        txs = self._parse(CSV_MIXED)
+        self.assertEqual(len(txs), 1)
+        self.assertEqual(txs[0].description, "DAKI - NuPay")
+
+    def test_all_rows_malformed_raises(self):
+        # If EVERY row fails, that's a format problem, not noise — fail loud
+        # instead of silently returning 0 transactions.
+        with self.assertRaises(ValueError):
+            self._parse(CSV_MALFORMED)
 
     def test_multiple_rows(self):
         txs = self._parse(CSV_MULTI)

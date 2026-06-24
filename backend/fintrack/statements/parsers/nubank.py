@@ -1,10 +1,9 @@
 import csv
 import re
 from datetime import datetime
-from decimal import Decimal, InvalidOperation
 from io import TextIOWrapper
 
-from .base import StatementParser, TransactionDTO
+from .base import StatementParser, TransactionDTO, parse_amount
 
 # Matches "- Parcela 2/6" or "- Parcela 2/6 " at end of title (case-insensitive)
 INSTALLMENT_RE = re.compile(r"\s*-\s*Parcela\s+(\d+)/(\d+)\s*$", re.IGNORECASE)
@@ -34,16 +33,17 @@ class NubankParser(StatementParser):
             )
 
         transactions = []
+        skipped = 0
 
         for row in reader:
             title = row["title"].strip()
             raw_amount = row["amount"].strip()
             raw_date = row["date"].strip()
 
-            try:
-                amount = Decimal(raw_amount)
-            except InvalidOperation:
-                continue  # skip malformed rows
+            amount = parse_amount(raw_amount)
+            if amount is None:
+                skipped += 1
+                continue  # tolerate the odd malformed row (see fail-loud check below)
 
             date = datetime.strptime(raw_date, "%Y-%m-%d").date()
 
@@ -65,6 +65,15 @@ class NubankParser(StatementParser):
                     installment_number=installment_number,
                     installment_total=installment_total,
                 )
+            )
+
+        # Fail loud instead of returning nothing: if the file had rows but none
+        # parsed, the format is wrong (e.g. unrecognized amounts) — not just
+        # noise. This is exactly what silently produced "0 transactions" before.
+        if not transactions and skipped:
+            raise ValueError(
+                f"Could not parse any of the {skipped} rows — the amount format "
+                "wasn't recognized. Is this really a Nubank credit-card invoice CSV?"
             )
 
         return transactions
