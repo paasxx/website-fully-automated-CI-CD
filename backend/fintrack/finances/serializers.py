@@ -16,10 +16,26 @@ class CategorySerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "is_locked"]
 
 
+class UserCategoryField(serializers.PrimaryKeyRelatedField):
+    """A ``category_id`` must reference a category owned by the requesting user.
+
+    PrimaryKeyRelatedField with a static ``queryset=`` validates the id against
+    the whole table, which lets one user point a transaction at another user's
+    category (an IDOR leak). Overriding ``get_queryset`` instead scopes the
+    validation queryset per-request — DRF calls it at validation time, when the
+    ``request`` already exists in the serializer context.
+    """
+
+    def get_queryset(self):
+        request = self.context.get("request", None)
+        if request is None:
+            return Category.objects.none()
+        return Category.objects.filter(user=request.user)
+
+
 class TransactionSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
-    category_id = serializers.PrimaryKeyRelatedField(
-    queryset=Category.objects.all(), source="category", write_only=True)
+    category_id = UserCategoryField(source="category", write_only=True)
 
 
     class Meta:
