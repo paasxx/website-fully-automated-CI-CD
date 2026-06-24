@@ -18,6 +18,12 @@ CSV_MULTI = (
     b"2026-05-25,Pagamento recebido,-4801.32\n"
     b"2026-05-20,Amazon Marketplace - Parcela 8/10,54.77\n"
 )
+# Nubank ACCOUNT statement ("extrato da conta") — a DIFFERENT export from the
+# credit-card invoice: Portuguese columns, no "title"/"amount". Must be rejected.
+CSV_ACCOUNT_STATEMENT = (
+    "Data,Valor,Identificador,Descrição\n"
+    "12/09/2025,831.94,68c49fb1-43dd,Transferência Recebida - Bruno\n"
+).encode("utf-8")
 
 
 class TestNubankDetect(SimpleTestCase):
@@ -101,3 +107,10 @@ class TestNubankParse(SimpleTestCase):
         # NubankParser accepts password kwarg but ignores it (CSV needs no password)
         txs = self.parser.parse(io.BytesIO(CSV_SIMPLE), password="irrelevant")
         self.assertEqual(len(txs), 1)
+
+    def test_account_statement_format_rejected(self):
+        # Wrong format (account statement, not a credit-card invoice) must raise a
+        # clear ValueError — which the upload view maps to a 400 — instead of a raw
+        # KeyError that would surface as an opaque 500.
+        with self.assertRaisesRegex(ValueError, "credit-card invoice"):
+            self._parse(CSV_ACCOUNT_STATEMENT)

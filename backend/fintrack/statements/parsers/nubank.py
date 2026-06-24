@@ -20,6 +20,19 @@ class NubankParser(StatementParser):
 
     def parse(self, file, password=None) -> list[TransactionDTO]:
         reader = csv.DictReader(TextIOWrapper(file, encoding="utf-8"))
+
+        # Validate the format BEFORE parsing. Without this, a wrong-format file
+        # (e.g. a Nubank account statement — "extrato" — whose columns are
+        # Data/Valor/Identificador/Descrição) blows up mid-loop with a raw
+        # KeyError, which the upload view can only surface as an opaque 500.
+        # Raising a ValueError here lets the view turn it into a clear 400.
+        if not self.detect(set(reader.fieldnames or [])):
+            raise ValueError(
+                "This file doesn't look like a Nubank credit-card invoice "
+                "(expected columns: date, title, amount). A Nubank account "
+                "statement ('extrato da conta') has a different format and is not supported."
+            )
+
         transactions = []
 
         for row in reader:
