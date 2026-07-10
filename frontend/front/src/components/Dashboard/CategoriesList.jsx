@@ -12,18 +12,28 @@ const CategoriesList = () => {
     const [statusCreateCategory, setStatusCreateCategory] = useState('');
     const [statusUpdateCategory, setStatusUpdateCategory] = useState('');
     const [statusDeleteCategory, setStatusDeleteCategory] = useState('');
+
     const [errorCreateCategoryMsg, setErrorCreateCategoryMsg] = useState('');
     const [errorUpdateCategoryMsg, setErrorUpdateCategoryMsg] = useState('');
     const [errorDeleteCategoryMsg, setErrorDeleteCategoryMsg] = useState('');
+
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showSystemModal, setShowSystemModal] = useState(false);
     const [showUpdateModal, setShowUpdateModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+
     const [eraseCategory, setEraseCategory] = useState(false);
     const [editCategory, setEditCategory] = useState('');
+
     const [updateColor, setUpdateColor] = useState('#4caf50');
     const [newColor, setNewColor] = useState('#4caf50');
+    
     const [loading, setLoading] = useState(true);
+    const [isModalClosing, setIsModalClosing] = useState(false);
+
+    const VISIBLE_MS = 2000;
+    const MODAL_CLOSE_MS = 300;
+
 
     useEffect(() => {
         // Simulate fetching categories from an API
@@ -50,6 +60,13 @@ const CategoriesList = () => {
             setCategories(prev => [...prev, res.data]);
             setStatusCreateCategory('success');
             setShowCreateModal(false);
+            setTimeout(() => {
+                setIsModalClosing(true);
+                setTimeout(() => {
+                    setIsModalClosing(false);
+                    setStatusCreateCategory('');
+                }, MODAL_CLOSE_MS);
+            }, VISIBLE_MS);
         })
         .catch((err) => {
             console.error(err);
@@ -75,12 +92,19 @@ const CategoriesList = () => {
                 setCategories(prev => prev.map(cat => cat.id === editCategory.id ? res.data : cat));
                 setStatusUpdateCategory('success');
                 setShowUpdateModal(false);
+                setTimeout(() => {
+                    setIsModalClosing(true);
+                    setTimeout(() => {
+                        setIsModalClosing(false);
+                        setStatusUpdateCategory('');
+                    }, MODAL_CLOSE_MS);
+                }, VISIBLE_MS);
             })
             .catch((err) => {
                 console.error(err);
+                setShowUpdateModal(false);
                 setErrorUpdateCategoryMsg(err.response?.data?.error || 'Failed to update category.');
                 setStatusUpdateCategory('error');
-                setShowUpdateModal(false);
                 setTimeout(() => {
                     setStatusUpdateCategory('');
                     setErrorUpdateCategoryMsg('');
@@ -98,12 +122,20 @@ const CategoriesList = () => {
             setCategories(prev => prev.filter(cat => cat.id !== category.id));
             setStatusDeleteCategory('success');
             setShowDeleteModal(false);
+            setTimeout(() => {
+                setIsModalClosing(true);
+                setTimeout(() => {
+                    setIsModalClosing(false);
+                    setStatusDeleteCategory('');
+                }, MODAL_CLOSE_MS);
+            }, VISIBLE_MS);
+        
         })
         .catch((err) => {
             console.error(err);
+            setShowDeleteModal(false);
             setErrorDeleteCategoryMsg(err.response?.data?.error || 'Failed to delete category.');
             setStatusDeleteCategory('error');
-            setShowDeleteModal(false);
             setTimeout(() => {
                 setStatusDeleteCategory('');
                 setErrorDeleteCategoryMsg('');
@@ -135,6 +167,36 @@ const CategoriesList = () => {
                     <div className="modal-title">Error creating category.</div>
                     <div className="modal-description">{errorCreateCategoryMsg}</div>
                     <button className="modal-btn" onClick={() => setStatusCreateCategory('')}>Ok</button>
+                </div>
+            </div>
+            )}
+
+            {statusCreateCategory === 'success' && (
+            <div className={`modal-overlay ${isModalClosing ? 'closing' : ''}`}>
+                <div className={`modal-card ${isModalClosing ? 'closing' : ''}`}>
+                    <div className="modal-title">Category created successfully.</div>
+                    <div className="modal-description">The category has been created.</div>
+                    <button className="modal-btn" onClick={() => setStatusCreateCategory('')}>Ok</button>
+                </div>
+            </div>
+            )}
+
+            {statusUpdateCategory === 'success' && (
+            <div className={`modal-overlay ${isModalClosing ? 'closing' : ''}`}>
+                <div className={`modal-card ${isModalClosing ? 'closing' : ''}`}>
+                    <div className="modal-title">Category updated successfully.</div>
+                    <div className="modal-description">The category has been updated.</div>
+                    <button className="modal-btn" onClick={() => setStatusUpdateCategory('')}>Ok</button> 
+                </div>
+            </div>
+            )}
+
+            {statusDeleteCategory === 'success' && (
+            <div className={`modal-overlay ${isModalClosing ? 'closing' : ''}`}>
+                <div className={`modal-card ${isModalClosing ? 'closing' : ''}`}>
+                    <div className="modal-title">Category deleted successfully.</div>
+                    <div className="modal-description">The category has been deleted.</div>
+                    <button className="modal-btn" onClick={() => setStatusDeleteCategory('')}>Ok</button>
                 </div>
             </div>
             )}
@@ -225,9 +287,9 @@ const CategoriesList = () => {
                 </div>
             )}
 
-            {showCreateModal === true && (
+            {showCreateModal && (
             <div className="modal-overlay">
-                <div className='modal-card'>
+                <div className="modal-card">
                     <div className="modal-title">Create Category</div>
                     <div className="modal-description">Please enter the details for the new category.</div>
                     <form className="modal-form" onSubmit={(e) => {
