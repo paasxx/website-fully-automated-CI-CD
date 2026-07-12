@@ -7,6 +7,7 @@ import Navbar from './components/Navbar/Navbar';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import Transactions from './pages/Transactions';
 import Charts from './pages/Charts';
 import Profile from './pages/Profile';
 import Categories from './pages/Categories';
@@ -59,6 +60,7 @@ function App() {
                             <Route path="/dashboard" element={
                                 <PrivateRoute><Dashboard /></PrivateRoute>
                             } />
+                            <Route path="/transactions" element={<PrivateRoute><Transactions /></PrivateRoute>} />
                             <Route path="/categories" element={<PrivateRoute><Categories /></PrivateRoute>} />
                             <Route path="/charts" element={
                                 <PrivateRoute><Charts /></PrivateRoute>

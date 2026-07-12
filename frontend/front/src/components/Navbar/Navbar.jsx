@@ -22,6 +22,7 @@ const Navbar = () => {
             <div className="navbar-links">
                 {user ? (
                     <>
+                        <NavLink to="/transactions" className="navbar-link">Transactions</NavLink>
                         <NavLink to="/dashboard" className="navbar-link">Dashboard</NavLink>
                         <NavLink to="/categories" className="navbar-link">Categories</NavLink>
                         <NavLink to="/charts" className="navbar-link">Charts</NavLink>
