@@ -11,20 +11,22 @@ from .categorizer import FALLBACK_CATEGORY
 from .filters import TransactionFilter
 from .pagination import TransactionPagePagination
 
+
 class CategoryListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = CategorySerializer
 
-
     def get_queryset(self):
         return Category.objects.filter(user=self.request.user).order_by("name")
-    
+
+
 class CategoryCreateView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = CategorySerializer
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
 
 class CategoryDeleteView(generics.DestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -54,7 +56,7 @@ class CategoryDeleteView(generics.DestroyAPIView):
             ).update(category=fallback)
         instance.delete()
 
-    
+
 class CategoryUpdateView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = CategorySerializer
@@ -71,6 +73,7 @@ class CategoryUpdateView(generics.RetrieveUpdateAPIView):
             )
         return super().update(request, *args, **kwargs)
 
+
 class TransactionListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = TransactionSerializer
@@ -79,19 +82,52 @@ class TransactionListView(generics.ListAPIView):
     filterset_class = TransactionFilter
 
     def get_queryset(self):
-        return (
-            Transaction.objects
-            .filter(user=self.request.user)
-            .select_related("category")
+        return Transaction.objects.filter(user=self.request.user).select_related(
+            "category"
         )
-    
+
+
 class TransactionUpdateView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = TransactionSerializer
 
     def get_queryset(self):
         return Transaction.objects.filter(user=self.request.user)
-    
+
+
+class SpendingOverTimeByCategoryView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @log_execution_time
+    def get(self, request):
+        from collections import defaultdict
+
+        rows = (
+            Transaction.objects.filter(user=request.user, is_credit=False)
+            .annotate(month=TruncMonth("date"))
+            .values("month", "category__name", "category__color")
+            .annotate(total=Sum("amount"))
+            .order_by("month", "category__name")
+        )
+
+        monthly = defaultdict(dict)
+        category_colors = {}
+
+        for row in rows:
+            key = row["month"].strftime("%Y-%m")
+            name = row["category__name"]
+            color = row["category__color"]
+            monthly[key][name] = float(row["total"])
+            category_colors[name] = color
+
+        data = [{"month": month, **values} for month, values in sorted(monthly.items())]
+        categories = [
+            {"name": name, "color": color}
+            for name, color in sorted(category_colors.items())
+        ]
+
+        return Response({"data": data, "categories": categories})
+
 
 class SpendingOverTimeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -101,8 +137,7 @@ class SpendingOverTimeView(APIView):
         from collections import defaultdict
 
         rows = (
-            Transaction.objects
-            .filter(user=request.user, is_credit=False)
+            Transaction.objects.filter(user=request.user, is_credit=False)
             .annotate(month=TruncMonth("date"))
             .values("month", "bank")
             .annotate(total=Sum("amount"))
@@ -118,9 +153,6 @@ class SpendingOverTimeView(APIView):
             monthly[key][bank] = float(row["total"])
             banks.add(bank)
 
-        data = [
-            {"month": month, **values}
-            for month, values in sorted(monthly.items())
-        ]
+        data = [{"month": month, **values} for month, values in sorted(monthly.items())]
 
         return Response({"data": data, "banks": sorted(banks)})
