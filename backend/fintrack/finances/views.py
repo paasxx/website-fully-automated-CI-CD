@@ -128,6 +128,122 @@ class SpendingOverTimeByCategoryView(APIView):
 
         return Response({"data": data, "categories": categories})
 
+class DashboardView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @log_execution_time
+    def get(self, request):
+        from collections import defaultdict
+
+        month_str = request.query_params.get("month")
+        year, month = map(int, month_str.split("-"))
+
+        rows_top_categories = (
+            Transaction.objects.filter(
+                user=request.user, 
+                is_credit=False, 
+                date__year=year, 
+                date__month = month)
+            .values("category__name", "category__color")
+            .annotate(total=Sum("amount"))
+            .order_by("-total")[:3]
+        )
+
+        rows_top_merchants = (
+            Transaction.objects.filter(
+                user=request.user, 
+                is_credit=False, 
+                date__year=year, 
+                date__month = month)
+            .values("description")
+            .annotate(total=Sum("amount"))
+            .order_by("-total")[:3]
+        )
+
+        rows_biggest_transactions = (
+            Transaction.objects.filter(
+                user=request.user,
+                is_credit=False,
+                date__year=year,
+                date__month=month
+            )
+            .values("description", "amount")
+            .order_by("-amount")[:3]
+            )
+        
+        total_by_month = (
+            Transaction.objects.filter(
+                user=request.user,
+                is_credit=False,
+                date__year=year,
+                date__month=month
+            )
+            .aggregate(total=Sum("amount"))
+        )
+
+        if month == 1:
+            total_by_month_previous = (
+                Transaction.objects.filter(
+                    user=request.user,
+                    is_credit=False,
+                    date__year=year-1,
+                    date__month=12
+                )
+                .aggregate(total=Sum("amount"))
+            )
+        else:
+
+            total_by_month_previous = (
+                Transaction.objects.filter(
+                    user=request.user,
+                    is_credit=False,
+                    date__year=year,
+                    date__month=month-1
+                )
+                .aggregate(total=Sum("amount"))
+            )
+        percentual_change = 100*(total_by_month["total"] - total_by_month_previous["total"])/total_by_month_previous["total"] if total_by_month_previous["total"] and total_by_month["total"] is not None else None
+        
+        data_top_categories = {"top_categories": []}
+        data_top_merchants = {"top_merchants": []}
+        data_biggest_transactions = {"biggest_transactions": []}
+
+        for row in rows_top_categories:
+            data_top_categories["top_categories"].append(
+                {
+                    "name": row["category__name"], 
+                    "total": row["total"], 
+                    "color": row["category__color"]
+                },
+            )
+
+        for row in rows_top_merchants:
+            data_top_merchants["top_merchants"].append(
+                {
+                    "name": row["description"],
+                    "total": row["total"]
+                }
+            )
+        
+        for row in rows_biggest_transactions:
+            data_biggest_transactions["biggest_transactions"].append(
+                {
+                    "description": row["description"],
+                    "amount": row["amount"]
+                }
+            )
+        data = {
+                    **total_by_month, 
+                    "variation": percentual_change,
+                    **data_top_categories,
+                    **data_top_merchants,
+                    **data_biggest_transactions
+                }
+        
+        return Response(data)
+
+
+
 
 class SpendingOverTimeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
