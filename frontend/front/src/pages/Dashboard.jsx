@@ -47,7 +47,10 @@ const KpiListCard = ({ label, items, renderName, renderValue, getColor }) => (
 const Dashboard = () => {
     const [month, setMonth] = useState(CURRENT_MONTH);
     const [summaryData, setSummaryData] = useState(null);
+    const [monthsDropdown, setMonthsDropdown] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMonths, setLoadingMonths] = useState(true);
+
 
     const params = {
         month: month,
@@ -65,7 +68,24 @@ const Dashboard = () => {
         .finally(() => {
             setLoading(false);
         });
-    }, [month])  
+    }, [month]);
+    
+    useEffect(() => {
+        setLoadingMonths(true);
+        axiosInstance.get('/finances/months/')
+        .then(res => {
+            setMonthsDropdown(res.data);
+        }
+        )
+        .catch(err => {
+            console.error('Error fetching months data:', err);
+        })
+        .finally(() => {
+            setLoadingMonths(false);
+        }
+        )
+
+    }, []);
 
     return (
         <div className="dashboard-page">
@@ -77,9 +97,10 @@ const Dashboard = () => {
                         value={month}
                         onChange={(e) => setMonth(e.target.value)}
                     >
-                        {AVAILABLE_MONTHS.map(m => (
-                            <option key={m} value={m}>{formatMonth(m)}</option>
-                        ))}
+                       {loadingMonths ? <p>Loading...</p> : (
+                        monthsDropdown.map(m => (
+                            <option key={m.month} value={m.month}>{formatMonth(m.month)}</option>
+                        )))}
                     </select>
                 </div>
             {loading ? <p>Loading...</p> : (

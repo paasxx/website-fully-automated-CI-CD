@@ -243,7 +243,21 @@ class DashboardView(APIView):
         return Response(data)
 
 
+class TransactionsMonthsView(APIView):
+    permissions_classes = [permissions.IsAuthenticated]
 
+    def get(self,request):
+
+        rows = (Transaction.objects.filter(user=request.user)
+        .annotate(total=TruncMonth("date"))
+        .order_by()
+        .values("total").distinct().order_by("total"))
+
+        
+        data = [{"month": row["total"].strftime("%Y-%m")}  for row in rows]
+
+        return Response(data)
+    
 
 class SpendingOverTimeView(APIView):
     permission_classes = [permissions.IsAuthenticated]

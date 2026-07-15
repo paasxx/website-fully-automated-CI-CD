@@ -8,6 +8,7 @@ from .views import (
     DashboardView,
     CategoryListView,
     CategoryCreateView,
+    TransactionsMonthsView,
     TransactionUpdateView,
 )
 
@@ -26,6 +27,7 @@ urlpatterns = [
         SpendingOverTimeByCategoryView.as_view(),
         name="spending-over-time-by-category",
     ),
+    path("months/", TransactionsMonthsView.as_view(), name="months" ),
     path("dashboard/", DashboardView.as_view(), name="dashboard"),
     path("categories/", CategoryListView.as_view(), name="category-list"),
     path("categories/create/", CategoryCreateView.as_view(), name="category-create"),
