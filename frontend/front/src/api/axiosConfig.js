@@ -40,6 +40,11 @@ axiosInstance.interceptors.response.use(
     async err => {
         const original = err.config;
         if (err.response?.status !== 401) return Promise.reject(err);
+        // A 401 from the login endpoint means bad credentials — not an expired session.
+        // Let the Login page handle it (it shows "Invalid email or password").
+        if (original.url?.endsWith('/auth/token/')) {
+            return Promise.reject(err);
+        }
         if (original.url?.includes('token/refresh')) {
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');

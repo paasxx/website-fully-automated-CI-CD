@@ -57,6 +57,20 @@ jobs:
         run: |
             docker exec back bash -c "cd /var && ls" 
 
+      - name: Wait for database to be ready
+        run: |
+          tries=0
+          until docker exec fintrack-db pg_isready -U fintrack_user -d fintrack_db; do
+            tries=$((tries + 1))
+            if [ "$tries" -ge 30 ]; then
+              echo "Postgres did not become ready in time"
+              docker logs fintrack-db
+              exit 1
+            fi
+            echo "Waiting for Postgres... ($tries)"
+            sleep 2
+          done
+
       - name: Run tests
         run: |
           docker exec back bash -c "cd /app && python manage.py test --verbosity=2"

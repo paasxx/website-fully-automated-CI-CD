@@ -194,3 +194,6 @@ out/
 
 # Editor config para projetos JS
 .vscode/
+
+# Local seed config (use seed_config.example.yml as template)
+seed_config.yml

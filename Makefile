@@ -21,6 +21,7 @@ ECS_CLUSTER     = dev-cluster
         logs logs-back logs-front logs-db \
         shell-back shell-front shell-db \
         migrate makemigrations createsuperuser \
+        seed clear-transactions \
         test \
         clean clean-images \
         ecr-login push-back push-front push-all deploy-ecs deploy
@@ -110,6 +111,20 @@ migrations-apply: ## Só aplica migrations existentes
 
 createsuperuser: ## Cria superuser Django (interativo)
 	docker exec -it $(BACK) bash -c "cd /app && python manage.py createsuperuser"
+
+# ── Seed / dados de teste ───────────────────────────────────
+#
+#  Gera transações sintéticas direto no banco (bypass dos parsers) para
+#  testar escalabilidade. Edite backend/fintrack/seed_config.yml para mudar
+#  o usuário-alvo, a quantidade, os bancos, o range de datas, etc.
+#  O usuário precisa estar registrado antes (categorias nascem no registro).
+
+seed: ## Gera transações sintéticas em massa (config: backend/fintrack/finances/seed_config.yml)
+	docker exec $(BACK) bash -c "cd /app && python manage.py seed_transactions --config finances/seed_config.yml"
+
+clear-transactions: ## Apaga TODAS as transações de um usuário — uso: make clear-transactions EMAIL=teste@gmail.com
+	docker exec $(DB) psql -U fintrack_user -d fintrack_db \
+		-c "DELETE FROM finances_transaction WHERE user_id=(SELECT id FROM identity_user WHERE email='$(EMAIL)');"
 
 # ── Testes ──────────────────────────────────────────────────
 
