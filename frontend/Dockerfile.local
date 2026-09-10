@@ -8,7 +8,7 @@ WORKDIR /app
 COPY front/ /app
 
 # Instala as dependências do projeto
-RUN npm install
+RUN npm ci
 
 # Abre a porta 3000 para acessar o servidor de desenvolvimento do React
 EXPOSE 3000

@@ -7,7 +7,7 @@ WORKDIR /app
 COPY front/ /app
 
 # Instala dependências
-RUN npm install --legacy-peer-deps
+RUN npm ci --legacy-peer-deps
 
 # Build do React
 RUN npm run build
