@@ -1,255 +1,89 @@
-# Auth System — Como Funciona e Por Que
+# Auth System — How It Works and Why
 
-Documento educacional completo sobre o sistema de autenticação do FinTrack.
-Cobre hooks, lifecycle, JWT, interceptors e decisões de design.
-
----
-
-## 1. Visão geral do fluxo
-
-```
-Usuário digita email/senha
-       ↓
-  Login.jsx chama login() do AuthContext
-       ↓
-  POST /auth/token/ → Django retorna access_token + refresh_token
-       ↓
-  Tokens salvos no localStorage
-       ↓
-  fetchUser() busca /auth/me/ → seta user no context
-       ↓
-  Toda requisição subsequente: interceptor do Axios injeta Bearer token
-       ↓
-  Quando access_token expira (1h):
-    → Interceptor tenta refresh automático (POST /auth/token/refresh/)
-    → Se refresh ok: novo access_token, refaz a requisição original
-    → Se refresh falhou: dispara custom event auth:expired
-       ↓
-  AuthContext ouve o evento → remove tokens → seta sessionExpired=true
-       ↓
-  Modal em App.jsx aparece sobre a página atual
-       ↓
-  Usuário clica Sign in → logout() + navigate('/login')
-```
+Reference doc for the FinTrack auth system: state lifecycle, the axios interceptor,
+and the custom-event bridge between them.
 
 ---
 
-## 2. Os arquivos e suas responsabilidades
+## 1. State diagram
 
-| Arquivo | Papel |
-|---------|-------|
-| `axiosConfig.js` | Instância Axios com interceptors de request e response |
-| `AuthContext.jsx` | Estado global de autenticação (user, loading, sessionExpired) |
-| `App.jsx` | Renderiza o `SessionExpiredModal` no nível do Router |
-| `PrivateRoute.jsx` | Guarda rotas privadas — redireciona para /login se não autenticado |
-| `Login.jsx` | Formulário de login |
-| `Register.jsx` | Formulário de registro |
+```
+app opens (mount / F5 / new tab / browser reopen)
+       ↓
+  loading = true
+       ↓
+  is there a token in localStorage?
+       ├─ no  → loading = false, user stays null → /login
+       └─ yes → fetchUser()
+                  ├─ succeeds → user = {...}, loading = false
+                  └─ fails    → logout() (clears tokens, user = null), loading = false
+       ↓ (authenticated user)
+  using the app normally
+       ↓
+  access_token expires → request gets 401 → interceptor tries a refresh
+       ├─ refresh succeeds → new tokens saved, original request retried,
+       │                     the user never notices
+       └─ refresh fails    → dispatches 'auth:expired'
+       ↓
+  AuthContext listener: clears tokens, sessionExpired = true
+       ↓
+  modal appears over whatever screen the user is on
+       ↓
+  user clicks "Sign in" → logout() + navigate('/login')
+       ↓
+  user = null, sessionExpired = false → login page
+```
+
+Note the two separate branches after "is there a token": **no token at all** just
+stops loading — there's nothing to log out from. **Invalid/expired token** is the
+only branch that calls `logout()`, inside `fetchUser()`'s `.catch()`.
 
 ---
 
-## 3. React Context API — o que é e por que usar
+## 2. Files and their responsibilities
 
-**Problema**: `user` (quem está logado) precisa ser acessível em qualquer componente —
-Navbar, Dashboard, PrivateRoute, modais. Passar via props por cada nível seria prop drilling.
-
-**Solução**: Context cria um "estado global" que qualquer componente filho pode consumir.
-
-```jsx
-// Criação do context
-const AuthContext = createContext();
-
-// Provider: envolve a árvore e disponibiliza os valores
-export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    return (
-        <AuthContext.Provider value={{ user, setUser }}>
-            {children}
-        </AuthContext.Provider>
-    );
-};
-
-// Hook customizado: esconde o useContext para quem consome
-export const useAuth = () => useContext(AuthContext);
-
-// Uso em qualquer componente na árvore:
-const { user } = useAuth();
-```
-
-No `App.jsx`, `AuthProvider` envolve o Router inteiro — então qualquer componente
-pode chamar `useAuth()` e ter acesso a `user`, `login`, `logout`, `sessionExpired`, etc.
+| File | Role |
+|---|---|
+| `axiosConfig.js` | Axios instance with request/response interceptors |
+| `AuthContext.jsx` | Global auth state (`user`, `loading`, `sessionExpired`) |
+| `App.jsx` | Renders `SessionExpiredModal` at the Router level |
+| `PrivateRoute.jsx` | Guards private routes — redirects to `/login` when unauthenticated |
+| `Login.jsx` | Login form |
+| `Register.jsx` | Registration form |
 
 ---
 
-## 4. useState — o hook básico de estado
+## 3. The two `useEffect`s in AuthContext
 
-```jsx
-const [user, setUser] = useState(null);
-//     ^^^^  ^^^^^^^   ^^^^^^^^^^^^
-//     valor  setter    valor inicial
-```
+Both run with an empty dependency array — each fires exactly once, when
+`AuthProvider` first mounts.
 
-- `user` é a variável de leitura
-- `setUser(novoValor)` atualiza o estado E provoca um re-render do componente
-- O valor inicial (`null`) só é usado na primeira renderização
+**Listener for `auth:expired`**: registers an event listener once and keeps it
+alive for the component's lifetime — it does **not** touch tokens at mount time.
+The actual cleanup (removing tokens, flagging the session as dead) only runs
+later, whenever the custom event fires — however long after mount the access
+token happens to expire and its refresh attempt fails. This is the bridge
+between `axiosConfig.js` (plain JS, can't call `setState`) and this context —
+see section 5.
 
-**Regra fundamental**: nunca mute o estado diretamente. Sempre use o setter.
-
-```jsx
-// ERRADO — mutação direta não provoca re-render
-user.name = 'Pedro';
-
-// CERTO — cria um novo objeto com a mudança
-setUser({ ...user, name: 'Pedro' });
-```
-
----
-
-## 5. useEffect — efeitos colaterais e ciclo de vida
-
-`useEffect` substitui os lifecycle methods de classes (`componentDidMount`,
-`componentDidUpdate`, `componentWillUnmount`). É onde você escreve código que
-interage com o "mundo externo": APIs, localStorage, event listeners, timers.
-
-### Anatomia
-
-```jsx
-useEffect(() => {
-    // código do efeito — roda APÓS o render
-
-    return () => {
-        // função de cleanup — roda ANTES do próximo efeito ou quando o componente desmonta
-    };
-}, [dependência1, dependência2]); // array de dependências
-```
-
-### Os três comportamentos pelo array de deps
-
-```jsx
-// Sem array: roda após CADA render — quase sempre é bug, evite
-useEffect(() => { console.log('rodou'); });
-
-// Array vazio []: roda UMA VEZ após a montagem inicial (componentDidMount)
-useEffect(() => { fetchUser(); }, []);
-
-// Com deps: roda após montar E toda vez que uma dep mudar (componentDidUpdate)
-useEffect(() => { fetchData(); }, [userId]);
-```
-
-### No AuthContext.jsx — dois useEffects
-
-**Primeiro** — ouve o evento customizado de sessão expirada:
-```jsx
-useEffect(() => {
-    const handle = () => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        setSessionExpired(true);
-        // Não chama logout() — mantém user no state para PrivateRoute não redirecionar.
-        // O modal em App.jsx controla a navegação.
-    };
-    window.addEventListener('auth:expired', handle);
-
-    // Cleanup: remove o listener quando o componente desmonta.
-    // Sem isso, addEventListener acumularia listeners duplicados a cada re-mount.
-    return () => window.removeEventListener('auth:expired', handle);
-}, []); // array vazio = registra o listener UMA VEZ na montagem
-```
-
-**Segundo** — restaura a sessão ao recarregar a página:
-```jsx
-useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (!token) { setLoading(false); return; } // sem token: nada a restaurar
-
-    fetchUser()
-        .catch(() => logout())      // token expirado → limpa e vai para login
-        .finally(() => setLoading(false));
-}, [fetchUser, logout]); // deps: funções estabilizadas por useCallback (ver seção 6)
-```
-
-Por que as deps `[fetchUser, logout]`? React exige que toda função usada dentro de um
-efeito esteja no array — caso contrário você usa uma versão "stale" (desatualizada) da
-função. `useCallback` garante que essas funções não mudam de referência entre renders,
-então o efeito roda apenas uma vez na prática.
+**Session restore**: reads `localStorage` for a saved token and, if one exists,
+calls `fetchUser()` to rehydrate `user`. This exists because "mounting
+`AuthProvider`" doesn't mean "brand new visitor" — it happens every time the JS
+runtime restarts in the browser: pressing **F5**, opening the app in a **new
+tab**, or **reopening the browser** after closing it. React state lives only in
+memory and is wiped on every one of those; `localStorage` survives them.
+Without this effect, a logged-in user would get bounced back to `/login` on
+every reload, even with a perfectly valid session already sitting in storage.
 
 ---
 
-## 6. useCallback — memorizar funções
+## 4. The Axios interceptors — request and response
 
-**Problema**: em React, a cada re-render do componente, todas as funções declaradas
-dentro dele são recriadas. Função nova = referência nova. Isso importa quando a função
-entra no array de deps de um `useEffect` (causaria loop) ou é passada como prop para
-um componente memoizado.
+Axios lets you intercept every request before it leaves and every response
+before it reaches `.then()`. This is the right place for cross-cutting auth
+logic: attaching the token, automatic refresh.
 
-```jsx
-// SEM useCallback: logout é uma função NOVA a cada render
-const logout = () => {
-    localStorage.removeItem('access_token');
-    setUser(null);
-};
-
-// COM useCallback: logout é a MESMA referência enquanto as deps não mudarem
-const logout = useCallback(() => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    setUser(null);
-    setSessionExpired(false);
-}, []); // deps []: logout nunca recria (não usa nada do escopo externo que mude)
-```
-
-### useCallback no AuthContext
-
-```jsx
-const logout = useCallback(() => { ... }, []);
-// Deps []: logout nunca muda de referência após a montagem.
-
-const fetchUser = useCallback(async () => {
-    const res = await axiosInstance.get('/auth/me/');
-    setUser(res.data);
-}, []);
-// Deps []: axiosInstance é um singleton importado — não muda nunca.
-```
-
-Resultado: `logout` e `fetchUser` têm referências estáveis → entram no array de deps
-do `useEffect` sem causar loop infinito.
-
-### Quando NÃO usar useCallback
-
-Quando a função não vai para deps de useEffect nem para props de componentes memoizados
-(React.memo), `useCallback` só adiciona complexidade sem benefício. Não saia colocando
-`useCallback` em tudo — cada hook tem custo de memória.
-
----
-
-## 7. useMemo — memorizar valores computados
-
-`useCallback` memoriza funções. `useMemo` memoriza valores derivados caros de computar.
-
-```jsx
-// SEM useMemo: recalcula em CADA render, mesmo que transactions não tenha mudado
-const total = transactions.reduce((sum, t) => sum + t.amount, 0);
-
-// COM useMemo: só recalcula quando transactions mudar
-const total = useMemo(() => {
-    return transactions.reduce((sum, t) => sum + t.amount, 0);
-}, [transactions]);
-```
-
-**No FinTrack atualmente**: `useMemo` ainda não é usado porque não há computações
-pesadas que causem lentidão visível. Você vai querer quando tiver agregações de dados
-para os gráficos (somar por categoria, agrupar por mês, etc.).
-
-**Regra de ouro**: não otimize antes de ter problema. Se o re-render é perceptivelmente
-lento, meça com o React DevTools Profiler, aí aplique `useMemo`. Premature optimization.
-
----
-
-## 8. O interceptor do Axios — request e response
-
-Axios permite interceptar toda requisição antes de sair e toda resposta antes de chegar
-no `.then()`. É o lugar certo para lógica cross-cutting: autenticação, refresh automático.
-
-### Interceptor de request (injeta o token)
+### Request interceptor (attaches the token)
 
 ```jsx
 axiosInstance.interceptors.request.use((config) => {
@@ -257,25 +91,25 @@ axiosInstance.interceptors.request.use((config) => {
     if (token) {
         config.headers['Authorization'] = `Bearer ${token}`;
     }
-    return config; // obrigatório — devolve a config modificada
+    return config; // required — otherwise the request hangs
 }, (error) => Promise.reject(error));
 ```
 
-Roda antes de qualquer requisição sair. Se não devolver `config`, a requisição trava.
+Runs before any request leaves. If it doesn't return `config`, the request never fires.
 
-### Interceptor de response (refresh automático)
+### Response interceptor (automatic refresh)
 
 ```jsx
 axiosInstance.interceptors.response.use(
-    res => res, // resposta ok: passa direto
+    res => res, // ok response: pass through
 
     async err => {
-        const original = err.config; // a requisição que falhou
+        const original = err.config;
 
-        // Só nos importa 401 (não autorizado — token expirado ou inválido)
+        // We only care about 401 (unauthorized — expired or invalid token)
         if (err.response?.status !== 401) return Promise.reject(err);
 
-        // Se o próprio refresh falhou: sessão morreu de vez
+        // If the refresh call itself failed: the session is dead for good
         if (original.url?.includes('token/refresh')) {
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
@@ -283,7 +117,7 @@ axiosInstance.interceptors.response.use(
             return Promise.reject(err);
         }
 
-        // Evita loop: marca que já tentou retry nessa requisição
+        // Prevents a loop: marks that this request already tried a retry
         if (original._retry) return Promise.reject(err);
         original._retry = true;
 
@@ -296,8 +130,8 @@ axiosInstance.interceptors.response.use(
         try {
             const { data } = await axiosInstance.post('/auth/token/refresh/', { refresh });
             localStorage.setItem('access_token', data.access);
-            localStorage.setItem('refresh_token', data.refresh); // rotação de token
-            return axiosInstance(original); // refaz a requisição original com o novo token
+            localStorage.setItem('refresh_token', data.refresh); // token rotation
+            return axiosInstance(original); // retry the original request with the new token
         } catch {
             window.dispatchEvent(new CustomEvent('auth:expired'));
             return Promise.reject(err);
@@ -306,77 +140,56 @@ axiosInstance.interceptors.response.use(
 );
 ```
 
-**Fluxo completo quando o access_token expira:**
-1. Componente faz `GET /finances/transactions/`
-2. Interceptor de request injeta o token expirado no header
-3. Django retorna 401
-4. Interceptor de response intercepta o 401
-5. Checa: não é URL de refresh, não é `_retry` → tenta refresh
-6. Faz `POST /auth/token/refresh/` com o refresh_token salvo
-7. Django valida e retorna novos tokens (`ROTATE_REFRESH_TOKENS=True`)
-8. Salva novos tokens no localStorage
-9. Refaz a requisição original (`GET /finances/transactions/`) com o novo token
-10. Componente recebe a resposta normalmente — nem percebeu que houve um refresh
+**Full flow when the access_token expires:**
+1. A component does `GET /finances/transactions/`
+2. The request interceptor attaches the expired token to the header
+3. Django returns 401
+4. The response interceptor catches the 401
+5. Checks: not the refresh URL, not `_retry` yet → attempts a refresh
+6. `POST /auth/token/refresh/` with the saved refresh_token
+7. Django validates and returns new tokens (`ROTATE_REFRESH_TOKENS=True`)
+8. New tokens are saved to localStorage
+9. The original request (`GET /finances/transactions/`) is retried with the new token
+10. The component gets its response normally — it never noticed a refresh happened
 
 ---
 
-## 9. Custom Events — comunicação entre módulos desacoplados
+## 5. Custom events — communication between decoupled modules
 
-`axiosConfig.js` não tem acesso ao `AuthContext`. Não pode chamar `setSessionExpired(true)`
-diretamente. Solução: usar o `window` como barramento de eventos.
+`axiosConfig.js` has no access to `AuthContext`. It can't call `setSessionExpired(true)`
+directly. Solution: use `window` as an event bus.
 
 ```jsx
-// Em axiosConfig.js — publica o evento (não sabe quem vai ouvir)
+// In axiosConfig.js — publishes the event (doesn't know who's listening)
 window.dispatchEvent(new CustomEvent('auth:expired'));
 
-// Em AuthContext.jsx — subscreve o evento (não sabe quem publicou)
+// In AuthContext.jsx — subscribes to the event (doesn't know who published it)
 window.addEventListener('auth:expired', handle);
 ```
 
-Este é o padrão Pub/Sub (Publisher-Subscriber). O Axios publica. O AuthContext escuta.
-Nenhum dos dois sabe da existência do outro — isso é desacoplamento.
+This is the Pub/Sub pattern. Axios publishes. AuthContext listens. Neither one
+knows the other exists — that's the decoupling.
 
-**Por que não chamar logout() direto do interceptor?**
-`logout()` usa `setUser` — uma função do React que só funciona dentro de um componente
-ou hook. Chamá-la de dentro do Axios (JavaScript puro fora do React) quebraria as regras
-dos hooks e causaria erros em runtime. O custom event é a ponte segura.
-
----
-
-## 10. PrivateRoute — guardião de rota
-
-```jsx
-const PrivateRoute = ({ children }) => {
-    const { user, loading } = useAuth();
-
-    if (loading) return <div className="loading-screen">Loading...</div>;
-    if (!user) return <Navigate to="/login" replace />;
-
-    return children;
-};
-```
-
-**Por que o `loading` existe?** Na inicialização, o AuthContext verifica se há token
-salvo e chama `fetchUser()` assincronamente. Sem o `loading`, o componente renderizaria
-`<Navigate to="/login">` imediatamente — mesmo com token válido — porque `user` ainda
-é `null` enquanto a requisição está em andamento.
-
-`loading=true` durante o check → PrivateRoute mostra loading screen → `fetchUser()` resolve
-→ `user` fica preenchido → PrivateRoute renderiza os filhos. Sem flash de redirect indevido.
+**Why not call `logout()` directly from the interceptor?**
+`logout()` uses `setUser` — a React function that only works inside a component
+or hook. Calling it from inside Axios (plain JavaScript, outside React) would
+break the rules of hooks and throw at runtime. The custom event is the safe bridge.
 
 ---
 
-## 11. O modal de sessão expirada — por que ficou em App.jsx
+## 6. The session-expired modal — why it lives in App.jsx
 
-**Problema anterior**: o modal ficava em `Login.jsx` como um banner. Quando a sessão
-expirava, `logout()` era chamado imediatamente → `user=null` → `PrivateRoute` redirecionava
-para `/login` → só então o banner aparecia. A experiência: tela muda abruptamente.
+**Previous problem**: the modal used to live in `Login.jsx` as a banner. When the
+session expired, `logout()` was called immediately → `user = null` →
+`PrivateRoute` redirected to `/login` → only then did the banner show up. The
+experience: the screen changed abruptly.
 
-**Solução atual**: o modal fica em `App.jsx`, dentro do Router mas fora das Routes.
+**Current solution**: the modal lives in `App.jsx`, inside the Router but outside the Routes.
 
-O `auth:expired` handler **não chama `logout()`** — apenas remove os tokens do localStorage
-e seta `sessionExpired=true`. O `user` permanece no state → `PrivateRoute` não redireciona →
-o modal aparece em cima da página atual.
+The `auth:expired` handler **does not call `logout()`** — it only removes the
+tokens from localStorage and sets `sessionExpired = true`. `user` stays in
+state → `PrivateRoute` doesn't redirect → the modal appears on top of whatever
+page the user is on.
 
 ```jsx
 const SessionExpiredModal = () => {
@@ -393,7 +206,7 @@ const SessionExpiredModal = () => {
                     Your session has expired. Please sign in again to continue.
                 </div>
                 <button className="modal-btn modal-btn--confirm" onClick={() => {
-                    logout();         // agora sim: limpa user + tokens + sessionExpired
+                    logout();         // only now: clears user + tokens + sessionExpired
                     navigate('/login');
                 }}>
                     Sign in
@@ -404,68 +217,52 @@ const SessionExpiredModal = () => {
 };
 ```
 
-**Por que `useNavigate` exige estar dentro do Router?**
-`useNavigate` lê o context do React Router. Se o componente fosse definido fora de
-`<Router>`, o hook não encontraria o context e jogaria um erro. Por isso `SessionExpiredModal`
-é definido dentro do arquivo `App.jsx` (mas antes da função `App`), e renderizado dentro
-do `<Router>`.
+**Why does `useNavigate` require being inside the Router?**
+`useNavigate` reads React Router's context. If the component were defined
+outside `<Router>`, the hook wouldn't find the context and would throw. That's
+why `SessionExpiredModal` is defined inside the `App.jsx` file (but above the
+`App` function itself), and rendered inside `<Router>`.
+
+> Not yet confirmed whether this modal reliably shows up for a real user in
+> every scenario — it's fully reactive (see section 1), so it only appears
+> after *some* request happens to fail. Worth a dedicated test once the login/
+> refresh test coverage exists.
 
 ---
 
-## 12. Tokens no localStorage — riscos e alternativas
+## 7. Tokens in localStorage — risks and alternatives
 
-**Risco**: XSS (Cross-Site Scripting). Se um script malicioso rodar na sua página,
-ele pode ler `localStorage.getItem('access_token')` e exfiltrar o token.
+**Risk**: XSS (Cross-Site Scripting). If a malicious script runs on your page,
+it can read `localStorage.getItem('access_token')` and exfiltrate the token.
 
-**Alternativa segura**: httpOnly cookies. O browser não expõe cookies `httpOnly` para
-JavaScript — só os envia automaticamente em cada requisição. O backend os configura.
+**Safer alternative**: httpOnly cookies. The browser doesn't expose `httpOnly`
+cookies to JavaScript — it only sends them automatically with every request.
+The backend sets them.
 
 | | localStorage | httpOnly cookie |
 |--|--|--|
-| Legível por JS | Sim (risco XSS) | Não (mais seguro) |
-| Enviado automaticamente | Não (manual via header) | Sim |
-| Risco de CSRF | Não | Sim (precisa de CSRF token) |
-| Multi-domínio | Simples | Mais complexo |
-| Implementação atual | Sim | Requer mudança no backend |
+| Readable by JS | Yes (XSS risk) | No (safer) |
+| Sent automatically | No (manual, via header) | Yes |
+| CSRF risk | No | Yes (needs a CSRF token) |
+| Multi-domain | Simple | More complex |
+| Current implementation | Yes | Requires a backend change |
 
-Para um projeto pessoal, localStorage é aceitável. Para produção com dados sensíveis
-de usuários terceiros, migrar para httpOnly cookies é a decisão correta.
+For a personal project, localStorage is acceptable. For production with real
+third-party user data, migrating to httpOnly cookies is the right call.
 
 ---
 
-## 13. Tempo de vida dos tokens (settings.py)
+## 8. Token lifetime (settings.py)
 
 ```python
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),   # expira em 1h
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),   # expira em 7 dias
-    "ROTATE_REFRESH_TOKENS": True,                 # cada refresh gera novo refresh token
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),   # expires in 1h
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),   # expires in 7 days
+    "ROTATE_REFRESH_TOKENS": True,                 # each refresh issues a new refresh token
 }
 ```
 
-**Por que ROTATE_REFRESH_TOKENS=True?** A cada refresh, o Django invalida o refresh_token
-anterior e retorna um novo. Isso evita que um refresh token roubado dure 7 dias inteiros —
-se o usuário continuar usando o app, o token rotaciona e o roubado se torna inválido.
-
----
-
-## 14. Diagrama de estados
-
-```
-  app abre
-      ↓
-  loading=true → fetchUser() → token válido? → sim → user={...}, loading=false
-                                             → não → logout(), loading=false
-                                                       user=null → /login
-      ↓ (usuário autenticado)
-  usando o app normalmente
-      ↓
-  access_token expira → 401 → interceptor faz refresh → ok → segue normalmente
-                                                       → falhou → auth:expired
-      ↓
-  sessionExpired=true → modal aparece sobre a tela atual
-      ↓
-  usuário clica "Sign in" → logout() + navigate('/login')
-      ↓
-  user=null, sessionExpired=false → login page
-```
+**Why `ROTATE_REFRESH_TOKENS=True`?** On every refresh, Django invalidates the
+previous refresh_token and returns a new one. This stops a stolen refresh token
+from being usable for the full 7 days — if the real user keeps using the app,
+the token rotates and the stolen one becomes invalid.

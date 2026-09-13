@@ -6,7 +6,6 @@ const axiosInstance = axios.create({
     timeout: 250000,
 });
 
-// Função para pegar o token CSRF do cookie
 function getCSRFToken() {
     const name = 'csrftoken';
     const cookies = document.cookie.split(';');
@@ -20,7 +19,6 @@ function getCSRFToken() {
     return null;
 }
 
-// Interceptor: anexa JWT + CSRF em cada requisição
 axiosInstance.interceptors.request.use((config) => {
     const token = localStorage.getItem('access_token');
     if (token) {
@@ -39,20 +37,27 @@ axiosInstance.interceptors.response.use(
     res => res,
     async err => {
         const original = err.config;
+
+        // We only care about 401 (unauthorized — expired or invalid token)
         if (err.response?.status !== 401) return Promise.reject(err);
-        // A 401 from the login endpoint means bad credentials — not an expired session.
-        // Let the Login page handle it (it shows "Invalid email or password").
+        
+        // Status is 401, so can only be a bad password.
         if (original.url?.endsWith('/auth/token/')) {
             return Promise.reject(err);
         }
+
+        // If the 401 status came from the refresh endpoint, there is nothing more to be done, it means the refresh token is invalid or expired, so we log out the user.
         if (original.url?.includes('token/refresh')) {
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
             window.dispatchEvent(new CustomEvent('auth:expired'));
             return Promise.reject(err);
         }
+        // Avoid looping that can occur checking _retry
         if (original._retry) return Promise.reject(err);
         original._retry = true;
+
+        // If there is no refresh token, we can't do anything, so we log out the user.
         const refresh = localStorage.getItem('refresh_token');
         if (!refresh) {
             window.dispatchEvent(new CustomEvent('auth:expired'));

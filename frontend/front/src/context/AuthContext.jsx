@@ -8,7 +8,6 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    // loading=true enquanto verifica o token salvo — evita piscar a tela de login
     const [loading, setLoading] = useState(true);
     const [sessionExpired, setSessionExpired] = useState(false);
 
@@ -19,17 +18,15 @@ export const AuthProvider = ({ children }) => {
         setSessionExpired(false);
     }, []);
 
-    // Busca os dados do usuário usando um access token
     const fetchUser = useCallback(async () => {
         const res = await axiosInstance.get(`/auth/me/`);
         setUser(res.data);
     }, []);
 
+    // Bridges axiosConfig's interceptor (plain JS, can't touch React state) to this
+    // context: clears tokens and flags the session as dead when a refresh fails.
     useEffect(() => {
         const handle = () => {
-            // Remove tokens immediately so the interceptor stops retrying —
-            // but keep `user` alive so PrivateRoute doesn't redirect.
-            // The modal in App.jsx owns the navigation to /login.
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
             setSessionExpired(true);
@@ -38,15 +35,18 @@ export const AuthProvider = ({ children }) => {
         return () => window.removeEventListener('auth:expired', handle);
     }, []);
 
-    // Na inicialização: se já tem token salvo, tenta restaurar a sessão
+    // Restores the session on every fresh mount (F5, new tab, browser reopen) —
+    // React state resets on reload, but a saved token survives it.
     useEffect(() => {
         const token = localStorage.getItem('access_token');
         if (!token) { setLoading(false); return; }
 
         fetchUser()
-            .catch(() => logout())      // token expirado → limpa e vai para login
+            .catch(() => logout())      
             .finally(() => setLoading(false));
     }, [fetchUser, logout]);
+    // fetchUser and logout are stable because they're wrapped in useCallback, so this effect runs only once, 
+    // but if useCallback is removed this sintax is safer than an empty dependency array.
 
     const login = async (email, password) => {
         const res = await axiosInstance.post(`/auth/token/`, { email, password });
@@ -54,7 +54,6 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('refresh_token', res.data.refresh);
         setSessionExpired(false);
         await fetchUser();
-        // Se fetchUser jogar erro, o login() vai propagar — o componente trata
     };
 
     const updateUser = useCallback((data) => setUser(data), []);
