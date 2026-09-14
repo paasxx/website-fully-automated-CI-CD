@@ -63,6 +63,8 @@ axiosInstance.interceptors.response.use(
             window.dispatchEvent(new CustomEvent('auth:expired'));
             return Promise.reject(err);
         }
+
+        // Finally try to refresh the access token and retry the original request.
         try {
             const { data } = await axiosInstance.post('/auth/token/refresh/', { refresh });
             localStorage.setItem('access_token', data.access);

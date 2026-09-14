@@ -266,3 +266,31 @@ SIMPLE_JWT = {
 previous refresh_token and returns a new one. This stops a stolen refresh token
 from being usable for the full 7 days — if the real user keeps using the app,
 the token rotates and the stolen one becomes invalid.
+
+---
+
+## 9. Known failure scenarios (tracked)
+
+Two real bugs found while writing tests, not yet fixed. Both end the same way
+(a broken session) but through different mechanisms.
+
+**Blank screen on stale tokens ([#67](https://github.com/paasxx/website-fully-automated-CI-CD/issues/67))**
+Needs only a single request — no concurrency involved. If both tokens are
+invalid (two tabs open, logout in one; backend down during a refresh; the
+refresh_token naturally expired after 7 days idle), the interceptor's error
+handler (section 4) ends in a rejected Promise that reaches whatever component
+made the request. The app has no Error Boundary anywhere in the tree, so an
+unhandled render-time error from that rejection crashes the whole React app
+instead of showing a message.
+
+**Concurrent refresh race condition ([#61](https://github.com/paasxx/website-fully-automated-CI-CD/issues/61))**
+When the access_token expires and two or more requests are in flight at the
+same time (e.g. a page firing several fetches on mount), each one
+independently sets its own `_retry` flag and reads the *same* refresh_token
+before either has updated it. Whichever refresh call reaches the backend first
+succeeds and rotates the token; the second one is rejected because that
+refresh_token was just invalidated. Because that failing refresh call is
+itself routed through the same interceptor, it hits the "refresh URL failed"
+branch (section 4) — which clears *both* tokens from localStorage and
+dispatches `auth:expired`, wiping out the valid tokens the first call just
+saved, even though the session is actually fine.
