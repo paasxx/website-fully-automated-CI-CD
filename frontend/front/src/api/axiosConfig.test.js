@@ -33,12 +33,21 @@ describe('axiosInstance', () => {
         let refreshCalls = 0;
 
         server.use(
-            http.get('*/auth/me/', () => HttpResponse.json({}, { status: 401 })),
+            // Old token → 401 (simulates the expired access token).
+            // New token (the one the refresh mock below issues) → 200.
+            http.get('*/auth/me/', ({ request }) => {
+                const auth = request.headers.get('Authorization');
+                if (auth === 'Bearer new-access-token') {
+                    return HttpResponse.json({ id: 1, email: 'user@example.com' });
+                }
+                return HttpResponse.json({}, { status: 401 });
+            }),
             http.post('*/auth/token/refresh/', () => {
                 refreshCalls += 1;
                 if (refreshCalls === 1) {
                     return HttpResponse.json({ access: 'new-access-token', refresh: 'new-refresh-token' });
                 }
+                // never falls back to this case because our new axiosConfig deals with 2 racing requests trying to refresh the token.
                 return HttpResponse.json({}, { status: 401 });
             }),
         );

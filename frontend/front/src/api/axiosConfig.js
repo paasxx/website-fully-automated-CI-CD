@@ -1,6 +1,9 @@
 // axiosConfig.js
 import axios from 'axios';
 
+// this variable tracks simultaneously requests trying to refresh the token.
+let refreshPromise = null
+
 const axiosInstance = axios.create({
     baseURL: import.meta.env.REACT_APP_BACKEND_URL || '/api',
     timeout: 250000,
@@ -47,7 +50,8 @@ axiosInstance.interceptors.response.use(
         }
 
         // If the 401 status came from the refresh endpoint, there is nothing more to be done, it means the refresh token is invalid or expired, so we log out the user.
-        if (original.url?.includes('token/refresh')) {
+
+        if (original.url?.includes('token/refresh')) {            
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
             window.dispatchEvent(new CustomEvent('auth:expired'));
@@ -65,15 +69,35 @@ axiosInstance.interceptors.response.use(
         }
 
         // Finally try to refresh the access token and retry the original request.
-        try {
-            const { data } = await axiosInstance.post('/auth/token/refresh/', { refresh });
+        if (!refreshPromise) {
+        refreshPromise = axiosInstance.post('/auth/token/refresh/', { refresh });
+
+          try {
+            const { data } = await refreshPromise;
             localStorage.setItem('access_token', data.access);
             localStorage.setItem('refresh_token', data.refresh);
+            refreshPromise = null;
             return axiosInstance(original);
         } catch {
             window.dispatchEvent(new CustomEvent('auth:expired'));
+            refreshPromise = null;
             return Promise.reject(err);
         }
+
+        };
+
+        // if refreshPromise is not null this request has to wait the first refresh try to finish.
+        try{
+            await refreshPromise;
+            return axiosInstance(original);
+        }
+        catch{
+            refreshPromise = null;
+            return Promise.reject(err);
+        }
+        
+
+      
     }
 );
 
