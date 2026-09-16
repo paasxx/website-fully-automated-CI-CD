@@ -63,10 +63,12 @@ Owns transactions and categories. This is the heart of the product.
 |------|---------------|
 | `models.py` | `Category`, `Transaction` |
 | `serializers.py` | `TransactionSerializer`, `CategorySerializer` |
-| `filters.py` | `TransactionFilter` — search, date range, bank, is_credit, is_installment |
+| `services.py` | `seed_default_categories`, `generate_sample_transactions` (used by the `seed_transactions` command) |
+| `categorizer.py` | keyword rules + `categorize()` + `default_categories()` (single source of truth for category names/colors) |
+| `filters.py` | `TransactionFilter` — search, date range, bank, is_credit, is_installment, category |
 | `pagination.py` | `TransactionPagePagination` — page_size=25, max=200 |
-| `views.py` | `TransactionListView`, `SpendingOverTimeView` |
-| `urls.py` | `/api/finances/transactions/`, `/api/finances/spending-over-time/` |
+| `views.py` | `TransactionListView`, `SpendingOverTimeView`, category CRUD views |
+| `urls.py` | `/api/finances/transactions/`, `/api/finances/spending-over-time/`, `/api/finances/categories/...` |
 
 #### `Transaction` model field design
 

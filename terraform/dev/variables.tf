@@ -13,3 +13,9 @@ variable "db_password" {
   description = "Senha do banco de dados"
   type        = string
 }
+
+variable "django_secret_key" {
+  description = "Chave secreta do Django"
+  type        = string
+  sensitive   = true
+}

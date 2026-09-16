@@ -6,7 +6,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from finances.models import Transaction
+from finances.models import Transaction, Category
 
 User = get_user_model()
 
@@ -176,3 +176,52 @@ class TestSpendingOverTimeView(TestCase):
         self.client.force_authenticate(self.user)
         resp = self.client.get(SPENDING_OVER_TIME_URL)
         self.assertEqual(resp.data["data"], [])
+
+
+class TestTransactionUpdateView(TestCase):
+    """PATCH /transactions/<id>/ — changing a transaction's category.
+
+    Guards against IDOR: a user may only point a transaction at a category
+    they own. The transaction itself is already user-scoped by get_queryset;
+    these tests cover the category_id, which is scoped by UserCategoryField.
+    """
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username="test@example.com", email="test@example.com", password="pass123"
+        )
+        self.my_category = Category.objects.create(
+            user=self.user, name="Food", color="#fff"
+        )
+        self.tx = _tx(self.user)
+
+    def _url(self, pk):
+        return f"{TRANSACTIONS_URL}{pk}/"
+
+    def test_can_assign_own_category(self):
+        self.client.force_authenticate(self.user)
+        resp = self.client.patch(
+            self._url(self.tx.id), {"category_id": self.my_category.id}
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.tx.refresh_from_db()
+        self.assertEqual(self.tx.category_id, self.my_category.id)
+
+    def test_cannot_assign_other_users_category(self):
+        other = User.objects.create_user(
+            username="other@example.com", email="other@example.com", password="pass123"
+        )
+        other_category = Category.objects.create(
+            user=other, name="Food", color="#000"
+        )
+
+        self.client.force_authenticate(self.user)
+        resp = self.client.patch(
+            self._url(self.tx.id), {"category_id": other_category.id}
+        )
+
+        # Validation must reject the foreign id (it is not in this user's queryset).
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.tx.refresh_from_db()
+        self.assertIsNone(self.tx.category_id)  # unchanged

@@ -6,8 +6,11 @@ from .parsers.registry import get_parser
 
 
 def process_statement(user, file, filename: str, bank: str, password: str = None) -> Statement:
-    if Statement.objects.filter(user=user, filename=filename).exists():
-        raise ValueError(f"'{filename}' has already been imported.")
+    existing = Statement.objects.filter(user=user, filename=filename).first()
+    if existing:
+        if existing.status != "failed":
+            raise ValueError(f"'{filename}' já foi importado.")
+        existing.delete()
 
     statement = Statement.objects.create(
         user=user,
@@ -20,7 +23,7 @@ def process_statement(user, file, filename: str, bank: str, password: str = None
         parser = get_parser(bank)
         dtos = parser.parse(file, password=password)
 
-        categories = {c.name: c for c in Category.objects.filter(user=None)}
+        categories = {c.name: c for c in Category.objects.filter(user=user)}
 
         rows = [
             Transaction(

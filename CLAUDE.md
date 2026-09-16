@@ -1,4 +1,4 @@
-# Guia do Projeto — Personal Finance Dashboard
+u# Guia do Projeto — Personal Finance Dashboard
 
 Documento de orientação rápida para retomar o projeto depois de uma pausa.
 Leia isso antes de abrir qualquer arquivo de código.
@@ -38,8 +38,14 @@ make logs-back    # só backend
 make logs-front   # só frontend
 make shell-back   # entra no container Django
 make migrate      # makemigrations + migrate
+make seed         # gera transações sintéticas (edite backend/fintrack/finances/seed_config.yml)
+make clear-transactions EMAIL=...  # apaga as transações de um usuário
+make clean        # zera o banco inteiro (containers + volume postgres_data)
 make help         # lista todos os comandos
 ```
+
+> `make seed` popula o banco com transações sintéticas para testar escalabilidade
+> (bypassa os parsers, gera direto no banco). Detalhes em `docs/infra/9_rodando_local.md`.
 
 Frontend: http://localhost:3000
 Backend: http://localhost:8000
@@ -101,9 +107,6 @@ terraform/
 
 ### Débitos técnicos conhecidos
 
-- `SECRET_KEY` hardcoded em settings.py → deve vir de env var
-- `DEBUG = True` em settings.py → deve ser `False` em prod
-- `CORS_ALLOW_ALL_ORIGINS = True` → restringir por origem em prod
 - Legacy components em `src/components/Legacy/` → remover
 - FileContext com mock data → conectar à API real
 - `prod/` no Terraform está incompleto (só task definitions, sem infra)

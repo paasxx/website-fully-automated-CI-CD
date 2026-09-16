@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
-
-const BASE_URL = import.meta.env.REACT_APP_BACKEND_URL || '/api';
+import { Eye, EyeOff } from 'lucide-react';
+import axiosInstance from '../api/axiosConfig';
 
 const Register = () => {
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -16,12 +18,21 @@ const Register = () => {
         setError('');
         setLoading(true);
         try {
-            await axios.post(`${BASE_URL}/auth/register/`, { email, password });
+            await axiosInstance.post('/auth/register/', {
+                email,
+                password,
+                first_name: firstName,
+                last_name: lastName,
+            });
             navigate('/login');
         } catch (err) {
             const data = err.response?.data;
-            // O DRF retorna erros por campo: { email: ["..."], password: ["..."] }
-            const msg = data?.email?.[0] || data?.password?.[0] || 'Registration failed.';
+            const msg =
+                data?.email?.[0] ||
+                data?.password?.[0] ||
+                data?.first_name?.[0] ||
+                data?.last_name?.[0] ||
+                'Registration failed.';
             setError(msg);
         } finally {
             setLoading(false);
@@ -35,6 +46,30 @@ const Register = () => {
                 <p className="login-subtitle">Create your account</p>
 
                 <form className="login-form" onSubmit={handleSubmit}>
+                    <div className="register-name-row">
+                        <div className="form-group">
+                            <label htmlFor="firstName">First name</label>
+                            <input
+                                id="firstName"
+                                type="text"
+                                value={firstName}
+                                onChange={e => setFirstName(e.target.value)}
+                                placeholder="First name"
+                                autoFocus
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="lastName">Last name</label>
+                            <input
+                                id="lastName"
+                                type="text"
+                                value={lastName}
+                                onChange={e => setLastName(e.target.value)}
+                                placeholder="Last name"
+                            />
+                        </div>
+                    </div>
+
                     <div className="form-group">
                         <label htmlFor="email">Email</label>
                         <input
@@ -44,20 +79,30 @@ const Register = () => {
                             onChange={e => setEmail(e.target.value)}
                             placeholder="you@email.com"
                             required
-                            autoFocus
                         />
                     </div>
 
                     <div className="form-group">
                         <label htmlFor="password">Password</label>
-                        <input
-                            id="password"
-                            type="password"
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
-                            placeholder="min. 8 characters"
-                            required
-                        />
+                        <div className="password-field">
+                            <input
+                                id="password"
+                                type={showPassword ? 'text' : 'password'}
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                                placeholder="min. 8 characters"
+                                required
+                            />
+                            <button
+                                type="button"
+                                className="password-toggle"
+                                onMouseDown={(e) => { e.preventDefault(); setShowPassword(v => !v); }}
+                                tabIndex={-1}
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            >
+                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                        </div>
                     </div>
 
                     {error && <p className="login-error">{error}</p>}
@@ -67,9 +112,9 @@ const Register = () => {
                     </button>
                 </form>
 
-                <p style={{ textAlign: 'center', marginTop: '8px', fontSize: '14px' }}>
+                <p className="login-footer-link">
                     Already have an account?{' '}
-                    <Link to="/login" style={{ color: 'var(--button-bg)' }}>Sign in</Link>
+                    <Link to="/login">Sign in</Link>
                 </p>
             </div>
         </div>

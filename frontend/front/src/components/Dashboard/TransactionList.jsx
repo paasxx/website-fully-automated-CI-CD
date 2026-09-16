@@ -54,6 +54,16 @@ const TransactionList = ({ refreshKey }) => {
     const [isCredit, setIsCredit] = useState('');
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
+    const [category, setCategory] = useState('');
+    const [categories, setCategories] = useState([]);
+    const [statusListTransactions, setStatusListTransactions] = useState(""); // To track status of loading all transactions.
+    const [statusUpdateCategory, setStatusUpdateCategory] = useState(""); // To track which transaction is being updated for category change  
+    const [errorUpdateCategoryMsg, setErrorUpdateCategoryMsg] = useState(""); // To store error message for category update
+    const [errorListTransactionsMsg, setErrorListTransactionsMsg] = useState(""); // To store error message for loading transactions
+
+    useEffect(() => {
+        axiosInstance.get('/finances/categories/').then(res => setCategories(res.data));
+    }, []);
 
     // Debounce search — waits 300ms after user stops typing before fetching
     useEffect(() => {
@@ -77,6 +87,7 @@ const TransactionList = ({ refreshKey }) => {
         if (isCredit !== '') params.is_credit  = isCredit;
         if (dateFrom)        params.date_from  = dateFrom;
         if (dateTo)          params.date_to    = dateTo;
+        if (category)        params.category   = category;
 
         axiosInstance
             .get('/finances/transactions/', { params })
@@ -84,23 +95,60 @@ const TransactionList = ({ refreshKey }) => {
                 setTransactions(res.data.results);
                 setCount(res.data.count);
             })
-            .catch(console.error)
+            .catch(err => 
+                {
+                console.error(err);
+                setStatusListTransactions('error');
+                setErrorListTransactionsMsg(err.response?.data?.error || 'Failed to load transactions.');
+                setTimeout(() => {
+                    setStatusListTransactions(''); // Reset status after 3 seconds
+                    setErrorListTransactionsMsg(''); // Clear error message after 3 seconds
+                }, 3000);
+            })
             .finally(() => setLoading(false));
-    }, [debouncedSearch, bank, isCredit, dateFrom, dateTo, currentPage, refreshKey]);
+    }, [debouncedSearch, bank, isCredit, dateFrom, dateTo, category, currentPage, refreshKey]);
 
     const goToPage    = (p) => setCurrentPage(p);
     const handleBank  = (e) => { setBank(e.target.value);     setCurrentPage(1); };
     const handleType  = (e) => { setIsCredit(e.target.value); setCurrentPage(1); };
     const handleFrom  = (e) => { setDateFrom(e.target.value); setCurrentPage(1); };
     const handleTo    = (e) => { setDateTo(e.target.value);   setCurrentPage(1); };
+    const handleCategory = (e) => { setCategory(e.target.value); setCurrentPage(1); };
 
-    const hasFilters  = searchInput || bank || isCredit || dateFrom || dateTo;
+    const handleChangeCategory = (transactionId, newCategoryId) => {
+        
+        axiosInstance.patch(`/finances/transactions/${transactionId}/`, { category_id: newCategoryId })
+            .then(res => {
+                // Update the transaction in the local state
+                setTransactions(prevTransactions =>
+                    prevTransactions.map(t =>
+                        t.id === transactionId ? { ...t, category: res.data.category } : t
+                    ).filter(t => String(t.category.id) === category || !category) // Remove transaction if it no longer matches the filter
+                
+                );
+               
+            })
+            .catch(err =>{
+                console.error(err);
+                setStatusUpdateCategory('error');
+                setErrorUpdateCategoryMsg(err.response?.data?.error || 'Category updated failed.');
+                setTimeout(() => {
+                    setStatusUpdateCategory(''); // Reset status after 3 seconds
+                    setErrorUpdateCategoryMsg(''); // Clear error message after 3 seconds
+                }, 3000);
+            }
+                
+            );
+    };
+
+    const hasFilters  = searchInput || bank || isCredit || dateFrom || dateTo || category;
     const clearFilters = () => {
         setSearchInput('');
         setBank('');
         setIsCredit('');
         setDateFrom('');
         setDateTo('');
+        setCategory('');
         setCurrentPage(1);
     };
 
@@ -109,6 +157,28 @@ const TransactionList = ({ refreshKey }) => {
 
     return (
         <div className="dashboard-card--large">
+
+            {statusUpdateCategory === 'error' && (
+                <div className="modal-overlay">
+                    <div className='modal-card'>
+                        <div className="modal-title">Error updating category.</div>
+                        <div className="modal-description">{errorUpdateCategoryMsg}</div>
+                        <button className="modal-btn" onClick={() => setStatusUpdateCategory('')}>Ok</button>
+                    </div>
+                </div>
+            )}
+
+            {statusListTransactions === 'error' && (
+                <div className="modal-overlay">
+                    <div className='modal-card'>
+                        <div className="modal-title">Error loading transactions.</div>
+                        <div className="modal-description">{errorListTransactionsMsg}</div>
+                        <button className="modal-btn" onClick={() => setStatusListTransactions('')}>Ok</button>
+                    </div>
+                </div>
+            )}
+               
+
             <div className="dashboard-card--large__header">
                 <h2>Transactions</h2>
             </div>
@@ -133,17 +203,26 @@ const TransactionList = ({ refreshKey }) => {
                         <option value="btg">BTG</option>
                     </select>
                     <select className="tx-filter-select" value={isCredit} onChange={handleType}>
-                        <option value="">All</option>
+                        <option value="">All types</option>
                         <option value="false">Expenses</option>
                         <option value="true">Credits</option>
                     </select>
                     <input type="date" className="tx-filter-input tx-filter-date" value={dateFrom} onChange={handleFrom} title="From" />
                     <input type="date" className="tx-filter-input tx-filter-date" value={dateTo}   onChange={handleTo}   title="To" />
+                    <select className="tx-filter-select" value={category} onChange={handleCategory}>
+                        <option value="">All categories</option>
+                        {categories.map(c => (
+                            <option key={c.id} value={c.id}>
+                                {c.name}
+                            </option>
+                        ))}
+                    </select>   
                 </div>
             </div>
 
             <div className="dashboard-card--large__body">
                 {/* First load: blank spinner (no previous content to show) */}
+                
                 {loading && transactions.length === 0 ? (
                     <div className="spinner" />
                 ) : (
@@ -185,18 +264,19 @@ const TransactionList = ({ refreshKey }) => {
                                             )}
                                         </span>
 
-                                        {t.category && (
-                                            <span
-                                                className="transaction-category"
-                                                style={{
-                                                    color: t.category.color,
-                                                    background: t.category.color + '1a',
-                                                    border: `1px solid ${t.category.color}80`,
-                                                }}
-                                            >
-                                                {t.category.name}
-                                            </span>
-                                        )}
+
+                                        <select className="transaction-category" style={{
+                                                    color: t.category?.color ?? '#888',
+                                                    background: (t.category?.color ?? '#888') + '1a',
+                                                    border: `1px solid ${(t.category?.color ?? '#888')}80`,
+
+                                                }} value={t.category?.id ?? ''} onChange={e => handleChangeCategory(t.id, e.target.value)}>
+                                            {categories.map(c => (
+                                                <option key={c.id} value={c.id} className='tx-filter-select'>
+                                                    {c.name}
+                                                </option>
+                                            ))}
+                                        </select>   
 
                                         <span className={`transaction-amount ${t.is_credit ? 'transaction-amount--credit' : 'transaction-amount--debit'}`}>
                                             {t.is_credit ? '+' : '-'}{formatCurrency(t.amount)}

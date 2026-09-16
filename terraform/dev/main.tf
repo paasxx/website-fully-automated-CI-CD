@@ -16,9 +16,12 @@ provider "aws" {
 
 # Módulo para Infraestrutura (ECS, ALB, etc.)
 module "infrastructure" {
-  source         = "./modules/infrastructure"
-  aws_account_id = var.aws_account_id
-  db_password    = var.db_password
+  source             = "./modules/infrastructure"
+  aws_account_id     = var.aws_account_id
+  db_password        = var.db_password
+  django_secret_key  = var.django_secret_key
+  debug              = "False"
+  allowed_hosts      = "*"
 }
 
 

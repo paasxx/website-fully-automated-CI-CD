@@ -1,0 +1,16 @@
+# Template for the seed_transactions command.
+# Copy to seed_config.yml (gitignored) and edit:
+#   cp finances/seed_config.example.yml finances/seed_config.yml
+# Then run:  make seed   (-> --config finances/seed_config.yml)
+
+email: pedro@test.com        # target user — must already be registered
+count: 1_000_000             # how many transactions to create
+years: 3                     # spread dates over the last N years
+banks: [nubank, inter, btg]  # bank is picked at random from this list per row
+
+credit_ratio: 0.10           # share of transactions that are credits/payments
+installment_ratio: 0.15      # share of (non-credit) transactions that are installments
+unknown_ratio: 0.10          # share with no keyword match -> falls into "Other"
+
+batch_size: 5000             # rows per bulk_create (tune for memory/speed)
+seed: 42                     # fix the RNG for reproducible runs (remove for random)

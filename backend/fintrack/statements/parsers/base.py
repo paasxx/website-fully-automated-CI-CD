@@ -1,8 +1,33 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Optional
+
+
+def parse_amount(raw: str) -> Optional[Decimal]:
+    """Parse a bank money string into a Decimal, or None if unparseable.
+
+    Handles the Brazilian format that Nubank/Inter exports actually use:
+
+        "1.234,56"  → 1234.56   (dot = thousands, comma = decimal)
+        "- 5,17"    → -5.17      (space between sign and digits)
+        "R$ 87,61"  → 87.61
+
+    A plain dotted decimal ("118.81") is left as-is, so older US-format Nubank
+    invoices keep working. Does NOT handle the US thousands format ("1,234.56")
+    — these banks never emit it. Returns None on anything unparseable so callers
+    can skip/aggregate instead of crashing mid-row.
+    """
+    if raw is None:
+        return None
+    cleaned = raw.replace("R$", "").replace("\xa0", "").replace(" ", "")
+    if "," in cleaned:                                   # Brazilian decimal
+        cleaned = cleaned.replace(".", "").replace(",", ".")
+    try:
+        return Decimal(cleaned)
+    except InvalidOperation:
+        return None
 
 
 @dataclass

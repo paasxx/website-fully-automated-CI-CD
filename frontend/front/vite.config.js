@@ -11,4 +11,9 @@ export default defineConfig({
     },
   },
   envPrefix: 'REACT_APP_',
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.js',
+  },
 })

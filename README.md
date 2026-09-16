@@ -42,20 +42,14 @@ A estrutura foi desenhada com foco em escalabilidade, manutenabilidade e separa�
 
 ```bash
 terraform/
-├── main.tf                  # Provider principal
-├── outputs.tf               # Outputs globais
-├── variables.tf             # Variáveis globais
-├── dev.tfvars               # Variáveis específicas do ambiente dev
 ├── bootstrap-backend/       # Setup do backend remoto
 │   ├── bucket_s3.tf
 │   ├── dynamodb.tf
 │   ├── main.tf
 │   ├── outputs.tf
-│   ├── variables.tf
-│   └── dev.tfvars
+│   └── variables.tf
 ├── dev/
 │   ├── backend.tf           # Backend remoto
-│   ├── dev.tfvars           # Variáveis dev
 │   ├── main.tf              # Entrypoint do ambiente dev
 │   ├── outputs.tf
 │   ├── variables.tf
@@ -66,14 +60,12 @@ terraform/
 │       │   ├── outputs.tf
 │       │   └── variables.tf
 │       └── infrastructure/  # Infra principal
-│           ├── dev.tfvars
 │           ├── main.tf
 │           ├── outputs.tf
 │           └── variables.tf
 └── prod/                    # Ambiente prod (em construção)
     ├── main.tf
     ├── outputs.tf
-    ├── prod.tfvars
     ├── variables.tf
     └── versions.tf
 ```
@@ -154,7 +146,7 @@ O projeto é totalmente automatizado por **quatro pipelines** via **GitHub Actio
 │   └── doc_2.md
 ├── docker-compose/
 │   ├── docker-compose-tests.yml
-│   └── docker-compose.dev.yml
+│   └── docker-compose.local.yml
 ├── .github/
 │   └── workflows/
 │       ├── run_tests.yml
@@ -244,20 +236,14 @@ O projeto é totalmente automatizado por **quatro pipelines** via **GitHub Actio
 │           ├── urls.py
 │           └── wsgi.py
 ├── terraform/
-│   ├── main.tf
-│   ├── outputs.tf
-│   ├── variables.tf
-│   ├── dev.tfvars
 │   ├── bootstrap-backend/
 │   │   ├── bucket_s3.tf
 │   │   ├── dynamodb.tf
 │   │   ├── main.tf
 │   │   ├── outputs.tf
-│   │   ├── variables.tf
-│   │   └── dev.tfvars
+│   │   └── variables.tf
 │   ├── dev/
 │   │   ├── backend.tf
-│   │   ├── dev.tfvars
 │   │   ├── main.tf
 │   │   ├── outputs.tf
 │   │   ├── variables.tf
@@ -268,14 +254,12 @@ O projeto é totalmente automatizado por **quatro pipelines** via **GitHub Actio
 │   │       │   ├── outputs.tf
 │   │       │   └── variables.tf
 │   │       └── infrastructure/
-│   │           ├── dev.tfvars
 │   │           ├── main.tf
 │   │           ├── outputs.tf
 │   │           └── variables.tf
 │   └── prod/
 │       ├── main.tf
 │       ├── outputs.tf
-│       ├── prod.tfvars
 │       ├── variables.tf
 │       └── versions.tf
 ```

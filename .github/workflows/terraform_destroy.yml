@@ -40,7 +40,7 @@ jobs:
         terraform_version: 1.5.5
 
     - name: Terraform Init
-      run: terraform init -var-file=${{ github.event.inputs.environment }}.tfvars
+      run: terraform init
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Listar estado do Terraform
@@ -48,11 +48,11 @@ jobs:
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Terraform Plan
-      run: terraform plan -target=module.infrastructure -var-file=${{ github.event.inputs.environment }}.tfvars
+      run: terraform plan -target=module.infrastructure -var="db_password=${{ secrets.DB_PASSWORD }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -var="django_secret_key=${{ secrets.DJANGO_SECRET_KEY }}"
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Terraform Destroy
-      run: terraform destroy -target=module.infrastructure -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
+      run: terraform destroy -target=module.infrastructure -auto-approve -var="db_password=${{ secrets.DB_PASSWORD }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -var="django_secret_key=${{ secrets.DJANGO_SECRET_KEY }}"
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
   https_dns_destroy:
@@ -74,7 +74,7 @@ jobs:
         terraform_version: 1.5.5
 
     - name: Terraform Init
-      run: terraform init -var-file=${{ github.event.inputs.environment }}.tfvars
+      run: terraform init
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Listar estado do Terraform
@@ -82,11 +82,11 @@ jobs:
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Terraform Plan
-      run: terraform plan -target=module.hosted_zone_acm -var-file=${{ github.event.inputs.environment }}.tfvars
+      run: terraform plan -target=module.hosted_zone_acm -var="db_password=${{ secrets.DB_PASSWORD }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -var="django_secret_key=${{ secrets.DJANGO_SECRET_KEY }}"
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
     - name: Terraform Destroy
-      run: terraform destroy -target=module.hosted_zone_acm -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
+      run: terraform destroy -target=module.hosted_zone_acm -auto-approve -var="db_password=${{ secrets.DB_PASSWORD }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -var="django_secret_key=${{ secrets.DJANGO_SECRET_KEY }}"
       working-directory: ./terraform/${{ github.event.inputs.environment }}
 
 

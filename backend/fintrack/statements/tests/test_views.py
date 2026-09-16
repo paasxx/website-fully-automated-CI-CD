@@ -75,6 +75,24 @@ class TestStatementUploadView(TestCase):
         self.assertEqual(resp.status_code, 500)
         self.assertIn("error", resp.data)
 
+    def test_wrong_format_file_returns_400_not_500(self):
+        # End-to-end (no mock): uploading a Nubank account statement (extrato)
+        # instead of a credit-card invoice must give a clear 400, never an
+        # opaque 500, and must not leave a "processed" statement behind.
+        self.client.force_authenticate(self.user)
+        extrato = (
+            "Data,Valor,Identificador,Descrição\n"
+            "12/09/2025,831.94,68c49fb1,Transferência Recebida\n"
+        ).encode("utf-8")
+
+        resp = self._upload(content=extrato, filename="extrato.csv")
+
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("error", resp.data)
+        self.assertEqual(
+            Statement.objects.filter(user=self.user, status="processed").count(), 0
+        )
+
     @patch("statements.views.process_statement")
     def test_bank_lowercased(self, mock_process):
         self.client.force_authenticate(self.user)

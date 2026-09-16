@@ -168,7 +168,7 @@ Logout button:
 `src/api/axiosConfig.js` creates a single axios instance used everywhere:
 
 ```js
-baseURL = REACT_APP_BACKEND_URL  // set in docker-compose.dev.yml
+baseURL = REACT_APP_BACKEND_URL  // set in docker-compose.local.yml
 timeout = 250s                   // for large file uploads
 
 // Request interceptor:
@@ -216,7 +216,7 @@ No Redux or Zustand — state lives close to where it's used:
 
 ## Environment variables
 
-Set in `docker-compose/docker-compose.dev.yml`:
+Set in `docker-compose/docker-compose.local.yml`:
 ```yaml
 REACT_APP_BACKEND_URL=http://localhost:8000/api
 ```

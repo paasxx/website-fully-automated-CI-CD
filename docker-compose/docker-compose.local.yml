@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_DB: fintrack_db
       POSTGRES_USER: fintrack_user
-      POSTGRES_PASSWORD: mypassword
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_PORT: 5432
 
     ports:
@@ -36,9 +36,12 @@ services:
     environment:
       DB_NAME: fintrack_db
       DB_USER: fintrack_user
-      DB_PASSWORD: mypassword
+      DB_PASSWORD: ${DB_PASSWORD}
       DB_HOST: db
       DB_PORT: 5432
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DEBUG: ${DEBUG}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
 
   frontend:
     image: front

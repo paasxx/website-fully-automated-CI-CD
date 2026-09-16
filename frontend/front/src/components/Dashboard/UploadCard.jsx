@@ -11,16 +11,16 @@ const BANKS = [
 // Banks that require a password on upload, with UI copy per bank.
 const BANK_PASSWORD_CONFIG = {
     btg: {
-        title:       'Senha da fatura BTG',
-        description: 'Faturas BTG são exportadas como XLSX protegido por senha. A senha padrão é o seu CPF sem pontuação (somente números).',
-        placeholder: 'CPF sem pontuação',
-        infoTip:     'Arquivo XLSX protegido — senha: CPF sem pontuação.',
+        title:       'BTG Statement Password',
+        description: 'BTG statements are exported as password-protected XLSX files. The default password is your CPF without punctuation (numbers only).',
+        placeholder: 'CPF without punctuation',
+        infoTip:     'Password-protected XLSX — password: CPF without punctuation.',
     },
     inter: {
-        title:       'Senha da fatura Inter',
-        description: 'Faturas Inter em PDF são protegidas por senha. Informe os 6 primeiros dígitos do seu CPF.',
-        placeholder: '6 primeiros dígitos do CPF',
-        infoTip:     'Arquivo PDF protegido — senha: 6 primeiros dígitos do CPF.',
+        title:       'Inter Statement Password',
+        description: 'Inter PDF statements are password-protected. Enter the first 6 digits of your CPF.',
+        placeholder: 'First 6 digits of your CPF',
+        infoTip:     'Password-protected PDF — password: first 6 digits of your CPF.',
     },
 };
 
