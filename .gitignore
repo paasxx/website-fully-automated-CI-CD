@@ -197,3 +197,10 @@ out/
 
 # Local seed config (use seed_config.example.yml as template)
 seed_config.yml
+
+# ========================
+# Terraform
+# ========================
+
+# tfvars carry real credentials (db_password, account_id) — never commit them.
+*.tfvars
