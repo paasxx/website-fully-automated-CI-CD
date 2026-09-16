@@ -202,7 +202,7 @@ CACHES = {
 }
 ```
 
-`docker-compose.dev.yml`:
+`docker-compose.local.yml`:
 
 ```yaml
   redis:
@@ -362,7 +362,7 @@ query rápida; Redis = não precisar fazer a query.
 | Cache de agregação | `finances/views.py` (`SpendingOverTimeView`) | `cache.get/set` com version-key |
 | Invalidação | `finances/services.py` + `statements/services.py` | `bump_cache_version()` nas escritas |
 | Rate limit | `settings.py` + `DemoDataView` | throttle scope |
-| Config Redis | `settings.py`, `docker-compose.dev.yml`, `requirements.txt` | `CACHES` + serviço `redis` |
+| Config Redis | `settings.py`, `docker-compose.local.yml`, `requirements.txt` | `CACHES` + serviço `redis` |
 | Async | `celery.py` + tasks | `process_statement`/seed viram tasks |
 
 ---

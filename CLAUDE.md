@@ -107,9 +107,6 @@ terraform/
 
 ### Débitos técnicos conhecidos
 
-- `SECRET_KEY` hardcoded em settings.py → deve vir de env var
-- `DEBUG = True` em settings.py → deve ser `False` em prod
-- `CORS_ALLOW_ALL_ORIGINS = True` → restringir por origem em prod
 - Legacy components em `src/components/Legacy/` → remover
 - FileContext com mock data → conectar à API real
 - `prod/` no Terraform está incompleto (só task definitions, sem infra)

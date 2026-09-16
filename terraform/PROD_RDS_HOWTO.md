@@ -33,9 +33,6 @@ RDS PostgreSQL 16         ← banco gerenciado, persistente, backups automático
 | `db-service.db.local` (service discovery) | endpoint RDS (ex: `fintrack-prod.xxx.rds.amazonaws.com`) |
 | Subnets públicas para tudo | Subnets públicas para ECS + privadas para RDS |
 | Sem service discovery necessário | Sem service discovery |
-| `DEBUG = True` | `DEBUG = False` |
-| `SECRET_KEY` hardcoded | `SECRET_KEY` via variável de ambiente |
-| `CORS_ALLOW_ALL_ORIGINS = True` | CORS restrito ao domínio |
 | `terraform/prod/main.tf` incompleto | `terraform/prod/` com infra completa |
 
 ---
@@ -54,26 +51,19 @@ Acesse: **Settings → Secrets and variables → Actions → New repository secr
 | `AWS_ACCOUNT_ID` | ID da sua conta AWS | ✅ |
 | `WORKFLOW_PASSWORD` | senha manual das pipelines | ✅ |
 | `DB_PASSWORD` | senha do banco | ✅ |
-| `DJANGO_SECRET_KEY` | chave secreta do Django | ⚠️ provavelmente não existe |
+| `DJANGO_SECRET_KEY` | chave secreta do Django | ✅ |
 
-Para gerar um `DJANGO_SECRET_KEY` seguro:
+Todos os secrets acima já existem. Se precisar gerar um `DJANGO_SECRET_KEY` novo pra outro ambiente:
 ```bash
 python3 -c "import secrets; print(secrets.token_urlsafe(50))"
 ```
 
-### tfvars para prod
+### Nada de tfvars
 
-A pipeline lê `-var-file=prod.tfvars`. Você precisa criar esse arquivo.
-
-**`terraform/prod/prod.tfvars`** (não commitar — adicionar ao `.gitignore`):
-```hcl
-aws_account_id   = "123456789012"
-db_password      = "sua-senha-aqui"
-django_secret_key = "sua-secret-key-aqui"
-```
-
-> Os valores sensíveis ficam no GitHub Secrets e são injetados pela pipeline.
-> O arquivo local é só para rodar terraform manualmente se precisar.
+As pipelines não usam `-var-file` — os valores sensíveis (`db_password`, `aws_account_id`,
+`django_secret_key`) são passados via `-var` direto na chamada do terraform, lidos dos secrets
+acima. Não crie nem commite nenhum `.tfvars` com valor real — o `.gitignore` já bloqueia
+`*.tfvars` de propósito.
 
 ---
 
@@ -104,9 +94,10 @@ terraform/prod/
   ├── variables.tf     ← ATUALIZAR (adicionar novas vars)
   ├── outputs.tf       ← ATUALIZAR
   ├── backend.tf       ← CRIAR (remote state S3 + DynamoDB)
-  ├── versions.tf      ← já existe, ok
-  └── prod.tfvars      ← CRIAR (não commitar)
+  └── versions.tf      ← já existe, ok
 ```
+
+Nenhum `.tfvars` — os valores sensíveis vêm dos GitHub Secrets, via `-var` na pipeline.
 
 ---
 
@@ -339,27 +330,14 @@ output "ecs_cluster_name" {
 
 ### 5. Backend Django — `backend/fintrack/fintrack/settings.py`
 
-Três mudanças obrigatórias antes de ir para prod:
+✅ Já aplicado — `SECRET_KEY`/`DEBUG`/`ALLOWED_HOSTS` já leem de env var com defaults seguros,
+e `CORS_ALLOW_ALL_ORIGINS` já foi removido (usa `CORS_ALLOWED_ORIGINS` como allowlist).
 
-```python
-# Antes (inseguro):
-SECRET_KEY = 'django-insecure-...'
-DEBUG = True
-CORS_ALLOW_ALL_ORIGINS = True
+Falta só passar `CORS_ALLOWED_ORIGINS` com o domínio real de prod na task definition do
+backend, quando ela existir (ver seção 3f).
 
-# Depois (correto):
-import os
-
-SECRET_KEY = os.environ['DJANGO_SECRET_KEY']     # quebra se não tiver — intencional
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
-
-CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
-CORS_ALLOW_ALL_ORIGINS = False
-```
-
-> No container local (docker-compose), `DEBUG=True` e `DJANGO_SECRET_KEY` podem continuar
-> sendo setados via `.env` — o código não muda, só o valor da variável de ambiente.
+> No container local (`docker-compose.local.yml`), `DEBUG=True` e `DJANGO_SECRET_KEY` vêm do
+> `.env` local, gerado automaticamente pelo `make dev` — não precisa criar na mão.
 
 ---
 
@@ -388,21 +366,19 @@ Também: o step `terraform apply` hoje só roda em `refs/heads/main`. Para prod 
 Siga essa ordem na primeira vez:
 
 ```
-1. Fazer as mudanças no settings.py do Django
+1. Fazer as mudanças no settings.py do Django (✅ já feito)
 2. Criar terraform/prod/backend.tf
-3. Criar terraform/prod/prod.tfvars (não commitar)
-4. Reescrever terraform/prod/main.tf com toda a infra
-5. Atualizar terraform/prod/variables.tf e outputs.tf
-6. Adicionar DJANGO_SECRET_KEY nos GitHub Secrets
-7. Push para main
-8. Rodar terraform_deploy_infra.yml com environment=prod
+3. Reescrever terraform/prod/main.tf com toda a infra
+4. Atualizar terraform/prod/variables.tf e outputs.tf
+5. Push para main
+6. Rodar terraform_deploy_infra.yml com environment=prod
    → Cria: VPC, subnets, ECS, ALBs, SGs, RDS (leva ~8-12 min pelo RDS)
-9. Rodar terraform_deploy_hosted_zone.yml com environment=prod
+7. Rodar terraform_deploy_hosted_zone.yml com environment=prod
    → Cria: Route53 zone, records DNS
-10. Rodar terraform_deploy_acm_https.yml com environment=prod
+8. Rodar terraform_deploy_acm_https.yml com environment=prod
     → Cria: certificados ACM, listeners HTTPS
-11. Verificar: acessar https://www.candlefarm.com.br
-12. Rodar migrations manualmente (primeira vez):
+9. Verificar: acessar https://www.candlefarm.com.br
+10. Rodar migrations manualmente (primeira vez):
     aws ecs run-task --cluster prod-cluster \
       --task-definition backend-task-prod \
       --overrides '{"containerOverrides":[{"name":"backend","command":["python","manage.py","migrate"]}]}'
@@ -438,4 +414,4 @@ Siga essa ordem na primeira vez:
 - [ ] SG do RDS aceita tráfego apenas do `backend_sg`
 - [ ] Migrations rodadas após primeiro deploy
 - [ ] HTTPS funcionando (ACM + listeners 443)
-- [ ] `terraform/prod/prod.tfvars` no `.gitignore`
+- [ ] Nenhum `.tfvars` criado/commitado — valores sensíveis só via GitHub Secrets

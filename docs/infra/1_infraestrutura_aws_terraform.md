@@ -5,20 +5,14 @@
 
 ```bash
 terraform/
-├── main.tf                  # Provider principal
-├── outputs.tf               # Outputs globais
-├── variables.tf             # Variáveis globais
-├── dev.tfvars               # Variáveis específicas do ambiente dev
 ├── bootstrap-backend/       # Setup do backend remoto
 │   ├── bucket_s3.tf
 │   ├── dynamodb.tf
 │   ├── main.tf
 │   ├── outputs.tf
-│   ├── variables.tf
-│   └── dev.tfvars
+│   └── variables.tf
 ├── dev/
 │   ├── backend.tf           # Backend remoto
-│   ├── dev.tfvars           # Variáveis dev
 │   ├── main.tf              # Entrypoint do ambiente dev
 │   ├── outputs.tf
 │   ├── variables.tf
@@ -29,14 +23,12 @@ terraform/
 │       │   ├── outputs.tf
 │       │   └── variables.tf
 │       └── infrastructure/  # Infra principal
-│           ├── dev.tfvars
 │           ├── main.tf
 │           ├── outputs.tf
 │           └── variables.tf
 └── prod/                    # Ambiente prod (em construção)
     ├── main.tf
     ├── outputs.tf
-    ├── prod.tfvars
     ├── variables.tf
     └── versions.tf
 ```

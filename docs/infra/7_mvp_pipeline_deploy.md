@@ -1,240 +1,59 @@
-## Primeira pipeline do projeto
+## Pipelines de deploy da infraestrutura
 
+O projeto usa **3 workflows separados** no GitHub Actions (`.github/workflows/`), cada um disparado
+manualmente (`workflow_dispatch`), com um `environment` (dev/prod) e uma senha checada contra
+`secrets.WORKFLOW_PASSWORD`. Existe também `terraform_destroy.yml`, o inverso de cada um deles.
 
-```bash
-name: Deploy Infrastructure with Terraform
-
-on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Escolha o ambiente (ex: dev, staging, prod)'
-        required: true
-        default: 'dev'
-      password:
-        description: 'Senha para rodar o workflow manualmente'
-        required: true
-        type: string
-
-jobs:
-  # Etapa 1: Criar S3 e DynamoDB
-  create_s3_and_dynamodb:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check password (for manual dispatch)
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        run: |
-          if [ "${{ github.event.inputs.password }}" != "${{ secrets.WORKFLOW_PASSWORD }}" ]; then
-            echo "Senha incorreta!"
-            exit 1
-          fi
-        shell: bash
-
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.5
-
-      - name: Terraform Apply (Create S3 Bucket and DynamoDB Table)
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: "us-east-1"
-        run: |
-          terraform apply -auto-approve -var-file=dev.tfvars \
-            -target=aws_s3_bucket.meu_bucket_terraform \
-            -target=aws_dynamodb_table.terraform_locks
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
-
-      
-  # Etapa 2: Criar ACM e Route 53
-  create_acm_and_route53:
-    runs-on: ubuntu-latest
-    needs: create_s3_and_dynamodb
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.5
-
-      - name: Configurar backend S3 e DynamoDB
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          echo 'terraform {
-            backend "s3" {
-              bucket = "meu-bucket-terraform-pedro-silveira"
-              key    = "terraform.tfstate"
-              region = "us-east-1"
-              dynamodb_table = "terraform-locks"
-              encrypt = true
-            }
-          }' > backend.tf
-          terraform init -var-file=dev.tfvars
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
-      - name: Terraform Init (ACM and Route 53)
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: terraform init -var-file=dev.tfvars
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
-      - name: Terraform Plan (ACM and Route 53)
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: terraform plan -var-file=dev.tfvars -target=aws_acm_certificate.frontend_cert_ext -target=aws_acm_certificate.backend_cert_ext -target=aws_route53_zone.my_zone
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
-      - name: Terraform Apply (ACM and Route 53)
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: terraform apply -auto-approve -var-file=dev.tfvars -target=aws_acm_certificate.frontend_cert_ext -target=aws_acm_certificate.backend_cert_ext -target=aws_route53_zone.my_zone
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
-
-  # Etapa 4: Provisionar o restante da infraestrutura
-  terraform:
-    runs-on: ubuntu-latest
-    needs: create_acm_and_route53
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.5
-
-      - name: Configurar backend S3 e DynamoDB
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          echo 'terraform {
-            backend "s3" {
-              bucket = "meu-bucket-terraform-pedro-silveira"
-              key    = "terraform.tfstate"
-              region = "us-east-1"
-              dynamodb_table = "terraform-locks"
-              encrypt = true
-            }
-          }' > backend.tf
-          terraform fmt backend.tf  # Formata automaticamente o arquivo gerado
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
-      - name: Terraform Init (Com Backend)
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: terraform init -var-file=dev.tfvars
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
-      - name: Terraform Plan
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: terraform plan -var-file=dev.tfvars
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
-      - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: terraform apply -auto-approve -var-file=dev.tfvars -var "aws_region=${{ secrets.AWS_REGION }}"
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
-  print_terraform_outputs_and_state:
-    runs-on: ubuntu-latest
-    needs: terraform
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.5
-
-      - name: Configurar backend S3 e DynamoDB
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          echo 'terraform {
-            backend "s3" {
-              bucket = "meu-bucket-terraform-pedro-silveira"
-              key    = "terraform.tfstate"
-              region = "us-east-1"
-              dynamodb_table = "terraform-locks"
-              encrypt = true
-            }
-          }' > backend.tf
-          terraform init -var-file=dev.tfvars
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
-      - name: Terraform Init
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: terraform init -var-file=dev.tfvars
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
-      - name: Listar todos os outputs do Terraform
-        run: terraform output
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
-      - name: Imprimir estado completo do Terraform
-        run: terraform show
-        working-directory: ./terraform/${{ github.event.inputs.environment }}
-
-  # Etapa 5: Build and Push Docker Images
-  build_and_push:
-    runs-on: ubuntu-latest
-    needs: terraform
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Log in to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v1
-        env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-      - name: Build and push backend Docker image
-        run: |
-          docker buildx build --platform linux/amd64 -f ./backend/Dockerfile.prod \
-          -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/backend-repo:latest \
-          --push ./backend
-
-      - name: Build and push frontend Docker image
-        run: |
-          docker buildx build --platform linux/amd64 \
-          -f ./frontend/Dockerfile.local \
-          -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/frontend-repo:latest \
-          --push ./frontend
 ```
+terraform_deploy_infra.yml        → VPC, ECS, ALBs, SGs (módulo infrastructure) + build/push das imagens
+terraform_deploy_hosted_zone.yml  → Route53 (módulo hosted_zone_acm) — depende da infra já existir
+terraform_deploy_acm_https.yml    → certificados ACM + listeners HTTPS — depende da hosted zone
+terraform_destroy.yml             → desfaz os três, na ordem inversa
+```
+
+### 1. `terraform_deploy_infra.yml`
+
+- **`create_s3_and_dynamodb`**: cria o backend remoto (bucket S3 + tabela DynamoDB de lock) — só
+  na primeira vez; um step anterior checa se já existe e pula se sim.
+- **`terraform`**: `init` + `plan` + `apply` do módulo `infrastructure` (o `apply` só roda em `main`).
+- **`print_terraform_outputs_and_state`**: lista os outputs e o state, só pra log.
+- **`build_and_push`**: builda as imagens Docker (`Dockerfile.prod` de front e back), sobe pro ECR,
+  força o ECS a redeployar com a imagem nova.
+
+### 2. `terraform_deploy_hosted_zone.yml`
+
+`init` + `plan` + `apply` do módulo `hosted_zone_acm`, direcionado (`-target`) só nos recursos de
+Route53 (zone + records). Roda depois da infra existir, porque precisa do DNS dos ALBs.
+
+### 3. `terraform_deploy_acm_https.yml`
+
+Mesma lógica, `-target=module.hosted_zone_acm`, mas cobrindo os certificados ACM e os listeners
+HTTPS — depende da hosted zone já estar criada.
+
+### Nenhuma delas usa `-var-file`
+
+Os valores sensíveis (`db_password`, `aws_account_id`, `django_secret_key`) nunca ficam em arquivo
+— vêm direto dos GitHub Secrets, passados como `-var` na própria chamada do terraform:
+
+```yaml
+- name: Terraform Apply
+  run: terraform apply -auto-approve \
+    -var="db_password=${{ secrets.DB_PASSWORD }}" \
+    -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" \
+    -var="django_secret_key=${{ secrets.DJANGO_SECRET_KEY }}" \
+    -target=module.infrastructure
+  working-directory: ./terraform/${{ github.event.inputs.environment }}
+```
+
+`terraform init` não precisa de `-var` nenhum (não avalia variáveis, só configura backend/providers).
+
+### Ordem de execução (primeira vez, ou depois de um destroy)
+
+1. `terraform_deploy_infra.yml`
+2. `terraform_deploy_hosted_zone.yml`
+3. `terraform_deploy_acm_https.yml`
+
+Pra destruir, `terraform_destroy.yml` na ordem inversa.
+
+> Detalhes de como reconstruir isso do zero para `prod` (RDS, subnets privadas, etc.) estão em
+> `terraform/PROD_RDS_HOWTO.md`.

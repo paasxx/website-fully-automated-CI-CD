@@ -11,10 +11,10 @@ Este guia mostra como subir, derrubar e interagir com os containers do projeto l
 1. **No diretório (/docker-compose), execute:**
 
    ```bash
-   docker-compose -f docker-compose.dev.yml up -d --build
+   docker-compose -f docker-compose.local.yml up -d --build
    ```
 
-   - Substitua `docker-compose.dev.yml` pelo nome do arquivo que deseja usar.
+   - Substitua `docker-compose.local.yml` pelo nome do arquivo que deseja usar.
    - O parâmetro `-d` executa em modo "detached" (em background).
    - O parâmetro `--build` força a reconstrução das imagens.
 
@@ -82,7 +82,7 @@ docker exec -it fintrack-db bash
 Para derrubar todo o ambiente:
 
 ```bash
-docker-compose -f docker-compose.dev.yml down
+docker-compose -f docker-compose.local.yml down
 ```
 
 - Isso para e remove todos os containers, redes e volumes anônimos criados pelo `up`.
