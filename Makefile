@@ -3,7 +3,7 @@
 #  Uso: make <target>   |   make help para listar todos
 # ============================================================
 
-COMPOSE_DEV   = docker-compose/docker-compose.dev.yml
+COMPOSE_LOCAL   = docker-compose/docker-compose.local.yml
 COMPOSE_TESTS = docker-compose/docker-compose-tests.yml
 BACK          = back
 FRONT         = front
@@ -17,7 +17,7 @@ ECS_CLUSTER     = dev-cluster
 
 .PHONY: help \
         up down restart build \
-        start-back start-front dev \
+        start-back start-front local \
         logs logs-back logs-front logs-db \
         shell-back shell-front shell-db \
         migrate makemigrations createsuperuser \
@@ -38,16 +38,20 @@ help: ## Lista todos os comandos disponíveis
 
 # ── Containers ──────────────────────────────────────────────
 
-up: ## Sobe todos os containers (build incluso)
-	docker-compose -f $(COMPOSE_DEV) up -d --build
+.env: ## Gera um .env local com senhas novas (só roda se o arquivo não existir)
+	@echo "Gerando .env local (valores novos, só para esta máquina)..."
+	@python3 -c "import secrets; print('DB_PASSWORD=' + secrets.token_urlsafe(24)); print('DJANGO_SECRET_KEY=' + secrets.token_urlsafe(50)); print('DEBUG=True'); print('ALLOWED_HOSTS=*')" > .env
+
+up: .env ## Sobe todos os containers (build incluso)
+	docker-compose -f $(COMPOSE_LOCAL) up -d --build
 
 down: ## Para e remove todos os containers
-	docker-compose -f $(COMPOSE_DEV) down
+	docker-compose -f $(COMPOSE_LOCAL) down
 
 restart: down up ## Reinicia tudo do zero
 
 build: ## Reconstrói as imagens sem subir
-	docker-compose -f $(COMPOSE_DEV) build
+	docker-compose -f $(COMPOSE_LOCAL) build
 
 # ── Servidores de desenvolvimento ───────────────────────────
 #
@@ -65,7 +69,7 @@ start-front: ## Inicia o npm start dentro do container (background)
 		"cd /app && npm start > /proc/1/fd/1 2>&1"
 	@echo "Frontend iniciado em http://localhost:3000  (aguarde ~20s para compilar)"
 
-dev: up migrate start-back start-front ## Fluxo completo: sobe, migra e inicia ambos os servidores
+local: up migrate start-back start-front ## Fluxo completo: sobe, migra e inicia ambos os servidores
 	@echo ""
 	@echo "  \033[32m✓ Ambiente local pronto\033[0m"
 	@echo "  Frontend : http://localhost:3000"
@@ -76,7 +80,7 @@ dev: up migrate start-back start-front ## Fluxo completo: sobe, migra e inicia a
 # ── Logs ────────────────────────────────────────────────────
 
 logs: ## Logs de todos os containers (follow)
-	docker-compose -f $(COMPOSE_DEV) logs -f
+	docker-compose -f $(COMPOSE_LOCAL) logs -f
 
 logs-back: ## Logs só do backend
 	docker logs -f $(BACK)
@@ -138,7 +142,7 @@ test: ## Roda suite de testes via docker-compose-tests
 # ── Limpeza ─────────────────────────────────────────────────
 
 clean: ## Remove containers, volumes e orphans
-	docker-compose -f $(COMPOSE_DEV) down -v --remove-orphans
+	docker-compose -f $(COMPOSE_LOCAL) down -v --remove-orphans
 
 clean-images: ## Remove imagens locais back e front
 	docker rmi $(BACK) $(FRONT) 2>/dev/null || true
