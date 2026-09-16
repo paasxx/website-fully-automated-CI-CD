@@ -38,3 +38,21 @@ variable "db_port" {
   type        = number
   default     = 5432 # PostgreSQL
 }
+
+variable "django_secret_key" {
+  description = "Chave secreta do Django"
+  type        = string
+  sensitive   = true
+}
+
+variable "debug" {
+  description = "Django DEBUG"
+  type        = string
+  default     = "False"
+}
+
+variable "allowed_hosts" {
+  description = "Django ALLOWED_HOSTS"
+  type        = string
+  default     = ""
+}

@@ -103,6 +103,18 @@ resource "aws_ecs_task_definition" "backend_task" {
         {
           name  = "DB_PORT"
           value = "5432"
+        },
+        {
+          name  = "DJANGO_SECRET_KEY"
+          value = var.django_secret_key
+        },
+        {
+          name  = "DEBUG"
+          value = var.debug
+        },
+        {
+          name  = "ALLOWED_HOSTS"
+          value = var.allowed_hosts
         }
       ]
       logConfiguration = {
