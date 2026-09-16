@@ -41,16 +41,16 @@ jobs:
           terraform_version: 1.5.5
 
       - name: Terraform Init (ACM, HTTPS and DNS)
-        run: terraform init -var-file=dev.tfvars
+        run: terraform init
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
       - name: Terraform Plan (ACM, HTTPS and DNS)
-        run: terraform plan -var-file=dev.tfvars -target=module.hosted_zone_acm
+        run: terraform plan -var="db_password=${{ secrets.DB_PASSWORD }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -var="django_secret_key=${{ secrets.DJANGO_SECRET_KEY }}" -target=module.hosted_zone_acm
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
       - name: Terraform Apply (ACM, HTTPS and DNS)
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'
-        run: terraform apply -auto-approve -var-file=dev.tfvars -target=module.hosted_zone_acm
+        run: terraform apply -auto-approve -var="db_password=${{ secrets.DB_PASSWORD }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -var="django_secret_key=${{ secrets.DJANGO_SECRET_KEY }}" -target=module.hosted_zone_acm
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
   print_terraform_outputs_and_state:
@@ -70,7 +70,7 @@ jobs:
           terraform_version: 1.5.5
 
       - name: Terraform Init
-        run: terraform init -var-file=dev.tfvars
+        run: terraform init
         working-directory: ./terraform/${{ github.event.inputs.environment }}
 
       - name: Listar todos os outputs do Terraform
