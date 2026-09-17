@@ -38,11 +38,11 @@ help: ## Lista todos os comandos disponíveis
 
 # ── Containers ──────────────────────────────────────────────
 
-.env: ## Gera um .env local com senhas novas (só roda se o arquivo não existir)
+docker-compose/.env: ## Gera um .env local com senhas novas (só roda se o arquivo não existir)
 	@echo "Gerando .env local (valores novos, só para esta máquina)..."
-	@python3 -c "import secrets; print('DB_PASSWORD=' + secrets.token_urlsafe(24)); print('DJANGO_SECRET_KEY=' + secrets.token_urlsafe(50)); print('DEBUG=True'); print('ALLOWED_HOSTS=*')" > .env
+	@python3 -c "import secrets; print('DB_PASSWORD=' + secrets.token_urlsafe(24)); print('DJANGO_SECRET_KEY=' + secrets.token_urlsafe(50)); print('DEBUG=True'); print('ALLOWED_HOSTS=*')" > docker-compose/.env
 
-up: .env ## Sobe todos os containers (build incluso)
+up: docker-compose/.env ## Sobe todos os containers (build incluso)
 	docker-compose -f $(COMPOSE_LOCAL) up -d --build
 
 down: ## Para e remove todos os containers
