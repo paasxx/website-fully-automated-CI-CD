@@ -338,7 +338,7 @@ resource "aws_iam_role_policy_attachment" "ecs_task_role_cloudwatch_policy" {
 
 resource "aws_lb" "backend_lb" {
   name                       = "backend-lb"
-  internal                   = false
+  internal                   = true
   load_balancer_type         = "application"
   security_groups            = [aws_security_group.backend_lb_sg.id]
   subnets                    = aws_subnet.dev_subnet[*].id
