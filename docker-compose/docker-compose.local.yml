@@ -3,6 +3,7 @@ services:
   db:
     image: postgres:16-alpine
     container_name: fintrack-db
+    env_file: .env
     volumes:
       - postgres_data:/var/lib/postgresql/data/
 
@@ -23,7 +24,8 @@ services:
   web:
     image: back
     container_name: back
-    build: 
+    env_file: .env
+    build:
       context: ../backend
       dockerfile: Dockerfile.local
     volumes:
