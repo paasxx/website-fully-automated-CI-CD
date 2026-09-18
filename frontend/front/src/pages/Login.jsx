@@ -22,8 +22,14 @@ const Login = () => {
         try {
             await login(email, password);
             navigate('/dashboard');
-        } catch {
-            setError('Invalid email or password.');
+        } catch (err) {
+            if(err.response && err.response.status === 429){
+                setError('Too many requests, try in a few seconds.')
+            }
+            else {
+                 setError('Invalid email or password.');
+            }
+
         } finally {
             setLoading(false);
         }
